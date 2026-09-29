@@ -13,6 +13,14 @@
 
 The requirements below define intended functionality. They are not claims of currently implemented or production-validated behavior.
 
+### Repository specification boundary
+
+[SPECIFICATIONS.md](SPECIFICATIONS.md) is the canonical repository-level technical specification and implementation contract. This file remains the detailed project-scope and normative product-requirements record. Current implementation state is controlled by evidence and the current-state records, including [CAPABILITIES.md](CAPABILITIES.md) and [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md).
+
+### Licensing status
+
+No repository license is currently present or approved. The project must adopt a recognized open-source license and document material dependency licensing before release or redistribution claims are made.
+
 ## 2. Product purpose
 
 GoreeCloud PDF Manager is intended to provide comprehensive tools for reading, editing, converting, organizing, securing, signing, scanning, automating, storing, and processing PDF documents while preserving GoreeCloud privacy, security, accessibility, and self-hosting requirements.
