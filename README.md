@@ -25,7 +25,8 @@ As of September 28, 2026, the repository does not contain an application impleme
 - [SECURITY.md](SECURITY.md) — repository-safe security and vulnerability guidance.
 - [NOTES.md](NOTES.md) — repository working notes.
 - [goreecloud.platform.yaml](goreecloud.platform.yaml) — machine-readable Platform Contract declaration.
-- [RIGHTS.md](RIGHTS.md) — interim no-license-grant rights notice.
+- [LICENSE](LICENSE) — governing AGPL-3.0-or-later software license.
+- [RIGHTS.md](RIGHTS.md) — project rights and third-party licensing notice.
 
 ## Product role
 
@@ -35,6 +36,8 @@ The project is intended to operate both as a standalone GoreeCloud PDF applicati
 
 No PDF editing, conversion, OCR, scanning, forms, signatures, redaction, document-library, workflow, API, MCP/AI, storage-integration, collaboration, deployment, or enterprise-processing capability is currently verified in this repository.
 
-## License status
+## License
 
-No recognized open-source software license is currently present or approved. An interim no-license-grant rights notice is maintained in [RIGHTS.md](RIGHTS.md). Public visibility does not by itself grant an open-source license. A recognized open-source license must be selected and documented before release or redistribution claims are made.
+GoreeCloud PDF Manager is licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
+
+The project remains Seed / pre-implementation; licensing does not imply a software release, production readiness, or implemented PDF-processing capability. Future third-party dependencies remain subject to compatibility review and their own required notices.
