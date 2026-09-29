@@ -1,0 +1,13 @@
+[package]
+name = "pdf-manager-cli"
+description = "Development CLI for the GoreeCloud PDF Manager foundation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+goreecloud-pdf-core = { path = "../../crates/pdf-core" }
+
+[lints]
+workspace = true
