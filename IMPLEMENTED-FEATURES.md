@@ -2,6 +2,9 @@
 
 ## Current state
 
+**Lifecycle:** Seed  
+**Implementation state:** Pre-implementation
+
 No application features are verified as implemented as of September 28, 2026.
 
 The repository currently contains project documentation only. Planned product functionality is tracked in [PLANNED-FEATURES.md](PLANNED-FEATURES.md) and specified in [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md).
