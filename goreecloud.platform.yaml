@@ -144,4 +144,3 @@ conformance:
     - No selected implementation stack, dependency foundation, or processing sandbox exists.
     - No automated test or representative document fixture suite exists.
     - No deployment, backup/restore, accessibility, security, privacy, or representative-runtime acceptance evidence exists.
-    - A recognized open-source software license has not yet been approved; RIGHTS.md is the interim no-license-grant rights notice.
