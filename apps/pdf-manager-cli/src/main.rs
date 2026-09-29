@@ -89,7 +89,6 @@ fn run_inspect(args: &[OsString]) -> Result<(), String> {
     Ok(())
 }
 
-
 fn print_help(program: &str) {
     println!(
         "{program} — GoreeCloud PDF Manager development CLI\n\n\
