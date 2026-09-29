@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/pdf-core",
+    "apps/pdf-manager-cli",
+]
+
+[workspace.package]
+edition = "2024"
+license = "AGPL-3.0-or-later"
+rust-version = "1.85.1"
+version = "0.0.1-seed"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
