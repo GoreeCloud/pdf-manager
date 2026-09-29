@@ -4,9 +4,9 @@ GoreeCloud PDF Manager is a planned privacy-focused, self-hosted PDF and documen
 
 ## Project status
 
-**Lifecycle:** Seed
+**Lifecycle:** Lab
 
-As of September 28, 2026, the repository does not contain an application implementation. The implementation status is pre-implementation. The documented product scope is planned functionality and must not be represented as currently available until implementation and validation evidence exists.
+As of September 28, 2026, the repository contains an exploratory native Rust implementation foundation: a reusable bounded PDF preflight core, a development-only CLI, unit tests, and CI validation. There is still no usable end-user PDF Manager application, PDF engine, service, deployment, or supported release. The broader documented product scope remains planned.
 
 ## Repository documentation
 
@@ -21,12 +21,15 @@ As of September 28, 2026, the repository does not contain an application impleme
 - [CAPABILITIES.md](CAPABILITIES.md) — current verified capability state.
 - [CHANGELOGS.md](CHANGELOGS.md) — meaningful repository change history.
 - [BRANDING.md](BRANDING.md) — canonical product naming and visual-identity boundaries.
-- [USER-MANUAL.md](USER-MANUAL.md) — Seed-stage availability boundary and intended workflow model.
+- [USER-MANUAL.md](USER-MANUAL.md) — Lab-stage availability boundary and intended workflow model.
 - [SECURITY.md](SECURITY.md) — repository-safe security and vulnerability guidance.
 - [NOTES.md](NOTES.md) — repository working notes.
 - [goreecloud.platform.yaml](goreecloud.platform.yaml) — machine-readable Platform Contract declaration.
 - [LICENSE](LICENSE) — governing AGPL-3.0-or-later software license.
 - [RIGHTS.md](RIGHTS.md) — project rights and third-party licensing notice.
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — current native implementation architecture and boundaries.
+- [DEPENDENCIES.md](DEPENDENCIES.md) — dependency inventory and selection rules.
+- [CONTRIBUTING.md](CONTRIBUTING.md) — development and validation workflow.
 
 ## Product role
 
@@ -34,10 +37,10 @@ The project is intended to operate both as a standalone GoreeCloud PDF applicati
 
 ## Current implementation boundary
 
-No PDF editing, conversion, OCR, scanning, forms, signatures, redaction, document-library, workflow, API, MCP/AI, storage-integration, collaboration, deployment, or enterprise-processing capability is currently verified in this repository.
+A bounded development preflight can size-gate a PDF candidate, locate a PDF header within the first 1024 bytes, parse its version token, and report whether an EOF marker appears in the final 2048 bytes. This does **not** establish full PDF validity or document safety. PDF editing, rendering, conversion, OCR, scanning, forms, signatures, redaction, document-library, workflow, API, MCP/AI, storage-integration, collaboration, deployment, and enterprise-processing capabilities remain unimplemented.
 
 ## License
 
 GoreeCloud PDF Manager is licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
 
-The project remains Seed / pre-implementation; licensing does not imply a software release, production readiness, or implemented PDF-processing capability. Future third-party dependencies remain subject to compatibility review and their own required notices.
+The project remains Lab / exploratory implementation; licensing does not imply a software release, production readiness, or a usable PDF-processing application. Future third-party dependencies remain subject to compatibility review and their own required notices.

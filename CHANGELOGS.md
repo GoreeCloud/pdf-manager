@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+### Native Rust foundation and Lab lifecycle — 2026-09-28
+
+- Established a Rust 2024 workspace on Rust 1.85.1 with unsafe Rust forbidden by workspace policy.
+- Added the standard-library-only `goreecloud-pdf-core` bounded PDF preflight library.
+- Added a development-only `pdf-manager-cli inspect` command for exercising the preflight boundary.
+- Added unit tests for header detection, version parsing, size limits, EOF-marker hints, and bounded scanning.
+- Added Rust Foundation CI for formatting, workspace build, unit tests, and clippy with warnings denied.
+- Added architecture, dependency, and contribution records.
+- Reconciled lifecycle from **Seed** to **Lab** because exploratory implementation now exists and is source-validated.
+- Kept every full product capability area planned; the preflight foundation is not full PDF validation, sanitization, security scanning, repair, or a user-facing application.
+
+The source validation establishes an exploratory implementation foundation only. It does not establish a supported platform, release, deployment, production acceptance, or Integral Platform System conformance.
+
+
 ### Licensing — 2026-09-28
 
 - Selected `AGPL-3.0-or-later` under the GoreeCloud Software Licensing Policy.

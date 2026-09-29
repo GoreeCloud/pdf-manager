@@ -1,5 +1,5 @@
 # GoreeCloud PDF Manager Platform Contract declaration
-# Seed-stage declaration: documentation does not prove runtime integration or acceptance.
+# Lab-stage declaration: exploratory source does not prove runtime platform integration or acceptance.
 
 schema_version: "0.4"
 
@@ -10,8 +10,8 @@ component:
   repository: GoreeCloud/pdf-manager
 
 # Canonical Platform Contract v2.0 lifecycle classification.
-lifecycle: seed
-version: "0.0.0-seed"
+lifecycle: lab
+version: "0.0.1-lab"
 
 supported_platforms: []
 
@@ -137,10 +137,14 @@ conformance:
     - PLANNED-FEATURES.md
     - SECURITY.md
     - BRANDING.md
+    - docs/ARCHITECTURE.md
+    - DEPENDENCIES.md
+    - crates/pdf-core/src/lib.rs
+    - .github/workflows/rust-foundation.yml
     - goreecloud.platform.yaml
   blockers:
-    - No application implementation or supported runtime exists.
+    - Only a bounded PDF preflight foundation and development CLI are implemented; no usable end-user application or service runtime exists.
     - No Integral Platform System runtime integration or product acceptance exists.
-    - No selected implementation stack, dependency foundation, or processing sandbox exists.
-    - No automated test or representative document fixture suite exists.
+    - No full PDF parser/editor/rendering engine, conversion/OCR foundation, or processing sandbox exists.
+    - Unit tests exist for the bounded preflight, but no representative document corpus, malformed/adversarial corpus, integration suite, or product acceptance suite exists.
     - No deployment, backup/restore, accessibility, security, privacy, or representative-runtime acceptance evidence exists.

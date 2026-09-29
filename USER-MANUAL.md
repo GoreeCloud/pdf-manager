@@ -2,11 +2,13 @@
 
 ## Current availability
 
-GoreeCloud PDF Manager is in the **Seed** lifecycle stage.
+GoreeCloud PDF Manager is in the **Lab** lifecycle stage.
 
-There is currently no usable PDF Manager application, installable package, hosted service, command-line interface, REST API, MCP service, or production deployment in this repository.
+There is currently no usable end-user PDF Manager application, installable release, hosted service, REST API, MCP service, or production deployment.
 
-This manual therefore documents the current availability boundary and the intended user-workflow model. It must not be read as instructions for functionality that already exists.
+A **development-only command-line tool** now exists for exercising bounded PDF preflight. It is an engineering surface, not a supported user product. The preflight operation checks an input-size limit, looks for a PDF header in a bounded prefix, parses the version token, and reports whether an EOF marker is visible in a bounded tail scan. It does not validate, sanitize, repair, render, edit, or prove the safety of the document.
+
+This manual therefore continues to document the user-availability boundary and intended product workflow rather than presenting planned functionality as available.
 
 ## Intended product model
 
@@ -65,7 +67,9 @@ Future versions must clearly identify when an optional external service would re
 
 ## Security expectations
 
-Uploaded documents must be treated as untrusted input. Future releases must make high-risk operations such as password removal, destructive redaction, sanitization, permission changes, and signature removal explicit.
+Document inputs must be treated as untrusted. The current development preflight is only an initial bounded input gate and does not replace parser isolation, malware inspection, sanitization, or other planned security controls.
+
+Future releases must make high-risk operations such as password removal, destructive redaction, sanitization, permission changes, and signature removal explicit.
 
 ## Account and deployment expectations
 
@@ -75,6 +79,6 @@ The planned product supports local/self-hosted use and optional GoreeCloud Ident
 
 ## Support status
 
-No release is currently supported because no software release exists.
+No supported software release currently exists.
 
 For product scope, see [SPECIFICATIONS.md](SPECIFICATIONS.md). For current verified capability state, see [CAPABILITIES.md](CAPABILITIES.md). For planned work, see [PLANNED-FEATURES.md](PLANNED-FEATURES.md).

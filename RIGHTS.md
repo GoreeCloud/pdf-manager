@@ -6,6 +6,6 @@ GoreeCloud PDF Manager is licensed under the **GNU Affero General Public License
 
 The root [LICENSE](LICENSE) file is the authoritative repository license record. This rights notice summarizes that license selection and does not replace or narrow the rights granted by the governing license.
 
-The repository remains in the **Seed** lifecycle stage with a pre-implementation implementation state. The presence of an open-source license does not imply that a usable PDF-processing application, release, deployment, or production-validated capability exists.
+The repository is in the **Lab** lifecycle stage with an exploratory native implementation foundation. The presence of an open-source license or development preflight code does not imply that a usable PDF-processing application, release, deployment, or production-validated capability exists.
 
 Third-party material, dependencies, assets, and incorporated components remain subject to their applicable copyright, license, attribution, provenance, and redistribution requirements. Nothing in the GoreeCloud PDF Manager project license relicenses third-party material beyond the rights granted by its respective rights holders.

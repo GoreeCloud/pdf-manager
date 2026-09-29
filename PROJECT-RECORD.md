@@ -5,8 +5,8 @@
 - **Repository:** `GoreeCloud/pdf-manager`
 - **Default branch:** `main`
 - **Project role:** Planned GoreeCloud PDF and document-processing platform
-- **Current lifecycle state:** Seed
-- **Implementation state:** Pre-implementation
+- **Current lifecycle state:** Lab
+- **Implementation state:** Exploratory native foundation
 
 ## Significant project record
 
@@ -76,6 +76,28 @@ The selection fits the planned architecture because PDF Manager is intended to p
 No third-party implementation dependencies are currently present in the repository. Future dependencies must be reviewed for compatibility and required notices.
 
 **Evidence:** [Pull request #4](https://github.com/GoreeCloud/pdf-manager/pull/4).
+
+### 2026-09-28 — First native implementation foundation established
+
+The repository moved from documentation-only Seed state into **Lab** after the first original GoreeCloud-owned implementation slice was established.
+
+The foundation uses Rust 2024 with Rust 1.85.1, forbids unsafe Rust through workspace lint policy, and introduces no third-party runtime crates.
+
+Implemented development foundation:
+
+- bounded input-size gating;
+- bounded PDF-header discovery within the first 1024 bytes;
+- three-character PDF version-token parsing;
+- bounded EOF-marker hint discovery within the final 2048 bytes;
+- a reusable `goreecloud-pdf-core` library;
+- a development-only `pdf-manager-cli` inspection command;
+- unit tests and Rust Foundation CI.
+
+GitHub Actions run #36517857311 validated formatting, workspace build, unit tests, and clippy on source head `547acb44ac1d00afb6e66ac6f87304bd9a63a4fc` before lifecycle reconciliation.
+
+This milestone does not establish full PDF validation, sanitization, malware scanning, repair, editing, rendering, conversion, a supported runtime platform, a user-facing application, deployment acceptance, or production readiness. All 30 full product capability areas remain planned.
+
+**Evidence:** [Pull request #5](https://github.com/GoreeCloud/pdf-manager/pull/5).
 
 ## Maintenance rule
 

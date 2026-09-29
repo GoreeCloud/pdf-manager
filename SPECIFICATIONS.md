@@ -4,8 +4,8 @@
 
 - **Product:** GoreeCloud PDF Manager
 - **Repository:** `GoreeCloud/pdf-manager`
-- **Lifecycle:** Seed
-- **Implementation state:** Pre-implementation
+- **Lifecycle:** Lab
+- **Implementation state:** Exploratory native foundation
 - **Canonical repository-level technical specification:** This file
 - **Detailed project scope and feature requirements:** [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md)
 - **Verified current capability state:** [CAPABILITIES.md](CAPABILITIES.md)
@@ -24,7 +24,7 @@ The project is intended to provide privacy-focused, self-hosted document reading
 
 ## Current implementation boundary
 
-No application runtime, PDF-processing engine, user interface, API service, database, worker, deployment artifact, or production release is currently verified in the repository.
+The repository contains an exploratory Rust workspace with a bounded PDF preflight library and development-only CLI. No full PDF parser/editor/rendering engine, end-user interface, API service, database, worker system, deployment artifact, supported platform, or production release is currently verified.
 
 ## Architecture requirements
 
@@ -147,9 +147,9 @@ Windows and macOS support must be validated before being claimed as supported ru
 
 ## Dependencies
 
-No processing stack has yet been selected.
+Rust 1.85.1 with edition 2024 is the selected native foundation for the current implementation. The first runtime slice uses only the Rust standard library. No full PDF parser/editor/rendering engine has been selected.
 
-Future dependency selection must prefer fully open-source, maintainable, replaceable technologies with clear licenses and acceptable security, recovery, portability, and self-hosting characteristics.
+Future dependency selection must prefer fully open-source, maintainable, replaceable technologies with clear licenses and acceptable security, recovery, portability, malformed-input behavior, and self-hosting characteristics.
 
 ## Licensing
 

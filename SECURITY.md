@@ -2,9 +2,11 @@
 
 ## Current security status
 
-GoreeCloud PDF Manager is in the **Seed** lifecycle stage and has no verified application runtime.
+GoreeCloud PDF Manager is in the **Lab** lifecycle stage with an exploratory native Rust foundation.
 
-No claim is made that the planned PDF parsing, editing, conversion, OCR, signing, redaction, storage, API, or automation surfaces are currently security-hardened because those surfaces do not yet exist.
+The current source includes a bounded PDF preflight primitive that checks a configured input-size limit, performs bounded prefix/tail inspection, and avoids a full document parse. This is a useful input-gating boundary but is **not** a sanitizer, malware scanner, parser sandbox, complete PDF validator, or production security control.
+
+No claim is made that the planned PDF parsing, editing, conversion, OCR, signing, redaction, storage, API, or automation surfaces are security-hardened because those surfaces are not yet implemented.
 
 ## Reporting a vulnerability
 
@@ -35,6 +37,12 @@ Implementation must treat PDFs and converted document formats as untrusted conte
 - malware/security-scanner integration hooks;
 - auditable administrative and high-risk actions;
 - safe API/MCP file transfer and operation permissions.
+
+## Current source validation
+
+The Rust Foundation workflow checks formatting, builds all workspace targets, runs unit tests, and runs clippy with warnings denied.
+
+Passing source CI is not production security qualification and does not establish that arbitrary PDFs are safe to process.
 
 ## Secrets
 
