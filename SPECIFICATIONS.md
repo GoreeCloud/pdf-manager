@@ -10,6 +10,7 @@
 - **Detailed project scope and feature requirements:** [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md)
 - **Verified current capability state:** [CAPABILITIES.md](CAPABILITIES.md)
 - **Feature lifecycle state:** [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md) and [PLANNED-FEATURES.md](PLANNED-FEATURES.md)
+- **License:** GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`)
 
 This specification defines the repository-level implementation contract. It does not claim that planned functionality already exists.
 
@@ -150,11 +151,13 @@ No processing stack has yet been selected.
 
 Future dependency selection must prefer fully open-source, maintainable, replaceable technologies with clear licenses and acceptable security, recovery, portability, and self-hosting characteristics.
 
-## Licensing status
+## Licensing
 
-No repository license is currently present or approved.
+The project is licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
 
-Public repository visibility does not by itself grant an open-source license. Before distribution, release, or reuse claims are made, the project must adopt an approved recognized open-source license and document the licensing of material dependencies.
+This project-specific selection follows GoreeCloud's Software Licensing Policy. AGPL is appropriate because the planned architecture includes self-hosted browser access, REST and MCP service surfaces, asynchronous workflow workers, and multi-node processing in addition to standalone application workflows.
+
+Material dependencies and third-party components must be reviewed for compatibility before adoption and must retain required copyright, license, attribution, and provenance notices.
 
 ## Observability and operations
 
@@ -193,7 +196,7 @@ A merged pull request or green source-level test run must not be represented as 
 
 The project is not Stable, released, production-ready, or production-validated.
 
-Those states require applicable implementation, security, privacy, dependency, licensing, deployment, recovery, accessibility, and runtime acceptance evidence.
+Those states require applicable implementation, security, privacy, dependency and third-party licensing, deployment, recovery, accessibility, and runtime acceptance evidence.
 
 ## Related records
 
