@@ -1,4 +1,4 @@
-//! Security-conscious PDF input preflight for GoreeCloud PDF Manager.
+//! Security-conscious PDF input preflight for `GoreeCloud` PDF Manager.
 //!
 //! This crate intentionally uses only the Rust standard library. The initial
 //! boundary performs bounded structural hints before a future PDF engine is
@@ -121,9 +121,9 @@ impl From<io::Error> for PreflightError {
 ///
 /// # Errors
 ///
-/// Returns PreflightError::InputTooLarge when the file exceeds
-/// max_input_bytes, structural errors when the bounded header inspection
-/// fails, or PreflightError::Io when filesystem operations fail.
+/// Returns an input-too-large error when the file exceeds the configured
+/// maximum, a structural error when the bounded header inspection fails, or
+/// an I/O preflight error when filesystem operations fail.
 pub fn preflight_path(
     path: impl AsRef<Path>,
     max_input_bytes: u64,
@@ -139,7 +139,7 @@ pub fn preflight_path(
     let tail_len = bounded_len(size_bytes, EOF_SCAN_BYTES);
     let mut tail = vec![0_u8; tail_len];
     if tail_len > 0 {
-        let tail_offset = i64::try_from(tail_len).expect("tail scan length fits in i64");
+        let tail_offset = i64::try_from(tail_len).unwrap_or(i64::MAX);
         file.seek(SeekFrom::End(-tail_offset))?;
         file.read_exact(&mut tail)?;
     }
@@ -154,12 +154,12 @@ pub fn preflight_path(
 ///
 /// # Errors
 ///
-/// Returns PreflightError::InputTooLarge when the input exceeds
-/// max_input_bytes, PreflightError::PdfHeaderNotFound when no header is found
-/// in the first 1024 bytes, or PreflightError::InvalidVersion when the header
-/// version token is malformed.
+/// Returns an input-too-large error when the input exceeds the configured
+/// maximum, a missing-header error when no header is found in the first 1024
+/// bytes, or an invalid-version error when the header version token is
+/// malformed.
 pub fn preflight_bytes(bytes: &[u8], max_input_bytes: u64) -> Result<PdfPreflight, PreflightError> {
-    let size_bytes = u64::try_from(bytes.len()).expect("slice length fits in u64");
+    let size_bytes = u64::try_from(bytes.len()).unwrap_or(u64::MAX);
     ensure_size_within_limit(size_bytes, max_input_bytes)?;
 
     let head_end = bytes.len().min(HEADER_SCAN_BYTES);
@@ -178,8 +178,8 @@ fn ensure_size_within_limit(size_bytes: u64, max_input_bytes: u64) -> Result<(),
 }
 
 fn bounded_len(size_bytes: u64, bound: usize) -> usize {
-    let bound = u64::try_from(bound).expect("scan bound fits in u64");
-    usize::try_from(size_bytes.min(bound)).expect("bounded scan length fits in usize")
+    let bound_u64 = u64::try_from(bound).unwrap_or(u64::MAX);
+    usize::try_from(size_bytes.min(bound_u64)).unwrap_or(bound)
 }
 
 fn inspect_windows(
