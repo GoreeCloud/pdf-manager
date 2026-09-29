@@ -46,6 +46,27 @@ Repository inspection also confirmed that no license file is present. Licensing 
 
 **Evidence:** [Pull request #2](https://github.com/GoreeCloud/pdf-manager/pull/2).
 
+### 2026-09-28 — Repository controls and canonical lifecycle reconciled
+
+The repository was reconciled to the current mandatory repository-control baseline and canonical lifecycle model.
+
+Added controls:
+
+- `BRANDING.md`.
+- `USER-MANUAL.md`.
+- `SECURITY.md`.
+- `NOTES.md`.
+- `.gitignore`.
+- `.editorconfig`.
+- `goreecloud.platform.yaml`.
+- `RIGHTS.md` as an interim no-license-grant rights notice.
+
+The lifecycle classification was corrected to **Seed**, while implementation status remains explicitly pre-implementation. The Platform Contract declaration evaluates all nine Integral Platform Systems as applicable but blocked/unaccepted and does not claim any runtime conformance.
+
+A recognized open-source software license remains an open prerequisite.
+
+**Evidence:** [Pull request #3](https://github.com/GoreeCloud/pdf-manager/pull/3).
+
 ## Maintenance rule
 
 Record significant implementation milestones, architectural transitions, security/privacy changes, major integrations, release-state transitions, production deployments, migrations, major incidents, and other material project events here with concrete dates and evidence where available.
