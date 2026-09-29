@@ -158,10 +158,7 @@ pub fn preflight_path(
 /// max_input_bytes, PreflightError::PdfHeaderNotFound when no header is found
 /// in the first 1024 bytes, or PreflightError::InvalidVersion when the header
 /// version token is malformed.
-pub fn preflight_bytes(
-    bytes: &[u8],
-    max_input_bytes: u64,
-) -> Result<PdfPreflight, PreflightError> {
+pub fn preflight_bytes(bytes: &[u8], max_input_bytes: u64) -> Result<PdfPreflight, PreflightError> {
     let size_bytes = u64::try_from(bytes.len()).expect("slice length fits in u64");
     ensure_size_within_limit(size_bytes, max_input_bytes)?;
 
@@ -213,9 +210,7 @@ fn parse_version(head: &[u8], header_offset: usize) -> Result<String, PreflightE
         .get(version_start..version_end)
         .ok_or(PreflightError::InvalidVersion)?;
 
-    let valid = version[0].is_ascii_digit()
-        && version[1] == b'.'
-        && version[2].is_ascii_digit();
+    let valid = version[0].is_ascii_digit() && version[1] == b'.' && version[2].is_ascii_digit();
 
     if !valid {
         return Err(PreflightError::InvalidVersion);
