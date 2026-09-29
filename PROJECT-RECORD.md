@@ -28,6 +28,8 @@ The planned scope includes PDF editing, page management, reading, annotations, f
 
 No production or implementation capability was claimed by this documentation event.
 
+**Evidence:** [Pull request #1](https://github.com/GoreeCloud/pdf-manager/pull/1), based on initial `main` commit `4225e25cede6d77360e48d61e959ae2e8d357e4c`.
+
 ## Maintenance rule
 
 Record significant implementation milestones, architectural transitions, security/privacy changes, major integrations, release-state transitions, production deployments, migrations, major incidents, and other material project events here with concrete dates and evidence where available.
