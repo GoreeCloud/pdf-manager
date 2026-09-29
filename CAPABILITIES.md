@@ -2,7 +2,7 @@
 
 ## Overview
 
-GoreeCloud PDF Manager is currently in a planned, pre-implementation state.
+GoreeCloud PDF Manager is currently in the **Seed** lifecycle stage with a pre-implementation implementation state.
 
 As of September 28, 2026, no PDF-processing application capability is verified in this repository. This file intentionally describes only the current evidence-backed state and does not restate planned functionality as available behavior.
 
