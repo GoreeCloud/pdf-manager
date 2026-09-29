@@ -9,7 +9,7 @@ members = [
 edition = "2024"
 license = "AGPL-3.0-or-later"
 rust-version = "1.85.1"
-version = "0.0.1-seed"
+version = "0.0.1-lab"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
