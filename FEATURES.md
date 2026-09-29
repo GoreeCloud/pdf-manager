@@ -2,13 +2,17 @@
 
 ## Current Features
 
-No GoreeCloud PDF Manager application features are currently verified as implemented.
+No end-user GoreeCloud PDF Manager product feature is currently verified as complete.
 
-The repository presently provides documentation and product-governance records only. Current verified capability state is maintained in [CAPABILITIES.md](CAPABILITIES.md) and [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md).
+The repository does contain an exploratory native development foundation: bounded PDF preflight implemented in Rust and exposed through a development-only CLI. See [CAPABILITIES.md](CAPABILITIES.md) and [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md).
 
 ## Experimental or Partial Features
 
-None are currently verified.
+### Bounded PDF preflight foundation
+
+The current exploratory implementation can size-gate an input, identify a PDF header within a bounded prefix, parse its version token, and report an EOF-marker hint from a bounded tail scan.
+
+It must not be represented as full validation, sanitization, security scanning, repair, or a user-facing document inspection feature.
 
 ## Planned Features
 
