@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+### Repository controls and lifecycle reconciliation — 2026-09-28
+
+- Added mandatory `BRANDING.md`, `USER-MANUAL.md`, `SECURITY.md`, `NOTES.md`, `.gitignore`, `.editorconfig`, and `goreecloud.platform.yaml` repository controls.
+- Added `RIGHTS.md` as an interim no-license-grant rights notice while the required recognized open-source license decision remains open.
+- Reconciled the project to the canonical **Seed** lifecycle terminology while keeping implementation status explicitly pre-implementation.
+- Added a truthful nine-system Platform Contract declaration with every runtime integration blocked/unverified.
+- Kept all user-facing and production capabilities unclaimed.
+
+No application implementation, release, deployment, production acceptance, or open-source license grant is represented by these changes.
+
+
 ### Documentation baseline — 2026-09-28
 
 - Added the mandatory repository-level `SPECIFICATIONS.md`.

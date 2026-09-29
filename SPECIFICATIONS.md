@@ -4,7 +4,8 @@
 
 - **Product:** GoreeCloud PDF Manager
 - **Repository:** `GoreeCloud/pdf-manager`
-- **Repository state:** Planned / pre-implementation
+- **Lifecycle:** Seed
+- **Implementation state:** Pre-implementation
 - **Canonical repository-level technical specification:** This file
 - **Detailed project scope and feature requirements:** [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md)
 - **Verified current capability state:** [CAPABILITIES.md](CAPABILITIES.md)
