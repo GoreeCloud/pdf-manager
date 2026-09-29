@@ -1,4 +1,4 @@
-//! Development command-line interface for GoreeCloud PDF Manager.
+//! Development command-line interface for `GoreeCloud` PDF Manager.
 //!
 //! This is not the planned end-user application. It exposes the first bounded
 //! PDF preflight capability for development, testing, and future service
