@@ -2,6 +2,8 @@
 
 ## Status
 
+**Lifecycle:** Seed
+
 All entries in this file are **planned** as of September 28, 2026. The repository does not yet contain an implementation that validates these capabilities.
 
 Detailed normative requirements are maintained in [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md).
