@@ -2,9 +2,9 @@
 
 ## Status
 
-**Lifecycle:** Seed
+**Lifecycle:** Lab
 
-All entries in this file are **planned** as of September 28, 2026. The repository does not yet contain an implementation that validates these capabilities.
+All 30 product capability areas in this file remain **planned** as of September 28, 2026. The bounded PDF preflight foundation does not satisfy any full product capability area below.
 
 Detailed normative requirements are maintained in [PROJECT-SPECIFICATIONS.md](PROJECT-SPECIFICATIONS.md).
 
