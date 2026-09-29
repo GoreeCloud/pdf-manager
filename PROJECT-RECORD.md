@@ -43,6 +43,8 @@ The records explicitly preserve the pre-implementation boundary. Competitive obj
 
 Repository inspection also confirmed that no license file is present. Licensing remains an open release prerequisite rather than being silently inferred from public repository visibility.
 
+**Evidence:** [Pull request #2](https://github.com/GoreeCloud/pdf-manager/pull/2).
+
 ## Maintenance rule
 
 Record significant implementation milestones, architectural transitions, security/privacy changes, major integrations, release-state transitions, production deployments, migrations, major incidents, and other material project events here with concrete dates and evidence where available.
