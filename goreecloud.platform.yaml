@@ -1,0 +1,147 @@
+# GoreeCloud PDF Manager Platform Contract declaration
+# Seed-stage declaration: documentation does not prove runtime integration or acceptance.
+
+schema_version: "0.4"
+
+component:
+  type: application
+  id: goreecloud-pdf-manager
+  product_name: GoreeCloud PDF Manager
+  repository: GoreeCloud/pdf-manager
+
+# Canonical Platform Contract v2.0 lifecycle classification.
+lifecycle: seed
+version: "0.0.0-seed"
+
+supported_platforms: []
+
+api:
+  versions: []
+  endpoints: []
+
+platform_systems:
+  manager:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+    notes: Central administration, inventory, configuration, diagnostics, limits, and lifecycle integration are planned but not implemented or accepted.
+
+  privacy_shield:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+      - PROJECT-SPECIFICATIONS.md
+    notes: Privacy requirements are documented; no Privacy Shield runtime adapter, policy evidence, or product acceptance exists.
+
+  wardveil_security:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SECURITY.md
+      - SPECIFICATIONS.md
+    notes: Document-security requirements are documented; no Wardveil runtime integration, sandbox, scanner adapter, or product acceptance exists.
+
+  everkeep:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+      - PLANNED-FEATURES.md
+    notes: Backup, restore, continuity, preservation, and recovery requirements are planned but not implemented or accepted.
+
+  glaze_ui:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - BRANDING.md
+      - SPECIFICATIONS.md
+    notes: Glaze UI is required for future user-facing surfaces; no runtime UI, Stable contract pin, rendered validation, accessibility acceptance, or representative-device evidence exists.
+
+  mesh:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+    notes: Cross-application capability discovery and coordination are planned but not implemented or accepted.
+    capabilities: []
+    dependencies: []
+    published_events: []
+    consumed_events: []
+
+  identity:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+      - PROJECT-SPECIFICATIONS.md
+    notes: Local and SSO account requirements are planned; no GoreeCloud Identity authentication, session, authorization, or workload integration exists.
+
+  policy:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+    notes: Shared policy representation, evaluation, explanation, enforcement coordination, and evidence are not implemented or accepted.
+
+  observability:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - SPECIFICATIONS.md
+    notes: Health, metrics, logs, events, traces, diagnostics, performance, dependency-health, and operational-evidence integration are not implemented or accepted.
+
+health:
+  health_endpoint: null
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Define and verify backup scope for persistent document-library state before any production dependency exists.
+      - Separate application metadata/state protection from protection of user-owned original documents where their storage authority differs.
+  restore:
+    required: true
+    requirements:
+      - Validate clean-environment restoration, integrity, authorization, retention, and document accessibility before recovery-ready claims.
+  export:
+    required: true
+    requirements:
+      - Provide user-controlled export for stored documents, relevant metadata, annotations, workflows, and configuration where applicable.
+  portability:
+    required: true
+    requirements:
+      - Preserve ordinary interoperable document formats and avoid making GoreeCloud PDF Manager a prerequisite for continued access to user documents.
+
+external_dependencies: []
+
+compatibility:
+  platform_contract: "0.4"
+  requires:
+    - goreecloud-platform-contract==0.4
+  provides: []
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - SPECIFICATIONS.md
+    - IMPLEMENTED-FEATURES.md
+    - PLANNED-FEATURES.md
+    - SECURITY.md
+    - BRANDING.md
+    - goreecloud.platform.yaml
+  blockers:
+    - No application implementation or supported runtime exists.
+    - No Integral Platform System runtime integration or product acceptance exists.
+    - No selected implementation stack, dependency foundation, or processing sandbox exists.
+    - No automated test or representative document fixture suite exists.
+    - No deployment, backup/restore, accessibility, security, privacy, or representative-runtime acceptance evidence exists.
+    - A recognized open-source software license has not yet been approved; RIGHTS.md is the interim no-license-grant rights notice.
