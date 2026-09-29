@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+### Licensing — 2026-09-28
+
+- Selected `AGPL-3.0-or-later` under the GoreeCloud Software Licensing Policy.
+- Added a root `LICENSE` rights grant.
+- Reconciled `RIGHTS.md`, README, specifications, benefits, and the Platform Contract licensing blocker.
+- Preserved the requirement to review future third-party dependencies for license compatibility and notices.
+
+This licensing change does not represent application implementation, release, deployment, or production validation.
+
 ### Repository controls and lifecycle reconciliation — 2026-09-28
 
 - Added mandatory `BRANDING.md`, `USER-MANUAL.md`, `SECURITY.md`, `NOTES.md`, `.gitignore`, `.editorconfig`, and `goreecloud.platform.yaml` repository controls.

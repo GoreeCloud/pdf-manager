@@ -17,9 +17,11 @@ The requirements below define intended functionality. They are not claims of cur
 
 [SPECIFICATIONS.md](SPECIFICATIONS.md) is the canonical repository-level technical specification and implementation contract. This file remains the detailed project-scope and normative product-requirements record. Current implementation state is controlled by evidence and the current-state records, including [CAPABILITIES.md](CAPABILITIES.md) and [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md).
 
-### Licensing status
+### Licensing
 
-No recognized open-source software license is currently present or approved. `RIGHTS.md` is the interim no-license-grant rights notice. The project must adopt a recognized open-source license and document material dependency licensing before release or redistribution claims are made.
+GoreeCloud PDF Manager is licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`). See [LICENSE](LICENSE).
+
+The selection follows GoreeCloud's Software Licensing Policy and fits the planned combination of self-hosted network interaction, REST/MCP service surfaces, automation workers, multi-node processing, and standalone application workflows. Material dependencies must be checked for license compatibility and required third-party notices as implementation begins.
 
 ## 2. Product purpose
 

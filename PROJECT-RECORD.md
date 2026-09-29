@@ -63,9 +63,19 @@ Added controls:
 
 The lifecycle classification was corrected to **Seed**, while implementation status remains explicitly pre-implementation. The Platform Contract declaration evaluates all nine Integral Platform Systems as applicable but blocked/unaccepted and does not claim any runtime conformance.
 
-A recognized open-source software license remains an open prerequisite.
+A recognized open-source software license remained an open prerequisite at this point.
 
 **Evidence:** [Pull request #3](https://github.com/GoreeCloud/pdf-manager/pull/3).
+
+### 2026-09-28 — Project license selected
+
+The project license was selected as **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`) under GoreeCloud's Software Licensing Policy.
+
+The selection fits the planned architecture because PDF Manager is intended to provide self-hosted browser access, REST and MCP service surfaces, workflow workers, and multi-node processing in addition to standalone application use. The Affero network-source requirement aligns with GoreeCloud's objective that modified hosted versions remain source-available to their users.
+
+No third-party implementation dependencies are currently present in the repository. Future dependencies must be reviewed for compatibility and required notices.
+
+**Evidence:** [Pull request #4](https://github.com/GoreeCloud/pdf-manager/pull/4).
 
 ## Maintenance rule
 
