@@ -6,7 +6,7 @@
 
 #![forbid(unsafe_code)]
 
-use goreecloud_pdf_core::{DEFAULT_MAX_INPUT_BYTES, PreflightError, preflight_path};
+use goreecloud_pdf_core::{DEFAULT_MAX_INPUT_BYTES, preflight_path};
 use std::borrow::Cow;
 use std::env;
 use std::ffi::OsString;
@@ -14,7 +14,8 @@ use std::path::PathBuf;
 use std::process::ExitCode;
 
 fn main() -> ExitCode {
-    match run(env::args_os().collect()) {
+    let args: Vec<OsString> = env::args_os().collect();
+    match run(&args) {
         Ok(()) => ExitCode::SUCCESS,
         Err(error) => {
             eprintln!("error: {error}");
@@ -23,7 +24,7 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(args: Vec<OsString>) -> Result<(), String> {
+fn run(args: &[OsString]) -> Result<(), String> {
     let program: Cow<'_, str> = args.first().map_or_else(
         || Cow::Borrowed("pdf-manager-cli"),
         |value| value.to_string_lossy(),
@@ -79,7 +80,7 @@ fn run_inspect(args: &[OsString]) -> Result<(), String> {
         }
     }
 
-    let result = preflight_path(&path, max_input_bytes).map_err(format_preflight_error)?;
+    let result = preflight_path(&path, max_input_bytes).map_err(|error| error.to_string())?;
 
     println!("pdf_version={}", result.version());
     println!("size_bytes={}", result.size_bytes());
@@ -88,9 +89,6 @@ fn run_inspect(args: &[OsString]) -> Result<(), String> {
     Ok(())
 }
 
-fn format_preflight_error(error: PreflightError) -> String {
-    error.to_string()
-}
 
 fn print_help(program: &str) {
     println!(
@@ -110,20 +108,20 @@ mod tests {
     fn help_without_arguments_succeeds() {
         let args = vec![OsString::from("pdf-manager-cli")];
 
-        assert!(run(args).is_ok());
+        assert!(run(&args).is_ok());
     }
 
     #[test]
     fn inspect_requires_a_path() {
         let args = vec![OsString::from("pdf-manager-cli"), OsString::from("inspect")];
 
-        assert_eq!(run(args).unwrap_err(), "inspect requires a PDF path");
+        assert_eq!(run(&args).unwrap_err(), "inspect requires a PDF path");
     }
 
     #[test]
     fn unknown_commands_fail() {
         let args = vec![OsString::from("pdf-manager-cli"), OsString::from("nope")];
 
-        assert!(run(args).unwrap_err().contains("unknown command"));
+        assert!(run(&args).unwrap_err().contains("unknown command"));
     }
 }
