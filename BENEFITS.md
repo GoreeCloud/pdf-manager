@@ -2,7 +2,7 @@
 
 ## Current verified benefits
 
-GoreeCloud PDF Manager is in the Seed lifecycle stage and remains pre-implementation, so no user-facing PDF-processing benefit is currently claimed.
+GoreeCloud PDF Manager is in the Lab lifecycle stage with only an exploratory native preflight foundation, so no end-user PDF-processing benefit is currently claimed.
 
 The repository baseline does provide two verified project-development benefits:
 
