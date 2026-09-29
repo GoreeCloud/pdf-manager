@@ -5,9 +5,9 @@
 - **Project:** GoreeCloud PDF Manager
 - **Repository:** `GoreeCloud/pdf-manager`
 - **Project type:** Application and document-processing platform
-- **Lifecycle status:** Planned / pre-implementation
+- **Lifecycle status:** Seed
 - **Authority:** This repository is the authoritative project-specification source.
-- **Implementation state:** No application implementation is verified as of September 28, 2026.
+- **Implementation state:** Pre-implementation; no application implementation is verified as of September 28, 2026.
 - **Deployment model:** Privacy-focused and self-hosted by default, with optional governed integrations.
 - **Primary role:** Standalone PDF application and shared PDF-processing foundation for the GoreeCloud ecosystem.
 
@@ -19,7 +19,7 @@ The requirements below define intended functionality. They are not claims of cur
 
 ### Licensing status
 
-No repository license is currently present or approved. The project must adopt a recognized open-source license and document material dependency licensing before release or redistribution claims are made.
+No recognized open-source software license is currently present or approved. `RIGHTS.md` is the interim no-license-grant rights notice. The project must adopt a recognized open-source license and document material dependency licensing before release or redistribution claims are made.
 
 ## 2. Product purpose
 
