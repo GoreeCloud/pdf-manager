@@ -2,7 +2,7 @@
 
 ## Current lifecycle
 
-GoreeCloud PDF Manager is in the **Seed** lifecycle stage while the first native implementation foundation is being established.
+GoreeCloud PDF Manager is in the **Lab** lifecycle stage. The native implementation is exploratory and currently limited to the bounded PDF preflight foundation and its development CLI.
 
 This document describes the current source architecture and near-term boundaries. It does not claim the planned PDF Manager product is complete, released, deployed, or production-accepted.
 
