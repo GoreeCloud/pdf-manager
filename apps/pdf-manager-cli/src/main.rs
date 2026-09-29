@@ -24,9 +24,10 @@ fn main() -> ExitCode {
 }
 
 fn run(args: Vec<OsString>) -> Result<(), String> {
-    let program: Cow<'_, str> = args
-        .first()
-        .map_or_else(|| Cow::Borrowed("pdf-manager-cli"), |value| value.to_string_lossy());
+    let program: Cow<'_, str> = args.first().map_or_else(
+        || Cow::Borrowed("pdf-manager-cli"),
+        |value| value.to_string_lossy(),
+    );
 
     if args.len() == 1 {
         print_help(&program);
@@ -114,10 +115,7 @@ mod tests {
 
     #[test]
     fn inspect_requires_a_path() {
-        let args = vec![
-            OsString::from("pdf-manager-cli"),
-            OsString::from("inspect"),
-        ];
+        let args = vec![OsString::from("pdf-manager-cli"), OsString::from("inspect")];
 
         assert_eq!(run(args).unwrap_err(), "inspect requires a PDF path");
     }
