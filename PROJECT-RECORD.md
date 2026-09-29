@@ -5,7 +5,8 @@
 - **Repository:** `GoreeCloud/pdf-manager`
 - **Default branch:** `main`
 - **Project role:** Planned GoreeCloud PDF and document-processing platform
-- **Current lifecycle state:** Planned / pre-implementation
+- **Current lifecycle state:** Seed
+- **Implementation state:** Pre-implementation
 
 ## Significant project record
 
