@@ -47,7 +47,7 @@ Subject to implementation and validation:
 
 ## Planned ownership and independence benefits
 
-Subject to final architecture and licensing:
+Subject to final architecture and dependency-license compatibility:
 
 - Self-hosted operation.
 - Open-source implementation and inspectable source.
