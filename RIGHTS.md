@@ -1,11 +1,11 @@
-# GoreeCloud PDF Manager — Rights Notice
+# GoreeCloud PDF Manager — Rights and Licensing Notice
 
-Copyright © 2026 GoreeCloud. All rights reserved unless and until a separate license file or other authoritative rights record explicitly grants additional permissions.
+Copyright © 2026 GoreeCloud.
 
-A recognized open-source software license has **not** yet been selected for this repository. Public repository visibility and the presence of source or documentation do not by themselves establish an open-source license grant.
+GoreeCloud PDF Manager is licensed under the **GNU Affero General Public License v3.0 or later** (`AGPL-3.0-or-later`).
 
-GoreeCloud governance requires a recognized open-source licensing decision before this project may be represented as an open-source software release.
+The root [LICENSE](LICENSE) file is the authoritative repository license record. This rights notice summarizes that license selection and does not replace or narrow the rights granted by the governing license.
 
-Third-party material, if introduced later, must retain its applicable copyright, license, attribution, and provenance requirements.
+The repository remains in the **Seed** lifecycle stage with a pre-implementation implementation state. The presence of an open-source license does not imply that a usable PDF-processing application, release, deployment, or production-validated capability exists.
 
-This notice must be reconciled or replaced when the long-term software license is formally approved.
+Third-party material, dependencies, assets, and incorporated components remain subject to their applicable copyright, license, attribution, provenance, and redistribution requirements. Nothing in the GoreeCloud PDF Manager project license relicenses third-party material beyond the rights granted by its respective rights holders.
