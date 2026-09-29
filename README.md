@@ -4,9 +4,9 @@ GoreeCloud PDF Manager is a planned privacy-focused, self-hosted PDF and documen
 
 ## Project status
 
-**Lifecycle:** Planned / pre-implementation
+**Lifecycle:** Seed
 
-As of September 28, 2026, the repository does not contain an application implementation. The documented product scope is planned functionality and must not be represented as currently available until implementation and validation evidence exists.
+As of September 28, 2026, the repository does not contain an application implementation. The implementation status is pre-implementation. The documented product scope is planned functionality and must not be represented as currently available until implementation and validation evidence exists.
 
 ## Repository documentation
 
@@ -20,6 +20,12 @@ As of September 28, 2026, the repository does not contain an application impleme
 - [IMPLEMENTED-FEATURES.md](IMPLEMENTED-FEATURES.md) — evidence-backed implemented feature inventory.
 - [CAPABILITIES.md](CAPABILITIES.md) — current verified capability state.
 - [CHANGELOGS.md](CHANGELOGS.md) — meaningful repository change history.
+- [BRANDING.md](BRANDING.md) — canonical product naming and visual-identity boundaries.
+- [USER-MANUAL.md](USER-MANUAL.md) — Seed-stage availability boundary and intended workflow model.
+- [SECURITY.md](SECURITY.md) — repository-safe security and vulnerability guidance.
+- [NOTES.md](NOTES.md) — repository working notes.
+- [goreecloud.platform.yaml](goreecloud.platform.yaml) — machine-readable Platform Contract declaration.
+- [RIGHTS.md](RIGHTS.md) — interim no-license-grant rights notice.
 
 ## Product role
 
@@ -31,4 +37,4 @@ No PDF editing, conversion, OCR, scanning, forms, signatures, redaction, documen
 
 ## License status
 
-No repository license is currently present or approved. Public visibility does not by itself grant an open-source license. A recognized open-source license must be selected and documented before release or redistribution claims are made.
+No recognized open-source software license is currently present or approved. An interim no-license-grant rights notice is maintained in [RIGHTS.md](RIGHTS.md). Public visibility does not by itself grant an open-source license. A recognized open-source license must be selected and documented before release or redistribution claims are made.
