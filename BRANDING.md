@@ -6,8 +6,8 @@
 - **Approved short application label:** PDF Manager
 - **Brand relationship:** Prefixed GoreeCloud family product
 - **Repository:** `GoreeCloud/pdf-manager`
-- **Lifecycle:** Seed
-- **Implementation status:** Pre-implementation
+- **Lifecycle:** Lab
+- **Implementation status:** Exploratory native foundation
 
 The full canonical name should be used in repository documentation, product records, release material, provenance, About/legal surfaces, and other contexts where GoreeCloud ownership matters.
 
