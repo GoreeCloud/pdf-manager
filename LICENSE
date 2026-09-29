@@ -1,0 +1,24 @@
+GoreeCloud PDF Manager
+Copyright (C) 2026 GoreeCloud
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+This project is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as published by
+the Free Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+This project is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this project. If not, see <https://www.gnu.org/licenses/>.
+
+The governing SPDX expression is AGPL-3.0-or-later.
+
+Third-party components, when introduced, remain subject to their own
+licenses, copyright notices, attribution requirements, and provenance.
+Nothing in this file relicenses third-party material beyond the rights
+granted by its respective copyright holders.
