@@ -1,0 +1,8 @@
+{
+  "schema_version": "1",
+  "source": "GoreeCloud/branding-assets",
+  "tree_revision": "8baba9c3b2761b5c4ff10a4f8ca4b46ebe9894c9",
+  "asset": "products/pdf-manager/app-icon.svg",
+  "blob": "0da0138e02fcca224a0fb5363640da42bb547309",
+  "local_path": "app/core/src/main/resources/static/goreecloud/pdf-manager-mark.svg"
+}

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" content="#f5efe8">
+  <meta name="description" content="GoreeCloud PDF Manager — self-hosted PDF organization, conversion, optimization, and security tools.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <title>GoreeCloud PDF Manager</title>
+  <link rel="icon" href="/goreecloud/pdf-manager-mark.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/goreecloud/glaze/css/glaze.css">
+  <link rel="stylesheet" href="/goreecloud/pdf-manager.css">
+</head>
+<body class="glaze-canvas">
+  <a class="skip-link" href="#main">Skip to PDF tools</a>
+  <div class="app-shell">
+    <header class="topbar glaze-surface">
+      <a class="brand" href="/" aria-label="GoreeCloud PDF Manager home">
+        <img src="/goreecloud/pdf-manager-mark.svg" alt="" width="38" height="38">
+        <span><b>GoreeCloud</b><strong>PDF Manager</strong></span>
+      </a>
+      <div class="top-actions">
+        <span class="glaze-badge">Forge</span>
+        <a class="glaze-button link-button" href="/swagger-ui/index.html">API</a>
+        <button class="glaze-icon-button" id="themeToggle" type="button" aria-label="Toggle appearance" title="Toggle appearance">
+          <svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.64 5.64l1.56 1.56M16.8 16.8l1.56 1.56M18.36 5.64 16.8 7.2M7.2 16.8l-1.56 1.56"/><circle cx="12" cy="12" r="4.2"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <aside class="sidebar glaze-surface" aria-label="PDF Manager navigation">
+      <nav id="categoryNav">
+        <button class="glaze-nav-item nav-button" data-category="all" aria-current="page">Overview</button>
+        <button class="glaze-nav-item nav-button" data-category="organize">Organize</button>
+        <button class="glaze-nav-item nav-button" data-category="optimize">Optimize</button>
+        <button class="glaze-nav-item nav-button" data-category="convert">Convert</button>
+        <button class="glaze-nav-item nav-button" data-category="edit">Edit</button>
+        <button class="glaze-nav-item nav-button" data-category="protect">Protect</button>
+        <button class="glaze-nav-item nav-button" data-category="automate">Automate</button>
+      </nav>
+      <div class="sidebar-note">
+        <span class="status-dot" aria-hidden="true"></span>
+        <p><b>Self-hosted processing</b><span>Core tools run on this PDF Manager server.</span></p>
+      </div>
+    </aside>
+
+    <main id="main" class="main-content" tabindex="-1">
+      <section class="hero">
+        <div>
+          <span class="eyebrow">Document workbench</span>
+          <h1>Your PDFs, organized around the task.</h1>
+          <p>Merge, split, rotate, optimize, extract, convert, and inspect documents without routing core workflows through a third-party file service.</p>
+        </div>
+        <div class="service-card glaze-surface">
+          <span class="eyebrow">Service</span>
+          <strong id="serviceState">Checking…</strong>
+          <small id="serviceDetail">Verifying the application endpoint.</small>
+        </div>
+      </section>
+
+      <section class="workspace glaze-surface" aria-labelledby="workspaceTitle">
+        <div class="section-row">
+          <div><span class="eyebrow">Workspace</span><h2 id="workspaceTitle">Add documents</h2></div>
+          <button class="glaze-button" id="clearFiles" type="button" disabled>Clear</button>
+        </div>
+        <label id="dropZone" class="drop-zone" for="fileInput">
+          <input id="fileInput" type="file" accept=".pdf,image/*" multiple>
+          <span class="drop-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
+          <strong>Drop PDFs or images here</strong>
+          <span>or choose files from this device</span>
+        </label>
+        <div id="fileQueue" class="file-queue" aria-live="polite"></div>
+      </section>
+
+      <section class="section-row tools-heading">
+        <div><span class="eyebrow">Tools</span><h2>Choose what happens next</h2></div>
+        <label class="search-box"><span class="sr-only">Search tools</span><input class="glaze-input" id="toolSearch" type="search" placeholder="Search PDF tools"></label>
+      </section>
+      <section id="toolGrid" class="tool-grid" aria-live="polite"></section>
+
+      <section class="trust-card glaze-surface">
+        <div><span class="eyebrow">Trust boundary</span><h2>Clear claims, not decorative promises.</h2></div>
+        <p>PDF Manager does not label a document private, encrypted, sanitized, signed, or protected merely because the interface shows an icon. Those states require evidence from the responsible processing or platform control.</p>
+        <a class="glaze-button link-button" href="/swagger-ui/index.html">Inspect API</a>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="toolDialog" class="tool-dialog glaze-overlay">
+    <form method="dialog" class="dialog-close"><button class="glaze-icon-button" aria-label="Close"><svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>
+    <div class="dialog-head">
+      <span class="eyebrow" id="toolDialogCategory">Tool</span>
+      <h2 id="toolDialogTitle">PDF tool</h2>
+      <p id="toolDialogDescription"></p>
+    </div>
+    <form id="toolForm" class="tool-form">
+      <div id="toolFields"></div>
+      <div class="dialog-actions">
+        <button id="runTool" class="glaze-button" data-variant="primary" type="submit">Run tool</button>
+        <a class="glaze-button link-button" href="/swagger-ui/index.html">API details</a>
+      </div>
+    </form>
+  </dialog>
+  <div id="toast" class="toast glaze-toast glaze-overlay" role="status" aria-live="polite" hidden></div>
+  <script type="module" src="/goreecloud/pdf-manager.js"></script>
+</body>
+</html>

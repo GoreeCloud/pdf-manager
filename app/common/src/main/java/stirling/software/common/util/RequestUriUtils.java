@@ -1,0 +1,226 @@
+package stirling.software.common.util;
+
+import java.util.regex.Pattern;
+
+public class RequestUriUtils {
+
+    // Share tokens are 36-char lowercase UUIDs (UUID.randomUUID().toString()); match exactly
+    private static final Pattern SHARE_LINK_PATTERN =
+            Pattern.compile(
+                    "^/share/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
+    // Invite tokens are 36-char lowercase UUIDs (UUID.randomUUID().toString()); match exactly
+    private static final Pattern INVITE_LINK_PATTERN =
+            Pattern.compile(
+                    "^/invite/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/?$");
+
+    public static boolean isStaticResource(String requestURI) {
+        return isStaticResource("", requestURI);
+    }
+
+    public static boolean isStaticResource(String contextPath, String requestURI) {
+        if (requestURI == null) {
+            return false;
+        }
+
+        String normalizedUri = stripContextPath(contextPath, requestURI);
+
+        // API routes are never static except for the public status endpoint
+        if (normalizedUri.startsWith("/api/")) {
+            return normalizedUri.startsWith("/api/v1/info/status");
+        }
+
+        // Well-known static asset directories (backend + React build artifacts)
+        if (normalizedUri.startsWith("/css/")
+                || normalizedUri.startsWith("/fonts/")
+                || normalizedUri.startsWith("/js/")
+                || normalizedUri.startsWith("/images/")
+                || normalizedUri.startsWith("/public/")
+                || normalizedUri.startsWith("/pdfjs/")
+                || normalizedUri.startsWith("/pdfium/")
+                || normalizedUri.startsWith("/assets/")
+                || normalizedUri.startsWith("/locales/")
+                || normalizedUri.startsWith("/Login/")
+                || normalizedUri.startsWith("/samples/")
+                || normalizedUri.startsWith("/modern-logo/")
+                || normalizedUri.startsWith("/og_images/")) {
+            return true;
+        }
+
+        // Specific static files bundled with the frontend
+        if ("/robots.txt".equals(normalizedUri)
+                || "/favicon.ico".equals(normalizedUri)
+                || "/manifest.json".equals(normalizedUri)
+                || "/site.webmanifest".equals(normalizedUri)
+                || "/index.html".equals(normalizedUri)) {
+            return true;
+        }
+
+        // Login/error pages remain public
+        if (normalizedUri.startsWith("/login") || normalizedUri.startsWith("/error")) {
+            return true;
+        }
+
+        // Mobile pages reached by scanning a QR code (peer-to-peer, no backend auth
+        // needed): /mobile-scanner uploads photos, /mobile-sign draws a signature.
+        if (normalizedUri.startsWith("/mobile-scanner")
+                || normalizedUri.startsWith("/mobile-sign")) {
+            return true;
+        }
+
+        // Admin portal SPA shell (mounted at /processor — must match the frontend
+        // PORTAL_BASENAME). Served publicly like the editor root so a direct nav /
+        // refresh to /processor loads the app (the JWT lives in localStorage, not a
+        // cookie, so the server can't authenticate the navigation itself). The
+        // portal gates access via its own auth gate + RequirePortalAccess, and its
+        // data APIs stay protected, so serving the shell pre-auth is safe.
+        if ("/processor".equals(normalizedUri) || normalizedUri.startsWith("/processor/")) {
+            return true;
+        }
+
+        // Treat common static file extensions as static resources
+        return normalizedUri.endsWith(".svg")
+                || normalizedUri.endsWith(".png")
+                || normalizedUri.endsWith(".ico")
+                || normalizedUri.endsWith(".txt")
+                || normalizedUri.endsWith(".webmanifest")
+                || normalizedUri.endsWith(".js")
+                || normalizedUri.endsWith(".css")
+                || normalizedUri.endsWith(".mjs")
+                || normalizedUri.endsWith(".html")
+                || normalizedUri.endsWith(".toml")
+                || normalizedUri.endsWith(".wasm");
+    }
+
+    public static boolean isFrontendRoute(String contextPath, String requestURI) {
+        if (requestURI == null) {
+            return false;
+        }
+
+        String normalizedUri = stripContextPath(contextPath, requestURI);
+
+        // APIs are never treated as frontend routes
+        if (normalizedUri.startsWith("/api/")) {
+            return false;
+        }
+
+        // Blocklist of backend/non-frontend paths that should still go through filters.
+        //
+        // `/files` was historically a backend route; it is now a frontend route
+        // owned by HomePage / FileManagerView. Direct-nav or refresh on /files
+        // (or /files/<folder-uuid>) was returning the Spring auth filter's 401
+        // JSON instead of serving index.html, so the SPA never got a chance to
+        // mount and the user saw a raw error response. There are no `/files`
+        // backend mappings at the servlet root - the real storage endpoints
+        // live under `/api/v1/storage/files`, which is filtered out a few lines
+        // up by the `startsWith("/api/")` guard.
+        String[] backendOnlyPrefixes = {
+            "/register",
+            "/pipeline",
+            "/pdfjs",
+            "/fonts",
+            "/images",
+            "/css",
+            "/js",
+            "/swagger",
+            "/v1/api-docs",
+            "/actuator"
+        };
+
+        for (String prefix : backendOnlyPrefixes) {
+            if (normalizedUri.equals(prefix) || normalizedUri.startsWith(prefix + "/")) {
+                return false;
+            }
+        }
+
+        if (normalizedUri.isBlank()) {
+            return false;
+        }
+
+        // Allow root and any extensionless path (React Router will handle these)
+        return !normalizedUri.contains(".");
+    }
+
+    public static boolean isTrackableResource(String requestURI) {
+        return isTrackableResource("", requestURI);
+    }
+
+    public static boolean isTrackableResource(String contextPath, String requestURI) {
+        return !(requestURI.startsWith("/js")
+                || requestURI.startsWith("/v1/api-docs")
+                || requestURI.endsWith("robots.txt")
+                || requestURI.startsWith("/images")
+                || requestURI.endsWith(".png")
+                || requestURI.endsWith(".ico")
+                || requestURI.endsWith(".css")
+                || requestURI.endsWith(".txt")
+                || requestURI.endsWith(".map")
+                || requestURI.endsWith(".svg")
+                || requestURI.endsWith("popularity.txt")
+                || requestURI.endsWith(".js")
+                || requestURI.endsWith(".toml")
+                || requestURI.endsWith(".wasm")
+                || requestURI.contains("swagger")
+                || requestURI.startsWith("/api/v1/info")
+                || requestURI.startsWith("/site.webmanifest")
+                || requestURI.startsWith("/fonts")
+                || requestURI.startsWith("/pdfjs")
+                || requestURI.startsWith("/pdfium"));
+    }
+
+    /**
+     * Checks if the request URI is a public authentication endpoint that doesn't require
+     * authentication. This includes login, signup, OAuth callbacks, and public config endpoints.
+     *
+     * @param requestURI The full request URI
+     * @param contextPath The servlet context path
+     * @return true if the endpoint is public and doesn't require authentication
+     */
+    public static boolean isPublicAuthEndpoint(String requestURI, String contextPath) {
+        // Remove context path from URI to normalize path matching
+        String trimmedUri =
+                requestURI.startsWith(contextPath)
+                        ? requestURI.substring(contextPath.length())
+                        : requestURI;
+
+        // Public auth endpoints that don't require authentication
+        return trimmedUri.startsWith("/login")
+                || trimmedUri.startsWith("/auth/")
+                || trimmedUri.startsWith("/oauth2")
+                || trimmedUri.startsWith("/saml2")
+                || trimmedUri.contains("/login/oauth2/code/") // Spring Security OAuth2 callback
+                || trimmedUri.contains("/oauth2/authorization/") // OAuth2 authorization endpoint
+                || trimmedUri.startsWith("/api/v1/auth/login")
+                || trimmedUri.startsWith("/api/v1/auth/refresh")
+                || trimmedUri.startsWith("/api/v1/auth/logout")
+                || trimmedUri.startsWith(
+                        "/api/v1/proprietary/ui-data/login") // Login page config (SSO providers +
+                // enableLogin)
+                || trimmedUri.startsWith(
+                        "/api/v1/ui-data/footer-info") // Public footer configuration
+                || trimmedUri.startsWith("/api/v1/invite/validate")
+                || trimmedUri.startsWith("/api/v1/invite/accept")
+                // Health Endpoints
+                || trimmedUri.startsWith("/actuator/health")
+                || trimmedUri.startsWith("/health")
+                || trimmedUri.startsWith("/healthz")
+                || trimmedUri.startsWith("/liveness")
+                || trimmedUri.startsWith("/readiness")
+                || trimmedUri.startsWith(
+                        "/api/v1/mobile-scanner/") // Mobile scanner endpoints (no auth)
+                || trimmedUri.startsWith("/api/v1/webhooks/")
+                || trimmedUri.startsWith("/v1/api-docs")
+                // Workflow participant endpoints - access controlled by share tokens, not login
+                || trimmedUri.startsWith("/api/v1/workflow/participant/")
+                // Share-link SPA bootstrap; data APIs remain protected
+                || SHARE_LINK_PATTERN.matcher(trimmedUri).matches()
+                // Invite-accept SPA bootstrap; data APIs remain protected
+                || INVITE_LINK_PATTERN.matcher(trimmedUri).matches();
+    }
+
+    private static String stripContextPath(String contextPath, String requestURI) {
+        if (contextPath != null && !contextPath.isBlank() && requestURI.startsWith(contextPath)) {
+            return requestURI.substring(contextPath.length());
+        }
+        return requestURI;
+    }
+}

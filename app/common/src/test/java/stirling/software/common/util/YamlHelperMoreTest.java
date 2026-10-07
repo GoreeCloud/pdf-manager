@@ -1,0 +1,463 @@
+package stirling.software.common.util;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.snakeyaml.engine.v2.api.LoadSettings;
+
+class YamlHelperMoreTest {
+
+    private static final LoadSettings LOAD_SETTINGS =
+            LoadSettings.builder()
+                    .setUseMarks(true)
+                    .setMaxAliasesForCollections(Integer.MAX_VALUE)
+                    .setAllowRecursiveKeys(true)
+                    .setParseComments(true)
+                    .build();
+
+    private YamlHelper helper(String yaml) {
+        return new YamlHelper(LOAD_SETTINGS, yaml);
+    }
+
+    @Nested
+    @DisplayName("updateValue value-type handling")
+    class UpdateValueTypes {
+
+        @Test
+        @DisplayName("updates an integer value with INT tag")
+        void integerValue() {
+            YamlHelper h = helper("server:\n  port: 80\n");
+            assertThat(h.updateValue(List.of("server", "port"), 8080)).isTrue();
+            assertThat(h.getValueByExactKeyPath("server", "port")).isEqualTo("8080");
+        }
+
+        @Test
+        @DisplayName("updates a float value")
+        void floatValue() {
+            YamlHelper h = helper("scale:\n  factor: 1.0\n");
+            assertThat(h.updateValue(List.of("scale", "factor"), 2.5f)).isTrue();
+            assertThat(String.valueOf(h.getValueByExactKeyPath("scale", "factor")))
+                    .startsWith("2.5");
+        }
+
+        @Test
+        @DisplayName("updates a boolean value via string literal")
+        void booleanValue() {
+            YamlHelper h = helper("flags:\n  on: false\n");
+            assertThat(h.updateValue(List.of("flags", "on"), "true")).isTrue();
+            assertThat(h.getValueByExactKeyPath("flags", "on")).isEqualTo("true");
+        }
+
+        @Test
+        @DisplayName("replaces a scalar with a Map value (MappingNode)")
+        void mapValue() {
+            YamlHelper h = helper("meta:\n  data: placeholder\n");
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("author", "alice");
+            map.put("year", 2024);
+            assertThat(h.updateValue(List.of("meta", "data"), map)).isTrue();
+            assertThat(h.getValueByExactKeyPath("meta", "data", "author")).isEqualTo("alice");
+            assertThat(h.getValueByExactKeyPath("meta", "data", "year")).isEqualTo("2024");
+        }
+
+        @Test
+        @DisplayName("merges a partial Map into an existing block, keeping siblings and comments")
+        void partialMapMergesIntoExistingBlock() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true # keep me\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing"), Map.of("emailEnabled", true))).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+            assertThat(h.convertNodeToYaml(h.getUpdatedRootNode())).contains("# keep me");
+        }
+
+        @Test
+        @DisplayName("a Map merge adds keys the existing block does not have")
+        void partialMapAddsUnknownKeys() {
+            YamlHelper h = helper("sharing:\n  enabled: false\n");
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("enabled", true);
+            values.put("emailEnabled", true);
+            assertThat(h.updateValue(List.of("sharing"), values)).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("true");
+        }
+
+        @Test
+        @DisplayName("a deep partial merge keeps every unrelated nested key, on disk too")
+        void deepMergeKeepsUnrelatedNestedKeys() {
+            YamlHelper h =
+                    helper(
+                            "oauth2:\n"
+                                    + "  enabled: false\n"
+                                    + "  client:\n"
+                                    + "    google:\n"
+                                    + "      clientId: OLD\n"
+                                    + "      clientSecret: SEC\n"
+                                    + "    github:\n"
+                                    + "      clientId: GH\n");
+            assertThat(
+                            h.updateValue(
+                                    List.of("oauth2"),
+                                    Map.of("client", Map.of("google", Map.of("clientId", "NEW")))))
+                    .isTrue();
+
+            // Re-parse the emitted YAML: the siblings must survive the round-trip to disk,
+            // not just the in-memory node tree.
+            YamlHelper reloaded = helper(h.convertNodeToYaml(h.getUpdatedRootNode()));
+            assertThat(reloaded.getValueByExactKeyPath("oauth2", "client", "google", "clientId"))
+                    .isEqualTo("NEW");
+            assertThat(
+                            reloaded.getValueByExactKeyPath(
+                                    "oauth2", "client", "google", "clientSecret"))
+                    .isEqualTo("SEC");
+            assertThat(reloaded.getValueByExactKeyPath("oauth2", "client", "github", "clientId"))
+                    .isEqualTo("GH");
+            assertThat(reloaded.getValueByExactKeyPath("oauth2", "enabled")).isEqualTo("false");
+        }
+
+        @Test
+        @DisplayName("a list inside a merge replaces the whole sequence instead of appending")
+        void listInsideMergeReplacesTheWholeSequence() {
+            YamlHelper h =
+                    helper(
+                            "mcp:\n"
+                                    + "  enabled: true\n"
+                                    + "  allowedOperations:\n"
+                                    + "    - a\n"
+                                    + "    - b\n");
+            assertThat(h.updateValue(List.of("mcp"), Map.of("allowedOperations", List.of("z"))))
+                    .isTrue();
+
+            // A security allowlist must still be shortenable, so the sequence is replaced.
+            List<?> operations = (List<?>) h.getValueByExactKeyPath("mcp", "allowedOperations");
+            assertThat(operations).hasSize(1);
+            assertThat(operations.getFirst()).isEqualTo("z");
+            assertThat(h.getValueByExactKeyPath("mcp", "enabled")).isEqualTo("true");
+        }
+
+        @Test
+        @DisplayName("a null entry in a merge writes null and does not delete the key")
+        void nullEntryDoesNotDeleteTheKey() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("emailEnabled", null);
+            assertThat(h.updateValue(List.of("sharing"), values)).isTrue();
+
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("null");
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+        }
+
+        @Test
+        @DisplayName("merging an empty map leaves every key in the block unchanged")
+        void emptyMapLeavesTheBlockUnchanged() {
+            YamlHelper h =
+                    helper(
+                            "sharing:\n"
+                                    + "  enabled: true\n"
+                                    + "  linkEnabled: true\n"
+                                    + "  emailEnabled: false\n"
+                                    + "  linkExpirationDays: 3\n");
+            h.updateValue(List.of("sharing"), Map.of());
+
+            assertThat(h.getValueByExactKeyPath("sharing", "enabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkEnabled")).isEqualTo("true");
+            assertThat(h.getValueByExactKeyPath("sharing", "emailEnabled")).isEqualTo("false");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("3");
+        }
+
+        @Test
+        @DisplayName("a non-numeric value does not inherit the existing INT tag")
+        void nonNumericValueDoesNotInheritIntTag() {
+            YamlHelper h = helper("sharing:\n  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing", "linkExpirationDays"), "notanumber"))
+                    .isTrue();
+
+            // !!int 'notanumber' would make settings.yml unloadable and brick the boot.
+            String dumped = h.convertNodeToYaml(h.getUpdatedRootNode());
+            assertThat(dumped).doesNotContain("!!int");
+            assertThat(helper(dumped).getValueByExactKeyPath("sharing", "linkExpirationDays"))
+                    .isEqualTo("notanumber");
+        }
+
+        @Test
+        @DisplayName("a null value does not inherit the existing INT tag")
+        void nullValueDoesNotInheritIntTag() {
+            YamlHelper h = helper("sharing:\n  linkExpirationDays: 3\n");
+            assertThat(h.updateValue(List.of("sharing", "linkExpirationDays"), null)).isTrue();
+
+            String dumped = h.convertNodeToYaml(h.getUpdatedRootNode());
+            assertThat(dumped).doesNotContain("!!int");
+            assertThat(h.getValueByExactKeyPath("sharing", "linkExpirationDays")).isEqualTo("null");
+        }
+
+        @Test
+        @DisplayName("replaces a scalar with a List value (SequenceNode)")
+        void listValue() {
+            YamlHelper h = helper("cfg:\n  items: x\n");
+            assertThat(h.updateValue(List.of("cfg", "items"), List.of("a", "b", "c"))).isTrue();
+            Object value = h.getValueByExactKeyPath("cfg", "items");
+            assertThat(value).isInstanceOf(List.class);
+            List<?> list = (List<?>) value;
+            assertThat(list).hasSize(3);
+            assertThat(list.toString()).contains("a").contains("b").contains("c");
+        }
+
+        @Test
+        @DisplayName("list with mixed scalar element types is converted")
+        void mixedListValue() {
+            YamlHelper h = helper("cfg:\n  vals: x\n");
+            assertThat(h.updateValue(List.of("cfg", "vals"), List.of("s", 1, 2.5, "true")))
+                    .isTrue();
+            Object value = h.getValueByExactKeyPath("cfg", "vals");
+            assertThat((List<?>) value).hasSize(4);
+        }
+
+        @Test
+        @DisplayName("updates a previously null scalar")
+        void nullScalarBecomesValue() {
+            YamlHelper h = helper("opt:\n  value:\n");
+            assertThat(h.updateValue(List.of("opt", "value"), "set")).isTrue();
+            assertThat(h.getValueByExactKeyPath("opt", "value")).isEqualTo("set");
+        }
+
+        @Test
+        @DisplayName("updates a null scalar to a boolean (BOOL tag promotion)")
+        void nullScalarBecomesBoolean() {
+            YamlHelper h = helper("opt:\n  enabled:\n");
+            assertThat(h.updateValue(List.of("opt", "enabled"), Boolean.TRUE)).isTrue();
+            assertThat(h.getValueByExactKeyPath("opt", "enabled")).isEqualTo("true");
+        }
+
+        @Test
+        @DisplayName("returns false when intermediate key path is not a mapping")
+        void nonMappingPathReturnsFalse() {
+            YamlHelper h = helper("server:\n  port: 80\n");
+            // 'port' is a scalar, so descending into it cannot update.
+            assertThat(h.updateValue(List.of("server", "port", "deeper"), "x")).isFalse();
+        }
+    }
+
+    @Nested
+    @DisplayName("updateValuesFromYaml")
+    class UpdateFromYaml {
+
+        @Test
+        @DisplayName("copies differing existing keys from source into target")
+        void copiesChangedValues() {
+            YamlHelper target = helper("server:\n  port: 80\n  host: localhost\n");
+            YamlHelper source = helper("server:\n  port: 9090\n  host: localhost\n");
+            boolean updated = target.updateValuesFromYaml(source, target);
+            assertThat(updated).isTrue();
+            assertThat(target.getValueByExactKeyPath("server", "port")).isEqualTo("9090");
+        }
+
+        @Test
+        @DisplayName("source keys absent from target are not added (no update)")
+        void unknownKeysIgnored() {
+            YamlHelper target = helper("server:\n  port: 80\n");
+            YamlHelper source = helper("server:\n  port: 80\n");
+            boolean updated = target.updateValuesFromYaml(source, target);
+            assertThat(updated).isFalse();
+            assertThat(target.getValueByExactKeyPath("server", "port")).isEqualTo("80");
+        }
+    }
+
+    @Nested
+    @DisplayName("save / saveOverride / node tracking")
+    class SaveAndNodes {
+
+        @Test
+        @DisplayName("save to the original path is a no-op write but returns the mapping")
+        void saveSamePathNoRewrite(@TempDir Path tempDir) throws IOException {
+            Path file = tempDir.resolve("orig.yaml");
+            Files.writeString(file, "a:\n  b: 1\n");
+            YamlHelper h = new YamlHelper(file);
+            h.updateValue(List.of("a", "b"), 2);
+            // Same path: method must not rewrite the file but still return a MappingNode.
+            assertThat(h.save(file)).isNotNull();
+        }
+
+        @Test
+        @DisplayName("saveOverride writes to disk")
+        void saveOverrideWrites(@TempDir Path tempDir) throws IOException {
+            YamlHelper h = helper("a:\n  b: 1\n");
+            h.updateValue(List.of("a", "b"), 42);
+            Path out = tempDir.resolve("out.yaml");
+            h.saveOverride(out);
+            assertThat(Files.readString(out)).contains("42");
+        }
+
+        @Test
+        @DisplayName("setNewNode then getUpdatedRootNode returns the set node")
+        void setAndGetNode() {
+            YamlHelper h = helper("a:\n  b: 1\n");
+            var root = h.getUpdatedRootNode();
+            h.setNewNode(root);
+            assertThat(h.getUpdatedRootNode()).isSameAs(root);
+        }
+    }
+
+    @Nested
+    @DisplayName("static numeric type checks")
+    class NumericChecks {
+
+        @Test
+        @DisplayName("isShort / isByte accept Long and parsable strings")
+        void shortAndByte() {
+            assertThat(YamlHelper.isShort(5L)).isTrue();
+            assertThat(YamlHelper.isShort("100")).isTrue();
+            assertThat(YamlHelper.isShort("notNumeric")).isFalse();
+            assertThat(YamlHelper.isByte(1L)).isTrue();
+            assertThat(YamlHelper.isByte("7")).isTrue();
+            assertThat(YamlHelper.isByte("999999")).isFalse();
+        }
+
+        @Test
+        @DisplayName("isInteger rejects null and non-numeric, accepts boxed integers")
+        void integerEdges() {
+            assertThat(YamlHelper.isInteger(null)).isFalse();
+            assertThat(YamlHelper.isInteger((byte) 3)).isTrue();
+            assertThat(YamlHelper.isInteger((short) 9)).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("publishing a saved file")
+    class Publishing {
+
+        private void posixOnly() {
+            Assumptions.assumeTrue(
+                    FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        }
+
+        private void bumpPort(Path file) throws IOException {
+            YamlHelper h = new YamlHelper(file);
+            h.updateValue(List.of("server", "port"), "9090");
+            h.saveOverride(file);
+        }
+
+        @Test
+        @DisplayName("keeps the target's existing permissions")
+        void preservesMode(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path file = dir.resolve("settings.yml");
+            Files.writeString(file, "server:\n  port: 80\n");
+            Set<PosixFilePermission> mode = PosixFilePermissions.fromString("rw-rw-r--");
+            Files.setPosixFilePermissions(file, mode);
+
+            bumpPort(file);
+
+            assertThat(Files.readString(file)).contains("9090");
+            assertThat(Files.getPosixFilePermissions(file)).isEqualTo(mode);
+        }
+
+        @Test
+        @DisplayName("stages the content in an owner-only file")
+        void stagingFileIsOwnerOnly(@TempDir Path dir) throws IOException {
+            posixOnly();
+
+            Path staged = YamlHelper.createStagingFile(dir);
+
+            assertThat(Files.getPosixFilePermissions(staged))
+                    .containsExactlyInAnyOrder(
+                            PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+        }
+
+        @Test
+        @DisplayName("keeps an owner-only target owner-only")
+        void preservesTightMode(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path file = dir.resolve("settings.yml");
+            Files.writeString(file, "server:\n  port: 80\n");
+            Set<PosixFilePermission> mode = PosixFilePermissions.fromString("rw-------");
+            Files.setPosixFilePermissions(file, mode);
+
+            bumpPort(file);
+
+            assertThat(Files.readString(file)).contains("9090");
+            assertThat(Files.getPosixFilePermissions(file)).isEqualTo(mode);
+        }
+
+        @Test
+        @DisplayName("writes through a symlink whose target does not exist yet")
+        void followsDanglingSymlink(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path seed = dir.resolve("seed.yml");
+            Files.writeString(seed, "server:\n  port: 80\n");
+            Path real = dir.resolve("real.yml");
+            Path link = dir.resolve("settings.yml");
+            Files.createSymbolicLink(link, real.getFileName());
+
+            YamlHelper h = new YamlHelper(seed);
+            h.updateValue(List.of("server", "port"), "9090");
+            h.saveOverride(link);
+
+            assertThat(Files.isSymbolicLink(link)).isTrue();
+            assertThat(Files.readString(real)).contains("9090");
+        }
+
+        @Test
+        @DisplayName("writes through a symlink instead of replacing it")
+        void followsSymlink(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path real = dir.resolve("real.yml");
+            Files.writeString(real, "server:\n  port: 80\n");
+            Path link = dir.resolve("settings.yml");
+            Files.createSymbolicLink(link, real);
+
+            bumpPort(link);
+
+            assertThat(Files.isSymbolicLink(link)).isTrue();
+            assertThat(Files.readString(real)).contains("9090");
+        }
+
+        @Test
+        @DisplayName("falls back to an in-place write when the directory will not take a temp file")
+        void stagingFailureStillPublishes(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path locked = Files.createDirectory(dir.resolve("configs"));
+            Path file = locked.resolve("settings.yml");
+            Files.writeString(file, "server:\n  port: 80\n");
+            Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("r-x------"));
+            try {
+                bumpPort(file);
+                assertThat(Files.readString(file)).contains("9090");
+            } finally {
+                Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("rwx------"));
+            }
+        }
+    }
+}

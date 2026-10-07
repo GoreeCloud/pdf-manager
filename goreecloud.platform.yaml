@@ -1,0 +1,167 @@
+schema_version: "2.0"
+
+component:
+  type: application
+  id: goreecloud-pdf-manager
+  product_name: GoreeCloud PDF Manager
+  repository: GoreeCloud/pdf-manager
+
+lifecycle: forge
+lifecycle_metadata:
+  deployment_state: development
+  qualification_state: not-qualified
+  next_gate: seal
+  candidate_identity:
+    source_revision: null
+    review_identity: null
+    build_identity: null
+    artifact_digest: null
+    rollback_target: d6831aec77500190bdab4797f11064740811b34d
+  evidence:
+    - README.md
+    - docs/PROJECT-RECORD.md
+    - docs/IMPLEMENTED-FEATURES.md
+    - docs/PLANNED-FEATURES.md
+    - docs/VALIDATION.md
+    - provenance/upstream.json
+    - provenance/glaze.json
+    - provenance/branding.json
+
+version: "0.1.0-dev"
+
+supported_platforms:
+  - linux
+  - web
+
+api:
+  versions:
+    - v1
+  endpoints:
+    - name: PDF processing API
+      url: /api/v1
+      purpose: Same-origin PDF processing and job operations exposed by the retained open-source core.
+
+platform_systems:
+  manager:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/ARCHITECTURE.md
+      - docs/PLANNED-FEATURES.md
+    notes: Manager registration, lifecycle visibility, health/readiness publication, and administrative acceptance are not yet implemented.
+  privacy_shield:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/PRIVACY.md
+    notes: The GoreeCloud shell defaults to no optional telemetry or third-party upload integration, but authoritative Privacy Shield runtime policy and production acceptance remain open.
+  wardveil_security:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/SECURITY.md
+    notes: Source hardening and evidence-bound presentation are implemented, but authoritative Wardveil runtime protection and production security acceptance remain open.
+  everkeep:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Backup, clean-target restore, migration, and rollback acceptance remain open.
+  glaze_ui:
+    result: applicable-migration-required
+    version: "1.7.0"
+    evidence:
+      - docs/GLAZE-ADOPTION.md
+      - provenance/glaze.json
+      - app/core/src/main/resources/static/goreecloud/glaze/js/glaze-v1.7.0.mjs
+    notes: Exact shared source is adopted; repository-local rendered, accessibility, performance, rollback, human visual, and production consumer acceptance remain incomplete.
+  mesh:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Capability registration and authenticated Mesh runtime integration remain open.
+    capabilities: []
+    dependencies: []
+    published_events: []
+    consumed_events: []
+  identity:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/SECURITY.md
+      - docs/PLANNED-FEATURES.md
+    notes: Production authentication, session, authorization, revocation, and device-trust integration remain open.
+  policy:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Policy decision and enforcement integration remains open.
+  observability:
+    result: applicable-blocked
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Privacy-minimized operational telemetry and production observability acceptance remain open.
+
+health:
+  health_endpoint: /api/v1/info/health
+  readiness_endpoint: /api/v1/info/status
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Protect only durable PDF Manager-owned state that is required for operation or user-approved persistence.
+      - Do not treat temporary document-processing files as long-term backup data by default.
+  restore:
+    required: true
+    requirements:
+      - Validate clean-target restoration before production recovery claims.
+  export:
+    required: true
+    requirements:
+      - Keep user documents and application-owned durable state exportable in documented formats.
+  portability:
+    required: true
+    requirements:
+      - Preserve self-hosted operation and avoid hard dependency on one external storage or processing provider.
+
+external_dependencies:
+  - name: Java
+    purpose: Spring Boot runtime and build toolchain.
+    required: true
+    version_constraint: ">=25"
+  - name: Optional document processors
+    purpose: Environment-dependent OCR/conversion capabilities used by selected retained endpoints.
+    required: false
+    version_constraint: null
+
+compatibility:
+  platform_contract: "2.0"
+  glaze_ui_required: "1.7.0"
+  requires:
+    - goreecloud-platform-contract==2.0
+    - glaze-ui==1.7.0
+  provides:
+    - goreecloud-pdf-manager-forge
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - docs/SECURITY.md
+    - docs/PRIVACY.md
+    - docs/GLAZE-ADOPTION.md
+    - scripts/check_source_boundary.sh
+    - scripts/validate_repository.sh
+  blockers:
+    - Fresh Glaze V1.7 rendered/accessibility/performance/rollback/human acceptance is incomplete.
+    - GoreeCloud Identity, Privacy Shield, Wardveil Security, Everkeep, Manager, Mesh, Policy, and Observability production integrations are incomplete.
+    - Representative hostile-file, deployment, recovery, upgrade, rollback, and production acceptance evidence is incomplete.

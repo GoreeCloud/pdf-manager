@@ -1,0 +1,8 @@
+{
+  "schema_version": "1",
+  "source": "GoreeCloud/glaze",
+  "revision": "9ab08060d723b022cdf07d001e8c95bca626a764",
+  "target_version": "1.7.0",
+  "entrypoint": "app/core/src/main/resources/static/goreecloud/glaze/js/glaze-v1.7.0.mjs",
+  "acceptance": "source-adopted-consumer-acceptance-incomplete"
+}

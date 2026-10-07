@@ -1,0 +1,174 @@
+package stirling.software.common.configuration;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.util.YamlHelper;
+
+/**
+ * A naive, line-based approach to merging "settings.yml" with "settings.yml.template" while
+ * preserving exact whitespace, blank lines, and inline comments -- but we only rewrite the file if
+ * the merged content actually differs.
+ */
+@Slf4j
+public class ConfigInitializer {
+
+    private static final int MIN_SETTINGS_FILE_LINES = 31;
+
+    public void ensureConfigExists() throws IOException, URISyntaxException {
+        // 1) If settings file doesn't exist, create from template
+        Path destPath = Path.of(InstallationPathConfig.getSettingsPath());
+
+        boolean settingsFileExists = Files.exists(destPath);
+
+        long lineCount = settingsFileExists ? Files.readAllLines(destPath).size() : 0;
+
+        log.info("Current settings file line count: {}", lineCount);
+
+        if (!settingsFileExists || lineCount < MIN_SETTINGS_FILE_LINES) {
+            if (settingsFileExists) {
+                // move settings.yml to settings.yml.{timestamp}.bak
+                Path backupPath =
+                        Path.of(
+                                InstallationPathConfig.getSettingsPath()
+                                        + "."
+                                        + System.currentTimeMillis()
+                                        + ".bak");
+                Files.move(destPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
+                log.info("Moved existing settings file to backup: {}", backupPath);
+            }
+            Files.createDirectories(destPath.getParent());
+            try (InputStream in =
+                    getClass().getClassLoader().getResourceAsStream("settings.yml.template")) {
+                if (in == null) {
+                    throw new FileNotFoundException(
+                            "Resource file not found: settings.yml.template");
+                }
+                Files.copy(in, destPath);
+            }
+            log.info("Created settings file from template");
+        } else {
+            // 2) Merge existing file with the template
+            URL templateResource = getClass().getClassLoader().getResource("settings.yml.template");
+            if (templateResource == null) {
+                throw new IOException("Resource not found: settings.yml.template");
+            }
+
+            // Copy template to a temp location so we can read lines
+            Path tempTemplatePath = Files.createTempFile("settings.yml", ".template");
+            try (InputStream in = templateResource.openStream()) {
+                Files.copy(in, tempTemplatePath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            // Copy setting.yaml to a temp location so we can read lines
+            Path settingTempPath = Files.createTempFile("settings", ".yaml");
+            try (InputStream in = Files.newInputStream(destPath)) {
+                Files.copy(in, settingTempPath, StandardCopyOption.REPLACE_EXISTING);
+            }
+
+            YamlHelper settingsTemplateFile = new YamlHelper(tempTemplatePath);
+            YamlHelper settingsFile = new YamlHelper(settingTempPath);
+
+            migrateEnterpriseEditionToPremium(settingsFile, settingsTemplateFile);
+            migrateProFeaturesKeyCasing(settingsFile, settingsTemplateFile);
+            boolean ssoAutoLoginMigrated =
+                    migrateSsoAutoLoginToSecurity(settingsFile, settingsTemplateFile);
+
+            boolean changesMade =
+                    settingsTemplateFile.updateValuesFromYaml(settingsFile, settingsTemplateFile)
+                            || ssoAutoLoginMigrated;
+            if (changesMade) {
+                settingsTemplateFile.save(destPath);
+                log.info("Settings file updated based on template changes.");
+            } else {
+                log.info("No changes detected; settings file left as-is.");
+            }
+
+            Files.deleteIfExists(tempTemplatePath);
+            Files.deleteIfExists(settingTempPath);
+        }
+
+        // 3) Ensure custom settings file exists
+        Path customSettingsPath = Path.of(InstallationPathConfig.getCustomSettingsPath());
+        if (Files.notExists(customSettingsPath)) {
+            Files.createFile(customSettingsPath);
+            log.info("Created custom_settings file: {}", customSettingsPath);
+        }
+    }
+
+    // TODO: Remove post migration
+    private void migrateEnterpriseEditionToPremium(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "enabled") != null) {
+            template.updateValue(
+                    List.of("premium", "enabled"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "enabled"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "key") != null) {
+            template.updateValue(
+                    List.of("premium", "key"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "key"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "autoUpdateMetadata")
+                != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "customMetadata", "autoUpdateMetadata"),
+                    yaml.getValueByExactKeyPath(
+                            "enterpriseEdition", "CustomMetadata", "autoUpdateMetadata"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "customMetadata", "author"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "author"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator") != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "customMetadata", "creator"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "creator"));
+        }
+        if (yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer")
+                != null) {
+            template.updateValue(
+                    List.of("premium", "proFeatures", "customMetadata", "producer"),
+                    yaml.getValueByExactKeyPath("enterpriseEdition", "CustomMetadata", "producer"));
+        }
+    }
+
+    // TODO: Remove post migration
+    void migrateProFeaturesKeyCasing(YamlHelper yaml, YamlHelper template) {
+        for (String field : List.of("autoUpdateMetadata", "author", "creator", "producer")) {
+            Object value =
+                    yaml.getValueByExactKeyPath("premium", "proFeatures", "CustomMetadata", field);
+            if (value != null) {
+                template.updateValue(
+                        List.of("premium", "proFeatures", "customMetadata", field), value);
+            }
+        }
+    }
+
+    boolean migrateSsoAutoLoginToSecurity(YamlHelper yaml, YamlHelper template) {
+        if (yaml.getValueByExactKeyPath("security", "ssoAutoLogin") != null) {
+            return false;
+        }
+        for (List<String> path :
+                List.of(
+                        List.of("premium", "proFeatures", "ssoAutoLogin"),
+                        List.of("premium", "proFeatures", "SSOAutoLogin"),
+                        List.of("enterpriseEdition", "ssoAutoLogin"),
+                        List.of("enterpriseEdition", "SSOAutoLogin"))) {
+            Object value = yaml.getValueByExactKeyPath(path.toArray(String[]::new));
+            if (value != null) {
+                return template.updateValue(List.of("security", "ssoAutoLogin"), value);
+            }
+        }
+        return false;
+    }
+}
