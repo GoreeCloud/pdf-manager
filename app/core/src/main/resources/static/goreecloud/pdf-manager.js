@@ -592,7 +592,8 @@ async function executeTool(tool) {
   if (state.busy) return;
   const availabilityKey = availabilityKeys[tool.id];
   if (availabilityKey && state.availability[availabilityKey]?.enabled === false) {
-    throw new Error("This workflow is currently unavailable on the PDF Manager server.");
+    showToast("This workflow is currently unavailable on the PDF Manager server.", "error");
+    return;
   }
   const original = runTool.textContent;
   state.busy = true;
