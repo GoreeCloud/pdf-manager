@@ -1,0 +1,172 @@
+schema_version: "2.0"
+
+component:
+  type: application
+  id: goreecloud-pdf-manager
+  product_name: GoreeCloud PDF Manager
+  repository: GoreeCloud/pdf-manager
+
+lifecycle: forge
+lifecycle_metadata:
+  deployment_state: development
+  qualification_state: incomplete
+  next_gate: weave
+  candidate_identity:
+    source_revision: null
+    review_identity: null
+    artifact_name: null
+    artifact_digest: null
+    configuration_boundary: "Core-only maintained fork derived from Stirling-PDF 973bff865cc19fbc268859e1fb13103c66c1f5a5; restricted upstream trees are excluded."
+    previous_known_good: null
+    rollback_target: d6831aec77500190bdab4797f11064740811b34d
+  evidence:
+    - README.md
+    - NOTICE.md
+    - docs/PROJECT-RECORD.md
+    - docs/PLANNED-FEATURES.md
+
+version: "0.1.0-dev"
+
+supported_platforms:
+  - linux
+  - web
+
+api:
+  versions:
+    - v1
+  endpoints:
+    - name: PDF processing API
+      url: /api/v1
+      purpose: Same-origin document-processing endpoints exposed by the retained open-source core.
+
+platform_systems:
+  manager:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Registration, lifecycle visibility, and operational integration are not accepted.
+  privacy_shield:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/PRIVACY.md
+    notes: Privacy-by-default source controls exist; authoritative Privacy Shield runtime integration and production acceptance remain open.
+  wardveil_security:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/SECURITY.md
+    notes: Source hardening is in progress; authoritative Wardveil runtime evidence and production acceptance remain open.
+  everkeep:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Backup, clean-target restore, rollback, and production recovery acceptance remain open.
+  glaze_ui:
+    result: applicable-migration-required
+    version: "1.7.0"
+    evidence:
+      - docs/GLAZE-ADOPTION.md
+      - app/core/src/main/resources/static/vendor/glaze/js/glaze-v1.7.0.mjs
+    notes: Source adoption targets Glaze V1.7; fresh product-specific consumer acceptance remains incomplete.
+  mesh:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Capability registration and accepted runtime integration remain open.
+    capabilities: []
+    dependencies: []
+    published_events: []
+    consumed_events: []
+  identity:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/SECURITY.md
+      - docs/PLANNED-FEATURES.md
+    notes: Protected multi-user deployments require accepted GoreeCloud Identity authentication/session/authorization integration.
+  policy:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/PLANNED-FEATURES.md
+    notes: Policy decision/distribution/enforcement integration is not accepted.
+  observability:
+    result: applicable-migration-required
+    version: null
+    evidence:
+      - docs/PRIVACY.md
+      - docs/PLANNED-FEATURES.md
+    notes: Privacy-minimized operational observability integration is not accepted.
+
+health:
+  health_endpoint: /api/v1/info/status
+  readiness_endpoint: null
+
+continuity:
+  backup:
+    required: true
+    requirements:
+      - Protect deployment configuration and any durable job/application state without treating temporary document-processing files as permanent records.
+  restore:
+    required: true
+    requirements:
+      - Validate clean-target restore and rollback before production qualification.
+  export:
+    required: true
+    requirements:
+      - Keep user document outputs in standard portable formats and document any durable application-state export that becomes necessary.
+  portability:
+    required: true
+    requirements:
+      - Avoid mandatory proprietary control planes for core self-hosted operation.
+
+external_dependencies:
+  - name: Java
+    purpose: Application runtime and build toolchain.
+    required: true
+    version_constraint: "25"
+  - name: Tesseract
+    purpose: Optional OCR processing.
+    required: false
+    version_constraint: null
+  - name: LibreOffice
+    purpose: Optional document conversion paths.
+    required: false
+    version_constraint: null
+  - name: Ghostscript
+    purpose: Optional PDF processing and optimization paths.
+    required: false
+    version_constraint: null
+
+compatibility:
+  platform_contract: "2.0"
+  glaze_ui_required: "1.7.0"
+  requires:
+    - goreecloud-platform-contract==2.0
+    - glaze-ui==1.7.0
+  provides:
+    - goreecloud-pdf-manager-development
+    - pdf-processing-api-v1
+
+evidence:
+  acceptance_tests: []
+  release: []
+
+conformance:
+  status: nonconformant
+  validated_at: null
+  evidence:
+    - README.md
+    - docs/ARCHITECTURE.md
+    - docs/SECURITY.md
+    - docs/PRIVACY.md
+    - docs/GLAZE-ADOPTION.md
+  blockers:
+    - Glaze V1.7 rendered/accessibility/performance/human consumer acceptance is incomplete.
+    - Production Identity, Privacy Shield, Wardveil Security, Everkeep, Manager, Mesh, Policy, and Observability acceptance is incomplete.
+    - Clean-target backup/restore, rollback, deployment, representative-environment, and production acceptance are incomplete.
+    - The current source is Forge development and has not completed Seal or Anchor qualification.
