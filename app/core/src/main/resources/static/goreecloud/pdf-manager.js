@@ -107,7 +107,7 @@ const tools = [
     description: "Reorder, reverse, duplicate, booklet-sort, or remove edge pages without rasterizing the document.",
     fields: [
       { name: "customMode", label: "Arrangement", type: "select", value: "CUSTOM", options: [["CUSTOM", "Custom page order"], ["REVERSE_ORDER", "Reverse all pages"], ["DUPLEX_SORT", "Duplex scan order"], ["BOOKLET_SORT", "Booklet order"], ["ODD_EVEN_SPLIT", "Odd pages then even pages"], ["DUPLICATE", "Duplicate each page"], ["REMOVE_FIRST", "Remove first page"], ["REMOVE_LAST", "Remove last page"], ["REMOVE_FIRST_AND_LAST", "Remove first and last pages"]] },
-      { name: "pageNumbers", label: "Page order / duplicate count", type: "text", value: "", help: "For Custom use values such as 3,1,2 or 1-4. For Duplicate enter the number of copies." },
+      { name: "pageNumbers", label: "Page order / duplicate count", type: "text", value: "all", help: "For Custom use values such as 3,1,2 or 1-4. Use all to preserve the current order. For Duplicate enter the number of copies." },
     ],
   },
   { id: "ocr", name: "OCR scanned PDFs", category: "convert", icon: "ocr", description: "Make scanned documents searchable with server-side OCR." },
@@ -426,6 +426,7 @@ function buildFormData(tool) {
     }
   }
   if (tool.id === "merge") data.append("fileOrder", state.files.map((file) => file.name).join("\n"));
+  if (tool.id === "page-numbers") data.append("pageNumbers", String(form.get("pagesToNumber") || "all"));
   return data;
 }
 
