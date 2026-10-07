@@ -90,3 +90,34 @@ button,input,select{font:inherit}.skip-link{position:fixed;z-index:999;top:8px;l
   cursor: progress;
   opacity: .76;
 }
+
+
+/* Server-authoritative workflow availability */
+.tool-card[data-ready="true"][data-available="true"] .tool-kind {
+  color: var(--glaze-success);
+}
+
+.tool-card[data-available="false"] .tool-kind {
+  color: var(--glaze-warning);
+}
+
+.tool-card[data-available="checking"] .tool-kind,
+.tool-card[data-available="unknown"] .tool-kind {
+  color: var(--glaze-muted);
+}
+
+.capability-note {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--glaze-warning) 35%, var(--glaze-line));
+  border-radius: 14px;
+  color: var(--glaze-muted);
+  background: color-mix(in srgb, var(--glaze-warning) 7%, var(--glaze-surface-muted));
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.field-textarea {
+  min-height: 120px;
+  resize: vertical;
+}
