@@ -59,8 +59,8 @@ for marker, description in required_html_markers.items():
         raise SystemExit(f"missing {description}: {marker}")
 
 required_js_markers = {
-    '"/api/v1/config/endpoints-availability"': "authoritative capability availability request",
-    "tool.available !== true": "fail-closed tool execution gate",
+    "/api/v1/config/endpoints-availability": "authoritative capability availability request",
+    'availabilityState(tool) !== "enabled"': "fail-closed tool execution gate",
     "storageKeys.onboarding": "persisted onboarding state",
     "storageKeys.hints": "persisted hint preference",
     "openOnboarding({ replay: true })": "onboarding replay control",

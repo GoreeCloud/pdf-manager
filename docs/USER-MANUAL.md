@@ -6,7 +6,7 @@ Drop PDFs or supported images into the Workspace or choose files from the device
 
 ## Direct workflows
 
-Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Rearrange pages, Document metadata, Page numbers, Text stamp & watermark, Sanitize PDF, Add password, Remove password, Repair PDF, and Flatten PDF.
+Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Auto-crop whitespace, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, Document metadata, Page numbers, Text stamp & watermark, Sanitize PDF, Redact text, Add password, Remove password, Repair PDF, and Flatten PDF.
 
 1. Add required files.
 2. Select a ready tool.
@@ -19,6 +19,10 @@ For rearrangement, **Custom page order** accepts page/range expressions such as 
 Page numbering supports `{n}`, `{total}`, and `{filename}` in its text pattern. Text stamps support selected pages, opacity, rotation, grid position, margin, and optional X/Y overrides.
 
 Sanitization defaults to removing JavaScript actions and embedded files. More destructive options such as link, metadata, and embedded-font removal remain explicit opt-ins.
+
+OCR accepts one or more Tesseract language codes and exposes skip/force mode, text-layer, deskew, orientation, cleanup, image-removal, and sidecar options. OCR remains unavailable when the server reports the required OCR dependency missing.
+
+PDF/A conversion exposes only archival profiles supported by the retained core contract. Auto-crop forces the automatic crop mode and removes data outside the resulting crop box. Text redaction removes matching text content rather than applying only a visual overlay; review patterns and optional regular-expression matching carefully before running it.
 
 Password protection is processed by the PDF Manager server. Password fields are rendered as password inputs and are not stored in PDF Manager application state; reopening a tool dialog reconstructs the controls.
 

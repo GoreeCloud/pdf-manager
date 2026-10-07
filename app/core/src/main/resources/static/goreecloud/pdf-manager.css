@@ -91,12 +91,16 @@ button,input,select{font:inherit}.skip-link{position:fixed;z-index:999;top:8px;l
   opacity: .76;
 }
 
-/* Capability truth and onboarding */
+/* Server-authoritative capability truth and onboarding */
+.tool-card[data-availability="enabled"] .tool-kind{color:var(--glaze-success)}
 .tool-card[data-availability="unknown"] .tool-kind{color:var(--glaze-muted)}
 .tool-card[data-availability="disabled"]{border-style:dashed;box-shadow:none}
 .tool-card[data-availability="disabled"] .tool-kind{color:var(--glaze-warning)}
 .tool-card[data-availability="disabled"] .tool-icon{color:var(--glaze-muted)}
 .tool-card[data-availability="disabled"]:hover{transform:none;border-color:var(--glaze-line);box-shadow:none}
+
+.capability-note{margin-bottom:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--glaze-warning) 35%,var(--glaze-line));border-radius:14px;color:var(--glaze-muted);background:color-mix(in srgb,var(--glaze-warning) 7%,var(--glaze-surface-muted));font-size:.82rem;line-height:1.5}
+.field-textarea{min-height:120px;resize:vertical}
 
 .context-hint{margin-top:14px;padding:14px 16px;border-radius:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
 .context-hint[hidden]{display:none}

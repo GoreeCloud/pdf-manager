@@ -25,11 +25,15 @@ This file records source implemented in the current candidate; it does not conve
 - Rotate pages by 90, 180, or 270 degrees.
 - Optimize/compress with optimization, size target, linearization, normalization, and grayscale options.
 - Extract embedded images to PNG, JPEG, or GIF archive output.
+- Auto-crop surrounding whitespace on selected pages through the retained crop API.
+- OCR scanned PDFs with language, OCR mode, text-layer, deskew, orientation, cleanup, image-removal, and sidecar controls when the server reports OCR dependencies available.
+- Convert PDFs to supported PDF/A archival profiles through the retained conversion path when the server reports the capability available.
 - Rearrange pages with custom order, reverse, duplex, booklet, odd/even, duplicate, and edge-removal modes.
 - Update or deliberately remove standard document metadata.
 - Add page numbers or Bates-style numbering with page, position, font, color, text-pattern, and zero-padding controls.
 - Add text stamps/watermarks with page selection, alphabet, size, rotation, opacity, position, margin, color, and coordinate overrides.
 - Sanitize PDFs by removing selected JavaScript, embedded files, metadata, links, or embedded fonts.
+- Permanently redact matching text or regular-expression patterns with whole-word, padding, color, and optional final rasterization controls.
 - Add PDF password protection with encryption-key and permission controls.
 - Remove password protection when the current password is known.
 - Attempt structural PDF repair through the server's available Ghostscript, qpdf, or PDFBox path.

@@ -21,7 +21,7 @@
 - Gradle project identity to `GoreeCloud PDF Manager`, group `com.goreecloud.pdfmanager`, version `0.1.0-dev`.
 - Build graph to common/core only.
 - Backend-only landing page into the primary GoreeCloud workbench.
-- Workbench-ready tool count expanded from 5 to 14 while retaining explicit API-only state for workflows that still need stronger preview/dependency UX.
+- Workbench-ready tool count expanded from 5 to 18, including auto-crop, OCR, PDF/A conversion, and text redaction, while retaining explicit API-only state for workflows that still need stronger preview/dependency UX.
 
 ### Security and privacy
 
