@@ -20,6 +20,10 @@ BASES = {
         ROOT / "app/common/src/main/java/stirling/software/common/annotations/api/SecurityApi.java",
         "/api/v1/security",
     ),
+    "convert": (
+        ROOT / "app/common/src/main/java/stirling/software/common/annotations/api/ConvertApi.java",
+        "/api/v1/convert",
+    ),
 }
 
 TOOLS = {
@@ -28,7 +32,10 @@ TOOLS = {
     "rotate": ("general", "/rotate-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/RotationController.java"),
     "compress": ("misc", "/compress-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/CompressController.java"),
     "extract-images": ("misc", "/extract-images", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/ExtractImagesController.java"),
+    "crop": ("general", "/crop", "app/core/src/main/java/stirling/software/SPDF/controller/api/CropController.java"),
     "rearrange": ("general", "/rearrange-pages", "app/core/src/main/java/stirling/software/SPDF/controller/api/RearrangePagesPDFController.java"),
+    "ocr": ("misc", "/ocr-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/OCRController.java"),
+    "pdfa": ("convert", "/pdf/pdfa", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToPDFA.java"),
     "metadata": ("misc", "/update-metadata", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/MetadataController.java"),
     "page-numbers": ("misc", "/add-page-numbers", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/PageNumbersController.java"),
     "stamp": ("misc", "/add-stamp", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/StampController.java"),
@@ -92,5 +99,14 @@ if 'tool.id === "page-numbers"' not in js or 'data.append("pageNumbers"' not in 
 
 if 'type: "password"' not in js:
     fail("password workflows must use password-type input definitions")
+
+if 'repeatValues: true' not in tool_blocks.get("ocr", "") or 'data.append(field.name, item)' not in js:
+    fail("OCR language lists must be emitted as repeated multipart values")
+
+if 'name: "autoCrop"' not in tool_blocks.get("crop", ""):
+    fail("crop workflow must expose the backend auto-crop mode")
+
+if 'name: "outputFormat"' not in tool_blocks.get("pdfa", ""):
+    fail("PDF/A workflow must expose the backend output profile")
 
 print(f"workbench-contract: PASS ({len(TOOLS)} ready workflows)")
