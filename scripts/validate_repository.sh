@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 "$ROOT/scripts/check_source_boundary.sh"
 
+python3 "$ROOT/scripts/validate_workbench_contract.py"
 node --check "$ROOT/app/core/src/main/resources/static/goreecloud/pdf-manager.js"
 
 python3 - "$ROOT" <<'PY'
