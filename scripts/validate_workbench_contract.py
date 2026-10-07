@@ -67,6 +67,11 @@ js = JS.read_text(encoding="utf-8")
 if "/api/v1/config/endpoints-availability" not in js:
     fail("workbench does not consume server-authoritative endpoint availability")
 
+if 'state.activeTool.available === true' in js:
+    fail("submit gating must not depend on deprecated per-tool availability state")
+if 'availabilityState(state.activeTool) === "enabled"' not in js:
+    fail("submit gating must use the unified server-authoritative availability state")
+
 tool_blocks: dict[str, str] = {}
 for match in re.finditer(r"(?ms)^  \{\n(.*?)^  \},?$", js):
     block = match.group(1)

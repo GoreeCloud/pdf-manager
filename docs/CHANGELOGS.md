@@ -23,6 +23,7 @@
 - Build graph to common/core only.
 - Backend-only landing page into the primary GoreeCloud workbench.
 - Workbench-ready tool count expanded from 5 to 18, including manual/automatic crop, OCR, level-B PDF/A conversion, and text redaction, while retaining explicit API-only state for workflows that still need stronger preview/dependency UX.
+- Corrected the workbench submit gate to use the unified server-authoritative availability state after capability-model consolidation.
 
 ### Security and privacy
 

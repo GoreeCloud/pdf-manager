@@ -33,10 +33,11 @@ Canonical GitHub CI is pinned to Ubuntu 24.04 with Temurin JDK 25 so the native 
 
 ## Capability-truth and onboarding candidate
 
-The current `feature/capability-aware-workflows` source passes JavaScript syntax validation, `git diff --check`, the 18-workflow workbench contract, source-boundary validation, and repository validation with static assertions for:
+The capability-aware implementation includes JavaScript syntax, workbench-contract, source-boundary, and repository validation with static assertions for:
 
 - the server-authoritative `/api/v1/config/endpoints-availability` capability request;
 - fail-closed execution when a tool is disabled or availability is unknown;
+- submit gating through the unified `availabilityState(...)` authority rather than the retired per-tool `available` property;
 - first-use onboarding state persistence;
 - voluntary Guide replay;
 - global contextual-hint preference;
