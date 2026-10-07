@@ -14,6 +14,12 @@ for path in "${restricted[@]}"; do
   [[ ! -e "$ROOT/$path" ]] || fail "restricted or license-ambiguous path is present: $path"
 done
 
+wrapper="$ROOT/gradle/wrapper/gradle-wrapper.jar"
+[[ -f "$wrapper" ]] || fail "Gradle wrapper JAR is missing"
+expected_wrapper_sha256="7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d"
+actual_wrapper_sha256="$(sha256sum "$wrapper" | awk '{print $1}')"
+[[ "$actual_wrapper_sha256" == "$expected_wrapper_sha256" ]] || fail "Gradle wrapper JAR hash mismatch"
+
 grep -Fq "include 'stirling-pdf', 'common'" "$ROOT/settings.gradle" || fail "settings.gradle is not pinned to common/core only"
 if grep -Eq "include .*proprietary|include .*saas|project\(':proprietary'\)|project\(':saas'\)" "$ROOT/settings.gradle"; then
   fail "settings.gradle contains a restricted project"

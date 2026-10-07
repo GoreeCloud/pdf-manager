@@ -31,5 +31,6 @@
     "path": "frontend",
     "reason": "current upstream frontend package metadata declares a proprietary license reference"
   },
-  "license_boundary": "MIT source only"
+  "license_boundary": "MIT source only",
+  "gradle_wrapper_sha256": "7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d"
 }

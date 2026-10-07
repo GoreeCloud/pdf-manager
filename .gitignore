@@ -175,6 +175,7 @@ app/core/src/main/resources/static/images/google-drive.svg
 
 # Package Files #
 *.jar
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
