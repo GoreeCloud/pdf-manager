@@ -96,7 +96,24 @@ const tools = [
       { name: "format", label: "Image format", type: "select", value: "png", options: [["png", "PNG"], ["jpeg", "JPEG"], ["gif", "GIF"]] },
     ],
   },
-  { id: "crop", name: "Crop pages", category: "edit", icon: "crop", description: "Adjust visible page boundaries and content framing." },
+  {
+    id: "crop",
+    name: "Crop pages",
+    category: "edit",
+    icon: "crop",
+    ready: true,
+    endpoint: "/api/v1/general/crop",
+    description: "Automatically trim white space or crop selected pages to explicit PDF coordinates.",
+    fields: [
+      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7." },
+      { name: "autoCrop", label: "Auto-detect content bounds", type: "checkbox", value: true, help: "When enabled, manual coordinates are ignored." },
+      { name: "x", label: "X coordinate", type: "number", value: "", step: "0.1", help: "Required only for manual crop." },
+      { name: "y", label: "Y coordinate", type: "number", value: "", step: "0.1", help: "Required only for manual crop." },
+      { name: "width", label: "Crop width", type: "number", value: "", min: "0.1", step: "0.1", help: "Required only for manual crop." },
+      { name: "height", label: "Crop height", type: "number", value: "", min: "0.1", step: "0.1", help: "Required only for manual crop." },
+      { name: "removeDataOutsideCrop", label: "Remove data outside crop when supported", type: "checkbox", value: false, help: "Uses the server Ghostscript path when that capability is enabled." },
+    ],
+  },
   {
     id: "rearrange",
     name: "Rearrange pages",
@@ -110,8 +127,40 @@ const tools = [
       { name: "pageNumbers", label: "Page order / duplicate count", type: "text", value: "all", help: "For Custom use values such as 3,1,2 or 1-4. Use all to preserve the current order. For Duplicate enter the number of copies." },
     ],
   },
-  { id: "ocr", name: "OCR scanned PDFs", category: "convert", icon: "ocr", description: "Make scanned documents searchable with server-side OCR." },
-  { id: "pdfa", name: "Convert to PDF/A", category: "convert", icon: "convert", description: "Prepare archival PDF/A output through the conversion API." },
+  {
+    id: "ocr",
+    name: "OCR scanned PDFs",
+    category: "convert",
+    icon: "ocr",
+    ready: true,
+    endpoint: "/api/v1/misc/ocr-pdf",
+    description: "Make scans searchable using the server OCR capability and explicit processing options.",
+    fields: [
+      { name: "languages", label: "OCR languages", type: "text", value: "eng", repeatValues: true, help: "Comma- or space-separated Tesseract language codes, for example eng,deu." },
+      { name: "ocrType", label: "OCR mode", type: "select", value: "skip-text", options: [["skip-text", "OCR image-only pages"], ["force-ocr", "Force OCR on every page"], ["Normal", "Normal"]] },
+      { name: "ocrRenderType", label: "Text layer", type: "select", value: "hocr", options: [["hocr", "hOCR"], ["sandwich", "Sandwich"]] },
+      { name: "deskew", label: "Deskew pages", type: "checkbox", value: true },
+      { name: "rotatePages", label: "Auto-rotate pages", type: "checkbox", value: true },
+      { name: "clean", label: "Clean input before OCR", type: "checkbox", value: false },
+      { name: "cleanFinal", label: "Clean final output", type: "checkbox", value: false },
+      { name: "sidecar", label: "Include sidecar text", type: "checkbox", value: false, help: "May change the returned result into an archive containing PDF and text." },
+      { name: "removeImagesAfter", label: "Remove images after OCR", type: "checkbox", value: false },
+    ],
+  },
+  {
+    id: "pdfa",
+    name: "Convert to PDF/A",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/pdfa",
+    description: "Convert a PDF to an archival PDF/A profile with optional strict validation.",
+    fields: [
+      { name: "outputFormat", label: "Archival profile", type: "select", value: "pdfa-2b", options: [["pdfa-1", "PDF/A-1B"], ["pdfa-2b", "PDF/A-2B"], ["pdfa-3b", "PDF/A-3B"], ["pdfa-1a", "PDF/A-1A"], ["pdfa-2a", "PDF/A-2A"], ["pdfa-3a", "PDF/A-3A"]] },
+      { name: "strict", label: "Require strict compliance", type: "checkbox", value: false, help: "Fail instead of returning output when compliance validation does not pass." },
+      { name: "pdfUa", label: "Also validate a PDF/UA declaration", type: "checkbox", value: false, help: "Applies only to level-A PDF/A profiles and is written only when validation succeeds." },
+    ],
+  },
   { id: "office", name: "Office conversion", category: "convert", icon: "convert", description: "Convert supported office formats where dependencies are available." },
   {
     id: "metadata",
@@ -363,9 +412,12 @@ function fieldMarkup(field) {
   if (field.type === "select") {
     return `<div class="field"><label for="${id}">${field.label}</label><select class="glaze-select" id="${id}" name="${field.name}">${field.options.map(([value, label]) => `<option value="${value}" ${String(value) === String(field.value) ? "selected" : ""}>${label}</option>`).join("")}</select>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
   }
-  const inputType = field.type === "password" ? "password" : "text";
+  const inputType = ["password", "number"].includes(field.type) ? field.type : "text";
   const autocomplete = field.autocomplete ? ` autocomplete="${field.autocomplete}"` : "";
-  return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+  const min = field.min === undefined ? "" : ` min="${field.min}"`;
+  const max = field.max === undefined ? "" : ` max="${field.max}"`;
+  const step = field.step === undefined ? "" : ` step="${field.step}"`;
+  return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}${min}${max}${step}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
 }
 
 function openTool(tool) {
@@ -422,7 +474,13 @@ function buildFormData(tool) {
     if (field.type === "checkbox") data.append(field.name, form.has(field.name) ? "true" : "false");
     else {
       const value = form.get(field.name);
-      if (value !== null && String(value).length) data.append(field.name, String(value));
+      if (value !== null && String(value).length) {
+        if (field.repeatValues) {
+          String(value).split(/[\s,]+/).filter(Boolean).forEach((item) => data.append(field.name, item));
+        } else {
+          data.append(field.name, String(value));
+        }
+      }
     }
   }
   if (tool.id === "merge") data.append("fileOrder", state.files.map((file) => file.name).join("\n"));
