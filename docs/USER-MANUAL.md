@@ -1,31 +1,25 @@
 # User Manual — GoreeCloud PDF Manager
 
-## Add documents
+## Workspace
 
-Use the Workspace drop area to select PDFs or supported images. Files stay in the browser workspace until removed or the page is refreshed. For merge operations, the visible file order controls the merge order.
+Drop PDFs or supported images into the Workspace or choose files from the device. Use the up/down controls to define merge order and remove files when they are no longer needed.
 
-## Run a workbench-ready tool
+## Direct workflows
 
-1. Add the required file or files.
-2. Choose a tool marked **Workbench ready**.
-3. Review its options.
-4. Select **Run tool**.
-5. The browser downloads the result returned by the server.
+Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, and Extract images.
 
-Current direct workflows: merge, split, rotate, optimize/compress, and extract images.
+1. Add required files.
+2. Select a ready tool.
+3. Review options.
+4. Run the tool.
+5. The browser downloads the returned result.
 
-## API-available tools
-
-Cards marked **API available** identify retained processing capabilities without a finished dedicated GoreeCloud workflow. Use the API link to inspect the current request contract.
+Tools marked **API available** exist in the retained backend but do not yet have a dedicated GoreeCloud workflow; use the API documentation for their current request contract.
 
 ## Appearance
 
-The first visit follows the operating-system appearance. The top-bar appearance control can switch light/dark.
+The initial appearance follows the system preference. The top-bar appearance control toggles light and dark.
 
 ## Privacy expectation
 
-The GoreeCloud interface does not send files to an analytics or third-party upload service. Selected files are submitted to the PDF Manager server used for processing.
-
-## Error behavior
-
-Processing returns a new result rather than overwriting the browser-selected source file. An operation failure therefore does not itself modify the source file on the user's device.
+Selected files are sent to the PDF Manager server in use so the requested server-side processing can occur. The GoreeCloud shell does not send those files to an analytics or third-party upload service.

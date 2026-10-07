@@ -1,21 +1,19 @@
-# Glaze V1.7 Adoption — PDF Manager
+# Glaze V1.7 Adoption
 
 ## Shared identity
 
 - Repository: `GoreeCloud/glaze`
-- Source: `9ab08060d723b022cdf07d001e8c95bca626a764`
-- Target: Glaze V1.7 / `1.7.0`
-- Runtime entrypoint: `js/glaze-v1.7.0.mjs`
-- Rollback baseline: `1.6.0`
+- Source revision: `9ab08060d723b022cdf07d001e8c95bca626a764`
+- Target: `1.7.0`
+- Entrypoint: `js/glaze-v1.7.0.mjs`
+- Shared rollback baseline: `1.6.0`
 
 ## Source adoption
 
-The PDF Manager candidate vendors the shared V1.7 entrypoint and its inherited V1.6 runtime/CSS dependencies under the GoreeCloud static-resource tree. The product applies PDF-specific tokens and composition on top of the shared runtime.
+PDF Manager vendors the V1.7 stable entrypoint, its inherited V1.6 runtime modules, base Glaze CSS, and MIT license. The GoreeCloud shell consumes those shared foundations and applies product-specific styles.
 
 ## Acceptance state
 
-**Implemented in source; consumer acceptance incomplete.**
+**Source adoption implemented; consumer acceptance incomplete.**
 
-Open obligations include rendered browser review, keyboard/assistive-technology acceptance, increased-contrast/forced-color evaluation, reduced-motion checks, compact-through-wide layouts, representative performance evidence, authority-boundary validation, rollback validation, human visual acceptance, and exact-source consumer-registry evidence where required.
-
-Glaze being Anchor/Stable does not make PDF Manager production-eligible.
+Open evidence includes rendered-browser review, keyboard and assistive-technology acceptance, contrast/forced-color review, reduced-motion validation, compact/medium/expanded/wide layout validation, representative performance evidence, privacy/security authority-boundary validation, rollback evidence, human visual acceptance, and exact-source consumer-registry evidence.

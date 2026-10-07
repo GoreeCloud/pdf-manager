@@ -15,6 +15,8 @@ This `docs/` tree is the canonical location for repository documentation.
 - [Implemented features](IMPLEMENTED-FEATURES.md)
 - [Planned features](PLANNED-FEATURES.md)
 - [Changelogs](CHANGELOGS.md)
+- [Validation](VALIDATION.md)
+- [Validation record](VALIDATION.md)
 
 ## Trust and experience
 

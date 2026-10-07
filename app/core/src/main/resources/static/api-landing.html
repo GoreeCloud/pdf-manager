@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="theme-color" content="#f5efe8">
   <meta name="description" content="GoreeCloud PDF Manager — self-hosted PDF organization, conversion, optimization, and security tools.">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <title>GoreeCloud PDF Manager</title>
   <link rel="icon" href="/goreecloud/pdf-manager-mark.svg" type="image/svg+xml">
   <link rel="stylesheet" href="/goreecloud/glaze/css/glaze.css">
@@ -23,7 +23,9 @@
       <div class="top-actions">
         <span class="glaze-badge">Forge</span>
         <a class="glaze-button link-button" href="/swagger-ui/index.html">API</a>
-        <button class="glaze-icon-button" id="themeToggle" type="button" aria-label="Toggle appearance">◐</button>
+        <button class="glaze-icon-button" id="themeToggle" type="button" aria-label="Toggle appearance" title="Toggle appearance">
+          <svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.64 5.64l1.56 1.56M16.8 16.8l1.56 1.56M18.36 5.64 16.8 7.2M7.2 16.8l-1.56 1.56"/><circle cx="12" cy="12" r="4.2"/></svg>
+        </button>
       </div>
     </header>
 
@@ -64,7 +66,7 @@
         </div>
         <label id="dropZone" class="drop-zone" for="fileInput">
           <input id="fileInput" type="file" accept=".pdf,image/*" multiple>
-          <span class="drop-symbol" aria-hidden="true">↥</span>
+          <span class="drop-symbol" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
           <strong>Drop PDFs or images here</strong>
           <span>or choose files from this device</span>
         </label>
@@ -86,7 +88,7 @@
   </div>
 
   <dialog id="toolDialog" class="tool-dialog glaze-overlay">
-    <form method="dialog" class="dialog-close"><button class="glaze-icon-button" aria-label="Close">×</button></form>
+    <form method="dialog" class="dialog-close"><button class="glaze-icon-button" aria-label="Close"><svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>
     <div class="dialog-head">
       <span class="eyebrow" id="toolDialogCategory">Tool</span>
       <h2 id="toolDialogTitle">PDF tool</h2>

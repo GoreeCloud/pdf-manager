@@ -1,0 +1,35 @@
+{
+  "schema_version": "1",
+  "source": "Stirling-Tools/Stirling-PDF",
+  "revision": "973bff865cc19fbc268859e1fb13103c66c1f5a5",
+  "verified_at": "2026-10-07",
+  "imported": [
+    "app/common",
+    "app/core",
+    "buildSrc",
+    "gradle",
+    "scripts",
+    "build.gradle",
+    "settings.gradle",
+    "gradle.properties",
+    "gradlew",
+    "gradlew.bat",
+    "testing/tool-io-cases.json"
+  ],
+  "excluded_restricted": [
+    "app/proprietary",
+    "app/saas",
+    "engine",
+    "frontend/editor/src/proprietary",
+    "frontend/editor/src/desktop",
+    "frontend/editor/src/saas",
+    "frontend/editor/src/cloud",
+    "frontend/editor/src/portal",
+    "frontend/editor/src/portal-saas"
+  ],
+  "excluded_frontend_workspace": {
+    "path": "frontend",
+    "reason": "current upstream frontend package metadata declares a proprietary license reference"
+  },
+  "license_boundary": "MIT source only"
+}

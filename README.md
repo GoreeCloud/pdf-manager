@@ -42,6 +42,7 @@ Development server:
 - [Implemented features](docs/IMPLEMENTED-FEATURES.md)
 - [Planned features](docs/PLANNED-FEATURES.md)
 - [Changelogs](docs/CHANGELOGS.md)
+- [Validation](docs/VALIDATION.md)
 - [Security](docs/SECURITY.md)
 - [Privacy](docs/PRIVACY.md)
 - [Branding and Glaze](docs/BRANDING.md)

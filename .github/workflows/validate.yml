@@ -1,54 +1,82 @@
-name: Validate PDF Manager
+name: Validate GoreeCloud PDF Manager
 
 on:
-  pull_request:
   push:
     branches:
       - main
+  pull_request:
 
 permissions:
   contents: read
 
 concurrency:
-  group: pdf-manager-${{ github.workflow }}-${{ github.ref }}
+  group: pdf-manager-validation-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  governance:
-    name: Source and governance
-    runs-on: ubuntu-latest
+  repository-boundary:
+    name: Repository and source boundary
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
-      - name: Check out exact source
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
-      - name: Validate GoreeCloud source boundary
-        run: ./scripts/verify-goreecloud-boundary.sh
+      - name: Verify exact source revision
+        env:
+          EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_SHA"
 
-  backend:
-    name: Core build and tests
-    runs-on: ubuntu-latest
+      - name: Validate repository and licensing boundary
+        run: ./scripts/validate_repository.sh
+
+  compile-and-package:
+    name: Compile and package core
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - name: Check out exact source
-        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
-      - name: Set up Java 25
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961
+      - name: Set up Temurin JDK 25
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
         with:
           distribution: temurin
           java-version: "25"
+          cache: gradle
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
+      - name: Compile core-only application
+        run: ./gradlew :stirling-pdf:compileJava -PnoSpotless --no-daemon
 
-      - name: Compile
-        run: ./gradlew :stirling-pdf:compileJava --no-daemon
+      - name: Package core-only application
+        run: ./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon
 
-      - name: Test core modules
-        run: ./gradlew :common:test :stirling-pdf:test --no-daemon
+  tests:
+    name: Core test suite
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - name: Check out exact source revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
 
-      - name: Build application
-        run: ./gradlew :stirling-pdf:bootJar --no-daemon
+      - name: Set up Temurin JDK 25
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: gradle
+
+      - name: Run common and core tests
+        run: ./gradlew :common:test :stirling-pdf:test -PnoSpotless --no-daemon

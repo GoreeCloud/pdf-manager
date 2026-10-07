@@ -9,21 +9,23 @@ component:
 lifecycle: forge
 lifecycle_metadata:
   deployment_state: development
-  qualification_state: incomplete
-  next_gate: weave
+  qualification_state: not-qualified
+  next_gate: seal
   candidate_identity:
     source_revision: null
     review_identity: null
-    artifact_name: null
+    build_identity: null
     artifact_digest: null
-    configuration_boundary: "Core-only maintained fork derived from Stirling-PDF 973bff865cc19fbc268859e1fb13103c66c1f5a5; restricted upstream trees are excluded."
-    previous_known_good: null
     rollback_target: d6831aec77500190bdab4797f11064740811b34d
   evidence:
     - README.md
-    - NOTICE.md
     - docs/PROJECT-RECORD.md
+    - docs/IMPLEMENTED-FEATURES.md
     - docs/PLANNED-FEATURES.md
+    - docs/VALIDATION.md
+    - provenance/upstream.json
+    - provenance/glaze.json
+    - provenance/branding.json
 
 version: "0.1.0-dev"
 
@@ -37,108 +39,102 @@ api:
   endpoints:
     - name: PDF processing API
       url: /api/v1
-      purpose: Same-origin document-processing endpoints exposed by the retained open-source core.
+      purpose: Same-origin PDF processing and job operations exposed by the retained open-source core.
 
 platform_systems:
   manager:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
+      - docs/ARCHITECTURE.md
       - docs/PLANNED-FEATURES.md
-    notes: Registration, lifecycle visibility, and operational integration are not accepted.
+    notes: Manager registration, lifecycle visibility, health/readiness publication, and administrative acceptance are not yet implemented.
   privacy_shield:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - docs/PRIVACY.md
-    notes: Privacy-by-default source controls exist; authoritative Privacy Shield runtime integration and production acceptance remain open.
+    notes: The GoreeCloud shell defaults to no optional telemetry or third-party upload integration, but authoritative Privacy Shield runtime policy and production acceptance remain open.
   wardveil_security:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - docs/SECURITY.md
-    notes: Source hardening is in progress; authoritative Wardveil runtime evidence and production acceptance remain open.
+    notes: Source hardening and evidence-bound presentation are implemented, but authoritative Wardveil runtime protection and production security acceptance remain open.
   everkeep:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - docs/PLANNED-FEATURES.md
-    notes: Backup, clean-target restore, rollback, and production recovery acceptance remain open.
+    notes: Backup, clean-target restore, migration, and rollback acceptance remain open.
   glaze_ui:
     result: applicable-migration-required
     version: "1.7.0"
     evidence:
       - docs/GLAZE-ADOPTION.md
-      - app/core/src/main/resources/static/vendor/glaze/js/glaze-v1.7.0.mjs
-    notes: Source adoption targets Glaze V1.7; fresh product-specific consumer acceptance remains incomplete.
+      - provenance/glaze.json
+      - app/core/src/main/resources/static/goreecloud/glaze/js/glaze-v1.7.0.mjs
+    notes: Exact shared source is adopted; repository-local rendered, accessibility, performance, rollback, human visual, and production consumer acceptance remain incomplete.
   mesh:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - docs/PLANNED-FEATURES.md
-    notes: Capability registration and accepted runtime integration remain open.
+    notes: Capability registration and authenticated Mesh runtime integration remain open.
     capabilities: []
     dependencies: []
     published_events: []
     consumed_events: []
   identity:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - docs/SECURITY.md
       - docs/PLANNED-FEATURES.md
-    notes: Protected multi-user deployments require accepted GoreeCloud Identity authentication/session/authorization integration.
+    notes: Production authentication, session, authorization, revocation, and device-trust integration remain open.
   policy:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
       - docs/PLANNED-FEATURES.md
-    notes: Policy decision/distribution/enforcement integration is not accepted.
+    notes: Policy decision and enforcement integration remains open.
   observability:
-    result: applicable-migration-required
+    result: applicable-blocked
     version: null
     evidence:
-      - docs/PRIVACY.md
       - docs/PLANNED-FEATURES.md
-    notes: Privacy-minimized operational observability integration is not accepted.
+    notes: Privacy-minimized operational telemetry and production observability acceptance remain open.
 
 health:
-  health_endpoint: /api/v1/info/status
-  readiness_endpoint: null
+  health_endpoint: /api/v1/info/health
+  readiness_endpoint: /api/v1/info/status
 
 continuity:
   backup:
     required: true
     requirements:
-      - Protect deployment configuration and any durable job/application state without treating temporary document-processing files as permanent records.
+      - Protect only durable PDF Manager-owned state that is required for operation or user-approved persistence.
+      - Do not treat temporary document-processing files as long-term backup data by default.
   restore:
     required: true
     requirements:
-      - Validate clean-target restore and rollback before production qualification.
+      - Validate clean-target restoration before production recovery claims.
   export:
     required: true
     requirements:
-      - Keep user document outputs in standard portable formats and document any durable application-state export that becomes necessary.
+      - Keep user documents and application-owned durable state exportable in documented formats.
   portability:
     required: true
     requirements:
-      - Avoid mandatory proprietary control planes for core self-hosted operation.
+      - Preserve self-hosted operation and avoid hard dependency on one external storage or processing provider.
 
 external_dependencies:
   - name: Java
-    purpose: Application runtime and build toolchain.
+    purpose: Spring Boot runtime and build toolchain.
     required: true
-    version_constraint: "25"
-  - name: Tesseract
-    purpose: Optional OCR processing.
-    required: false
-    version_constraint: null
-  - name: LibreOffice
-    purpose: Optional document conversion paths.
-    required: false
-    version_constraint: null
-  - name: Ghostscript
-    purpose: Optional PDF processing and optimization paths.
+    version_constraint: ">=25"
+  - name: Optional document processors
+    purpose: Environment-dependent OCR/conversion capabilities used by selected retained endpoints.
     required: false
     version_constraint: null
 
@@ -149,8 +145,7 @@ compatibility:
     - goreecloud-platform-contract==2.0
     - glaze-ui==1.7.0
   provides:
-    - goreecloud-pdf-manager-development
-    - pdf-processing-api-v1
+    - goreecloud-pdf-manager-forge
 
 evidence:
   acceptance_tests: []
@@ -161,12 +156,12 @@ conformance:
   validated_at: null
   evidence:
     - README.md
-    - docs/ARCHITECTURE.md
     - docs/SECURITY.md
     - docs/PRIVACY.md
     - docs/GLAZE-ADOPTION.md
+    - scripts/check_source_boundary.sh
+    - scripts/validate_repository.sh
   blockers:
-    - Glaze V1.7 rendered/accessibility/performance/human consumer acceptance is incomplete.
-    - Production Identity, Privacy Shield, Wardveil Security, Everkeep, Manager, Mesh, Policy, and Observability acceptance is incomplete.
-    - Clean-target backup/restore, rollback, deployment, representative-environment, and production acceptance are incomplete.
-    - The current source is Forge development and has not completed Seal or Anchor qualification.
+    - Fresh Glaze V1.7 rendered/accessibility/performance/rollback/human acceptance is incomplete.
+    - GoreeCloud Identity, Privacy Shield, Wardveil Security, Everkeep, Manager, Mesh, Policy, and Observability production integrations are incomplete.
+    - Representative hostile-file, deployment, recovery, upgrade, rollback, and production acceptance evidence is incomplete.
