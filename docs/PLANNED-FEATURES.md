@@ -2,8 +2,9 @@
 
 ## Forge convergence
 
-- Dedicated Glaze workflows for the broader retained API: crop, rearrange, OCR, PDF/A, office conversion, metadata, page numbers, stamp/watermark, sanitize, redact, passwords, repair, flatten, signatures, forms, and pipelines.
-- Native PDF previews, thumbnails, drag page reordering, page selection, result previews, and richer progress.
+- Dedicated Glaze workflows for the remaining retained API, including crop, OCR, PDF/A, office conversion, image stamps, redact, signatures, forms, and pipelines.
+- Native PDF previews, thumbnails, drag page reordering, page selection, crop handles, redaction selection, result previews, and richer progress.
+- Condition-aware tool forms so controls that do not apply to the selected mode are hidden or disabled without obscuring the server contract.
 - Replace remaining legacy Stirling-branded utility/static surfaces still reachable from retained core paths.
 - Real-browser accessibility, keyboard, responsive, visual, high-contrast, reduced-motion, and assistive-technology acceptance.
 - Dependency, vulnerability, secret, license, and hostile-file security validation.
