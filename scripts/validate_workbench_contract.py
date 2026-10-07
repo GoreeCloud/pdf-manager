@@ -51,13 +51,18 @@ for family, (path, expected) in BASES.items():
 
 js = JS.read_text(encoding="utf-8")
 
-ready_ids = set(
-    re.findall(
-        r'id:\s*"([^"]+)"(?:(?!\n\s*\},).)*?ready:\s*true',
-        js,
-        flags=re.DOTALL,
-    )
-)
+tool_blocks: dict[str, str] = {}
+for match in re.finditer(r"(?ms)^  \{\n(.*?)^  \},?$", js):
+    block = match.group(1)
+    id_match = re.search(r'id:\s*"([^"]+)"', block)
+    if id_match:
+        tool_blocks[id_match.group(1)] = block
+
+ready_ids = {
+    tool_id
+    for tool_id, block in tool_blocks.items()
+    if re.search(r"^    ready:\s*true,", block, flags=re.MULTILINE)
+}
 expected_ids = set(TOOLS)
 
 missing_ready = sorted(expected_ids - ready_ids)
@@ -78,12 +83,8 @@ for tool_id, (family, route, controller_rel) in TOOLS.items():
         fail(f"{tool_id} route {route} is not present in {controller_rel}")
 
     endpoint = BASES[family][1] + route
-    pattern = re.compile(
-        rf'id:\s*"{re.escape(tool_id)}"(?:(?!\n\s*\}},).)*?'
-        rf'endpoint:\s*"{re.escape(endpoint)}"',
-        flags=re.DOTALL,
-    )
-    if not pattern.search(js):
+    block = tool_blocks.get(tool_id, "")
+    if f'endpoint: "{endpoint}"' not in block:
         fail(f"{tool_id} is not wired to {endpoint}")
 
 if 'tool.id === "page-numbers"' not in js or 'data.append("pageNumbers"' not in js:
