@@ -946,7 +946,7 @@ toolGrid.addEventListener("click", (event) => {
 
 toolForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (state.activeTool?.ready && state.activeTool.available === true) await executeTool(state.activeTool);
+  if (state.activeTool?.ready && availabilityState(state.activeTool) === "enabled") await executeTool(state.activeTool);
 });
 
 dialog.addEventListener("click", (event) => {
