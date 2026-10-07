@@ -6,6 +6,30 @@ const state = {
   query: "",
   activeTool: null,
   busy: false,
+  availability: {},
+  availabilityResolved: false,
+  availabilityError: null,
+};
+
+const availabilityKeys = {
+  merge: "merge-pdfs",
+  split: "split-pages",
+  rotate: "rotate-pdf",
+  compress: "compress-pdf",
+  "extract-images": "extract-images",
+  crop: "crop",
+  rearrange: "rearrange-pages",
+  ocr: "ocr-pdf",
+  pdfa: "pdf-to-pdfa",
+  metadata: "update-metadata",
+  "page-numbers": "add-page-numbers",
+  stamp: "add-stamp",
+  sanitize: "sanitize-pdf",
+  redact: "auto-redact",
+  "add-password": "add-password",
+  "remove-password": "remove-password",
+  repair: "repair",
+  flatten: "flatten",
 };
 
 const icon = (name) => {
@@ -96,7 +120,20 @@ const tools = [
       { name: "format", label: "Image format", type: "select", value: "png", options: [["png", "PNG"], ["jpeg", "JPEG"], ["gif", "GIF"]] },
     ],
   },
-  { id: "crop", name: "Crop pages", category: "edit", icon: "crop", description: "Adjust visible page boundaries and content framing." },
+  {
+    id: "crop",
+    name: "Auto-crop whitespace",
+    category: "edit",
+    icon: "crop",
+    ready: true,
+    endpoint: "/api/v1/general/crop",
+    description: "Detect and remove surrounding white space on selected pages using the server's available crop implementation.",
+    fields: [
+      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7" },
+      { name: "autoCrop", type: "hidden", value: "true" },
+      { name: "removeDataOutsideCrop", type: "hidden", value: "true" },
+    ],
+  },
   {
     id: "rearrange",
     name: "Rearrange pages",
@@ -110,8 +147,39 @@ const tools = [
       { name: "pageNumbers", label: "Page order / duplicate count", type: "text", value: "all", help: "For Custom use values such as 3,1,2 or 1-4. Use all to preserve the current order. For Duplicate enter the number of copies." },
     ],
   },
-  { id: "ocr", name: "OCR scanned PDFs", category: "convert", icon: "ocr", description: "Make scanned documents searchable with server-side OCR." },
-  { id: "pdfa", name: "Convert to PDF/A", category: "convert", icon: "convert", description: "Prepare archival PDF/A output through the conversion API." },
+  {
+    id: "ocr",
+    name: "OCR scanned PDFs",
+    category: "convert",
+    icon: "ocr",
+    ready: true,
+    endpoint: "/api/v1/misc/ocr-pdf",
+    description: "Make scanned documents searchable when this server has OCRmyPDF or Tesseract available.",
+    fields: [
+      { name: "languages", label: "OCR languages", type: "text", value: "eng", multiValue: true, help: "Comma- or line-separated Tesseract language codes, for example eng,deu." },
+      { name: "ocrType", label: "OCR mode", type: "select", value: "skip-text", options: [["skip-text", "Skip pages that already contain text"], ["Normal", "Normal"], ["force-ocr", "Force OCR on every page"]] },
+      { name: "ocrRenderType", label: "Text layer", type: "select", value: "hocr", options: [["hocr", "hOCR"], ["sandwich", "Sandwich"]] },
+      { name: "deskew", label: "Deskew pages", type: "checkbox", value: true },
+      { name: "rotatePages", label: "Auto-correct page orientation", type: "checkbox", value: false },
+      { name: "clean", label: "Clean input before OCR", type: "checkbox", value: false },
+      { name: "cleanFinal", label: "Clean final output", type: "checkbox", value: false },
+      { name: "removeImagesAfter", label: "Remove images after OCR", type: "checkbox", value: false },
+      { name: "sidecar", label: "Include sidecar text file", type: "checkbox", value: false },
+    ],
+  },
+  {
+    id: "pdfa",
+    name: "Convert to PDF/A",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/pdfa",
+    description: "Prepare archival PDF/A output using the server's available core conversion path.",
+    fields: [
+      { name: "outputFormat", label: "Archival profile", type: "select", value: "pdfa-2b", options: [["pdfa-1", "PDF/A-1"], ["pdfa-2", "PDF/A-2"], ["pdfa-2b", "PDF/A-2b"], ["pdfa-3", "PDF/A-3"], ["pdfa-3b", "PDF/A-3b"]] },
+      { name: "strict", label: "Fail if requested compliance is not reached", type: "checkbox", value: false },
+    ],
+  },
   { id: "office", name: "Office conversion", category: "convert", icon: "convert", description: "Convert supported office formats where dependencies are available." },
   {
     id: "metadata",
@@ -194,7 +262,23 @@ const tools = [
       { name: "removeFonts", label: "Remove embedded fonts", type: "checkbox", value: false },
     ],
   },
-  { id: "redact", name: "Redact content", category: "protect", icon: "shield", description: "Apply actual PDF redaction rather than visual-only masking." },
+  {
+    id: "redact",
+    name: "Redact text",
+    category: "protect",
+    icon: "shield",
+    ready: true,
+    endpoint: "/api/v1/security/auto-redact",
+    description: "Remove matching text content from the PDF rather than placing a visual-only mask over it.",
+    fields: [
+      { name: "listOfText", label: "Text or patterns to redact", type: "textarea", value: "", required: true, help: "Enter one text value or regex pattern per line." },
+      { name: "useRegex", label: "Treat entries as regular expressions", type: "checkbox", value: false },
+      { name: "wholeWordSearch", label: "Match whole words only", type: "checkbox", value: true },
+      { name: "redactColor", label: "Redaction color", type: "color", value: "#000000" },
+      { name: "customPadding", label: "Padding", type: "number", value: "0", min: "0", step: "0.5", help: "Additional padding around matching content." },
+      { name: "convertPDFToImage", label: "Rasterize the final redacted PDF", type: "checkbox", value: false },
+    ],
+  },
   {
     id: "add-password",
     name: "Add password",
@@ -341,31 +425,62 @@ function renderTools() {
     return;
   }
 
-  toolGrid.innerHTML = filtered.map((tool) => `
-    <button class="tool-card" type="button" data-tool="${tool.id}" data-ready="${tool.ready === true}">
-      <span>
-        <span class="tool-card-top">
-          <span class="tool-icon">${icon(tool.icon)}</span>
-          <span class="tool-kind">${tool.ready ? "Workbench ready" : "API available"}</span>
+  toolGrid.innerHTML = filtered.map((tool) => {
+    const key = availabilityKeys[tool.id];
+    const availability = key ? state.availability[key] : undefined;
+    const availabilityState = !tool.ready
+      ? "api"
+      : !state.availabilityResolved
+        ? "checking"
+        : availability?.enabled === false
+          ? "false"
+          : availability?.enabled === true
+            ? "true"
+            : "unknown";
+    const kind = !tool.ready
+      ? "API available"
+      : availabilityState === "checking"
+        ? "Checking server"
+        : availabilityState === "false"
+          ? "Unavailable on server"
+          : availabilityState === "true"
+            ? "Ready on server"
+            : "Workbench wired";
+    return `
+      <button class="tool-card" type="button" data-tool="${tool.id}" data-ready="${tool.ready === true}" data-available="${availabilityState}">
+        <span>
+          <span class="tool-card-top">
+            <span class="tool-icon">${icon(tool.icon)}</span>
+            <span class="tool-kind">${kind}</span>
+          </span>
+          <h3>${tool.name}</h3>
+          <p>${tool.description}</p>
         </span>
-        <h3>${tool.name}</h3>
-        <p>${tool.description}</p>
-      </span>
-    </button>
-  `).join("");
+      </button>
+    `;
+  }).join("");
 }
 
 function fieldMarkup(field) {
   const id = `field-${field.name}`;
+  if (field.type === "hidden") {
+    return `<input id="${id}" name="${field.name}" type="hidden" value="${escapeHtml(String(field.value ?? ""))}">`;
+  }
   if (field.type === "checkbox") {
     return `<label class="check-field" for="${id}"><input id="${id}" name="${field.name}" type="checkbox" ${field.value ? "checked" : ""}><span>${field.label}</span></label>`;
   }
   if (field.type === "select") {
     return `<div class="field"><label for="${id}">${field.label}</label><select class="glaze-select" id="${id}" name="${field.name}">${field.options.map(([value, label]) => `<option value="${value}" ${String(value) === String(field.value) ? "selected" : ""}>${label}</option>`).join("")}</select>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
   }
-  const inputType = field.type === "password" ? "password" : "text";
+  if (field.type === "textarea") {
+    return `<div class="field"><label for="${id}">${field.label}</label><textarea class="glaze-input field-textarea" id="${id}" name="${field.name}" ${field.required ? "required" : ""}>${escapeHtml(String(field.value ?? ""))}</textarea>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+  }
+  const inputType = ["password", "number", "color"].includes(field.type) ? field.type : "text";
   const autocomplete = field.autocomplete ? ` autocomplete="${field.autocomplete}"` : "";
-  return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+  const min = field.min !== undefined ? ` min="${field.min}"` : "";
+  const max = field.max !== undefined ? ` max="${field.max}"` : "";
+  const step = field.step !== undefined ? ` step="${field.step}"` : "";
+  return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}${min}${max}${step}${field.required ? " required" : ""}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
 }
 
 function openTool(tool) {
@@ -374,8 +489,22 @@ function openTool(tool) {
   $("#toolDialogTitle").textContent = tool.name;
   $("#toolDialogDescription").textContent = tool.description;
 
-  if (tool.ready) {
+  const availabilityKey = availabilityKeys[tool.id];
+  const availability = availabilityKey ? state.availability[availabilityKey] : undefined;
+
+  if (tool.ready && !state.availabilityResolved) {
+    toolFields.innerHTML = '<div class="empty-state">Checking whether this workflow is available on the current PDF Manager server.</div>';
+    runTool.hidden = true;
+  } else if (tool.ready && availability?.enabled === false) {
+    const reason = availability.reason ? ` Reason: ${escapeHtml(availability.reason.toLowerCase())}.` : "";
+    toolFields.innerHTML = `<div class="empty-state">This workflow is wired into the workbench, but the server reports that it is currently unavailable.${reason}</div>`;
+    runTool.hidden = true;
+  } else if (tool.ready) {
+    const warning = state.availabilityError || (availabilityKey && !availability)
+      ? '<div class="capability-note">Server capability status could not be verified. You can still try the request; the server remains authoritative.</div>'
+      : "";
     toolFields.innerHTML = `
+      ${warning}
       <div class="field">
         <label>Input</label>
         <small>${tool.multi ? "Uses all files in the workspace, in the order shown." : "Uses the first file in the workspace."}</small>
@@ -419,10 +548,17 @@ function buildFormData(tool) {
 
   const form = new FormData(toolForm);
   for (const field of tool.fields || []) {
-    if (field.type === "checkbox") data.append(field.name, form.has(field.name) ? "true" : "false");
-    else {
+    if (field.type === "checkbox") {
+      data.append(field.name, form.has(field.name) ? "true" : "false");
+    } else {
       const value = form.get(field.name);
-      if (value !== null && String(value).length) data.append(field.name, String(value));
+      if (value !== null && String(value).length) {
+        if (field.multiValue) {
+          String(value).split(/[\\n,]+/).map((item) => item.trim()).filter(Boolean).forEach((item) => data.append(field.name, item));
+        } else {
+          data.append(field.name, String(value));
+        }
+      }
     }
   }
   if (tool.id === "merge") data.append("fileOrder", state.files.map((file) => file.name).join("\n"));
@@ -454,6 +590,10 @@ function downloadBlob(blob, filename) {
 
 async function executeTool(tool) {
   if (state.busy) return;
+  const availabilityKey = availabilityKeys[tool.id];
+  if (availabilityKey && state.availability[availabilityKey]?.enabled === false) {
+    throw new Error("This workflow is currently unavailable on the PDF Manager server.");
+  }
   const original = runTool.textContent;
   state.busy = true;
   runTool.disabled = true;
@@ -500,6 +640,29 @@ async function checkService() {
   } catch {
     status.textContent = "Unavailable";
     detail.textContent = "The interface loaded, but the status endpoint did not confirm service readiness.";
+  }
+}
+
+async function checkToolAvailability() {
+  const keys = [...new Set(Object.values(availabilityKeys))];
+  const params = new URLSearchParams();
+  for (const key of keys) params.append("endpoints", key);
+
+  try {
+    const response = await fetch(`/api/v1/config/endpoints-availability?${params.toString()}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Capability request failed with status ${response.status}.`);
+    state.availability = await response.json();
+    state.availabilityError = null;
+  } catch (error) {
+    console.warn("Unable to resolve PDF Manager endpoint availability.", error);
+    state.availability = {};
+    state.availabilityError = "unverified";
+  } finally {
+    state.availabilityResolved = true;
+    renderTools();
   }
 }
 
@@ -577,3 +740,4 @@ if (glazeV170.version !== "1.7.0" || glazeV170.consumerEligible !== true) {
 renderFiles();
 renderTools();
 checkService();
+checkToolAvailability();
