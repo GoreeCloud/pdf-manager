@@ -14,6 +14,9 @@ This file records source implemented in the current candidate; it does not conve
 - Workspace file queue with duplicate suppression, deterministic ordering, removal, and reordering.
 - Real backend readiness check rather than decorative status.
 - No analytics, advertising, remote fonts, or third-party upload logic in the GoreeCloud shell.
+- Server-authoritative tool availability sourced from `/api/v1/config/endpoints-availability`, with execution blocked when availability is disabled or cannot be verified.
+- First-use three-step onboarding with resumable progress, voluntary replay through the Guide control, privacy/server-boundary education, and user-controlled contextual hints.
+- Contextual hints for file setup, merge ordering, protection workflows, and dependency-backed conversion availability, with per-hint dismissal and a global preference.
 
 ## Direct workbench workflows
 
@@ -25,11 +28,12 @@ This file records source implemented in the current candidate; it does not conve
 - Crop selected pages manually or auto-detect content bounds to trim white space.
 - Rearrange pages with custom order, reverse, duplex, booklet, odd/even, duplicate, and edge-removal modes.
 - Run OCR with explicit language, mode, render-layer, deskew, rotation, cleanup, sidecar, and image-removal controls.
-- Convert PDFs to PDF/A-1/2/3 level A or B profiles with optional strict compliance and PDF/UA validation.
+- Convert PDFs to PDF/A-1B/2B/3B profiles with optional strict compliance when the server reports the conversion capability available.
 - Update or deliberately remove standard document metadata.
 - Add page numbers or Bates-style numbering with page, position, font, color, text-pattern, and zero-padding controls.
 - Add text stamps/watermarks with page selection, alphabet, size, rotation, opacity, position, margin, color, and coordinate overrides.
 - Sanitize PDFs by removing selected JavaScript, embedded files, metadata, links, or embedded fonts.
+- Permanently redact matching text or regular-expression patterns with whole-word, padding, color, and optional final rasterization controls.
 - Add PDF password protection with encryption-key and permission controls.
 - Remove password protection when the current password is known.
 - Attempt structural PDF repair through the server's available Ghostscript, qpdf, or PDFBox path.

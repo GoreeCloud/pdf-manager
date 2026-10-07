@@ -15,7 +15,9 @@ This repository is a **GoreeCloud-maintained fork/rebuild** derived from the MIT
 - Independently owned GoreeCloud browser shell.
 - Glaze V1.7 / `1.7.0` runtime pinned from `GoreeCloud/glaze@9ab08060d723b022cdf07d001e8c95bca626a764`.
 - Canonical PDF Manager icon synchronized from `GoreeCloud/branding-assets`.
-- Direct workbench workflows for merge, split, rotate, optimize/compress, image extraction, crop, rearrange, OCR, PDF/A, metadata, page numbers, text stamp/watermark, sanitize, password add/remove, repair, and flatten.
+- Eighteen direct Glaze workbench workflows spanning organization, optimization, editing, OCR/conversion, redaction, sanitization, and password protection.
+- Server-authoritative capability availability with fail-closed execution when a tool is disabled or cannot be verified.
+- First-use onboarding plus replayable, user-controlled contextual guidance.
 - No analytics, advertising, remote fonts, or third-party file-upload service in the GoreeCloud shell.
 - Source-boundary and CI controls to prevent restricted upstream code from entering this repository.
 

@@ -1,11 +1,45 @@
 import { glazeV170 } from "./glaze/js/glaze-v1.7.0.mjs";
 
+const storageKeys = {
+  onboarding: "goreecloud-pdf-onboarding-v1",
+  hints: "goreecloud-pdf-hints-v1",
+  dismissedHints: "goreecloud-pdf-dismissed-hints-v1",
+};
+
 const state = {
   files: [],
   category: "all",
   query: "",
   activeTool: null,
   busy: false,
+  availability: {},
+  availabilityResolved: false,
+  availabilityError: null,
+  hintsEnabled: localStorage.getItem(storageKeys.hints) !== "false",
+  onboardingStep: 0,
+};
+
+const availabilityKeys = {
+  merge: "merge-pdfs",
+  split: "split-pages",
+  rotate: "rotate-pdf",
+  compress: "compress-pdf",
+  "extract-images": "extract-images",
+  crop: "crop",
+  rearrange: "rearrange-pages",
+  ocr: "ocr-pdf",
+  pdfa: "pdf-to-pdfa",
+  office: "file-to-pdf",
+  metadata: "update-metadata",
+  "page-numbers": "add-page-numbers",
+  stamp: "add-stamp",
+  sanitize: "sanitize-pdf",
+  redact: "auto-redact",
+  "add-password": "add-password",
+  "remove-password": "remove-password",
+  repair: "repair",
+  flatten: "flatten",
+  pipeline: "pipeline",
 };
 
 const icon = (name) => {
@@ -136,11 +170,11 @@ const tools = [
     endpoint: "/api/v1/misc/ocr-pdf",
     description: "Make scans searchable using the server OCR capability and explicit processing options.",
     fields: [
-      { name: "languages", label: "OCR languages", type: "text", value: "eng", repeatValues: true, help: "Comma- or space-separated Tesseract language codes, for example eng,deu." },
+      { name: "languages", label: "OCR languages", type: "text", value: "eng", repeatValues: true, help: "Comma-, space-, or line-separated Tesseract language codes, for example eng,deu." },
       { name: "ocrType", label: "OCR mode", type: "select", value: "skip-text", options: [["skip-text", "OCR image-only pages"], ["force-ocr", "Force OCR on every page"], ["Normal", "Normal"]] },
       { name: "ocrRenderType", label: "Text layer", type: "select", value: "hocr", options: [["hocr", "hOCR"], ["sandwich", "Sandwich"]] },
       { name: "deskew", label: "Deskew pages", type: "checkbox", value: true },
-      { name: "rotatePages", label: "Auto-rotate pages", type: "checkbox", value: true },
+      { name: "rotatePages", label: "Auto-rotate pages", type: "checkbox", value: false },
       { name: "clean", label: "Clean input before OCR", type: "checkbox", value: false },
       { name: "cleanFinal", label: "Clean final output", type: "checkbox", value: false },
       { name: "sidecar", label: "Include sidecar text", type: "checkbox", value: false, help: "May change the returned result into an archive containing PDF and text." },
@@ -154,11 +188,10 @@ const tools = [
     icon: "convert",
     ready: true,
     endpoint: "/api/v1/convert/pdf/pdfa",
-    description: "Convert a PDF to an archival PDF/A profile with optional strict validation.",
+    description: "Convert a PDF to an archival level-B PDF/A profile with optional strict validation.",
     fields: [
-      { name: "outputFormat", label: "Archival profile", type: "select", value: "pdfa-2b", options: [["pdfa-1", "PDF/A-1B"], ["pdfa-2b", "PDF/A-2B"], ["pdfa-3b", "PDF/A-3B"], ["pdfa-1a", "PDF/A-1A"], ["pdfa-2a", "PDF/A-2A"], ["pdfa-3a", "PDF/A-3A"]] },
+      { name: "outputFormat", label: "Archival profile", type: "select", value: "pdfa-2b", options: [["pdfa-1", "PDF/A-1B"], ["pdfa-2b", "PDF/A-2B"], ["pdfa-3b", "PDF/A-3B"]] },
       { name: "strict", label: "Require strict compliance", type: "checkbox", value: false, help: "Fail instead of returning output when compliance validation does not pass." },
-      { name: "pdfUa", label: "Also validate a PDF/UA declaration", type: "checkbox", value: false, help: "Applies only to level-A PDF/A profiles and is written only when validation succeeds." },
     ],
   },
   { id: "office", name: "Office conversion", category: "convert", icon: "convert", description: "Convert supported office formats where dependencies are available." },
@@ -243,7 +276,23 @@ const tools = [
       { name: "removeFonts", label: "Remove embedded fonts", type: "checkbox", value: false },
     ],
   },
-  { id: "redact", name: "Redact content", category: "protect", icon: "shield", description: "Apply actual PDF redaction rather than visual-only masking." },
+  {
+    id: "redact",
+    name: "Redact text",
+    category: "protect",
+    icon: "shield",
+    ready: true,
+    endpoint: "/api/v1/security/auto-redact",
+    description: "Remove matching text content from the PDF rather than placing a visual-only mask over it.",
+    fields: [
+      { name: "listOfText", label: "Text or patterns to redact", type: "textarea", value: "", required: true, help: "Enter one text value or regex pattern per line." },
+      { name: "useRegex", label: "Treat entries as regular expressions", type: "checkbox", value: false },
+      { name: "wholeWordSearch", label: "Match whole words only", type: "checkbox", value: true },
+      { name: "redactColor", label: "Redaction color", type: "color", value: "#000000" },
+      { name: "customPadding", label: "Padding", type: "number", value: "0", min: "0", step: "0.5", help: "Additional padding around matching content." },
+      { name: "convertPDFToImage", label: "Rasterize the final redacted PDF", type: "checkbox", value: false },
+    ],
+  },
   {
     id: "add-password",
     name: "Add password",
@@ -301,7 +350,7 @@ const tools = [
       { name: "renderDpi", label: "Full-page render DPI", type: "text", value: "300", help: "Used only when full-page flattening is selected. Minimum 72 DPI; server maximum still applies." },
     ],
   },
-  { id: "pipeline", name: "Automation pipelines", category: "automate", icon: "automate", description: "Compose repeatable multi-step document-processing workflows." },
+  { id: "pipeline", name: "Automation pipelines", category: "automate", icon: "automate", availabilityKey: "pipeline", description: "Compose repeatable multi-step document-processing workflows." },
 ];
 
 const $ = (selector) => document.querySelector(selector);
@@ -315,6 +364,194 @@ const toolFields = $("#toolFields");
 const toolForm = $("#toolForm");
 const runTool = $("#runTool");
 const toast = $("#toast");
+const onboardingDialog = $("#onboardingDialog");
+const onboardingContent = $("#onboardingContent");
+const onboardingBack = $("#onboardingBack");
+const onboardingLater = $("#onboardingLater");
+const onboardingNext = $("#onboardingNext");
+const contextHint = $("#contextHint");
+const contextHintText = $("#contextHintText");
+
+const onboardingSteps = [
+  {
+    eyebrow: "Welcome",
+    title: "PDF work without the tool maze.",
+    body: "GoreeCloud PDF Manager is a self-hosted document workbench. Add documents once, then choose the task you want to perform.",
+    points: [
+      ["Workspace", "Keep the current input set visible and reorder files before multi-file operations."],
+      ["Tools", "Browse by task instead of navigating a directory of disconnected mini-apps."],
+      ["Results", "Processing returns a new result; browser-selected source files are not overwritten."],
+    ],
+  },
+  {
+    eyebrow: "Privacy & server boundary",
+    title: "Know where your documents go.",
+    body: "Selected files are sent to this PDF Manager server when you run a tool. The GoreeCloud shell does not send them to analytics or a third-party upload service.",
+    points: [
+      ["Same-origin", "The GoreeCloud shell loads its runtime and submits processing requests to this server."],
+      ["Evidence-bound", "Protected, sanitized, encrypted, or available states are shown only when the responsible system provides evidence."],
+      ["Self-hosted", "Administrators still control TLS, network exposure, storage, retention, and access policy for this deployment."],
+    ],
+  },
+  {
+    eyebrow: "Guidance",
+    title: "Keep hints useful, not noisy.",
+    body: "PDF Manager can show short contextual hints near the workflow you are using. You can turn ordinary hints off and replay this guide later from the top bar.",
+    points: [
+      ["Availability", "Tool availability comes from the server configuration and dependency checks."],
+      ["Security tools", "Sensitive operations explain their effect before you run them."],
+      ["Replay", "Choose Guide any time to review this onboarding again."],
+    ],
+    setting: true,
+  },
+];
+
+function availabilityKeyForTool(tool) {
+  if (availabilityKeys[tool.id]) return availabilityKeys[tool.id];
+  if (!tool.endpoint) return null;
+  const parts = tool.endpoint.split("/").filter(Boolean);
+  if (parts[2] === "convert" && parts.length > 4) return `${parts[3]}-to-${parts[4]}`;
+  return parts.at(-1) || null;
+}
+
+function availabilityEvidence(tool) {
+  const key = availabilityKeyForTool(tool);
+  return key ? state.availability[key] : null;
+}
+
+function availabilityState(tool) {
+  if (!state.availabilityResolved) return "unknown";
+  const evidence = availabilityEvidence(tool);
+  if (evidence?.enabled === true) return "enabled";
+  if (evidence?.enabled === false) return "disabled";
+  return "unknown";
+}
+
+function availabilityLabel(tool) {
+  const status = availabilityState(tool);
+  const evidence = availabilityEvidence(tool);
+  if (status === "disabled") {
+    if (evidence?.reason === "DEPENDENCY") return "Dependency unavailable";
+    if (evidence?.reason === "CONFIG") return "Disabled by server";
+    return "Unavailable";
+  }
+  if (status !== "enabled") return "Checking server";
+  return tool.ready ? "Workbench ready" : "API available";
+}
+
+function availabilityMessage(tool) {
+  const status = availabilityState(tool);
+  const evidence = availabilityEvidence(tool);
+  if (status === "disabled") {
+    if (evidence?.reason === "DEPENDENCY") {
+      return "This server reports that a required processing dependency is unavailable.";
+    }
+    if (evidence?.reason === "CONFIG") {
+      return "This capability is disabled by the current server configuration.";
+    }
+    return "This server reports that the capability is unavailable.";
+  }
+  return "PDF Manager could not confirm this capability from the server. Execution stays disabled until availability is verified.";
+}
+
+function onboardingState() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKeys.onboarding) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveOnboardingState(completed) {
+  localStorage.setItem(storageKeys.onboarding, JSON.stringify({
+    completed,
+    step: state.onboardingStep,
+  }));
+}
+
+function renderOnboarding() {
+  const step = onboardingSteps[state.onboardingStep];
+  document.querySelectorAll("[data-onboarding-dot]").forEach((dot, index) => {
+    dot.dataset.active = String(index <= state.onboardingStep);
+  });
+  onboardingContent.innerHTML = `
+    <span class="eyebrow">${step.eyebrow}</span>
+    <h2 id="onboardingTitle">${step.title}</h2>
+    <p>${step.body}</p>
+    <div class="onboarding-points">
+      ${step.points.map(([title, detail]) => `<div class="onboarding-point"><b>${title}</b><span>${detail}</span></div>`).join("")}
+    </div>
+    ${step.setting ? `
+      <div class="onboarding-setting">
+        <label for="onboardingHints"><input id="onboardingHints" type="checkbox" ${state.hintsEnabled ? "checked" : ""}><span>Show contextual hints</span></label>
+        <small>Ordinary hints can be disabled without hiding security warnings, errors, confirmations, or system-status messages.</small>
+      </div>
+    ` : ""}
+  `;
+  onboardingBack.disabled = state.onboardingStep === 0;
+  onboardingNext.textContent = state.onboardingStep === onboardingSteps.length - 1 ? "Finish" : "Continue";
+}
+
+function openOnboarding({ replay = false } = {}) {
+  const saved = onboardingState();
+  if (!replay && saved?.completed === true) return;
+  state.onboardingStep = replay ? 0 : Math.min(saved?.step || 0, onboardingSteps.length - 1);
+  renderOnboarding();
+  if (!onboardingDialog.open) onboardingDialog.showModal();
+}
+
+function finishOnboarding() {
+  const hintsControl = $("#onboardingHints");
+  if (hintsControl) {
+    const wasEnabled = state.hintsEnabled;
+    state.hintsEnabled = hintsControl.checked;
+    localStorage.setItem(storageKeys.hints, String(state.hintsEnabled));
+    if (!wasEnabled && state.hintsEnabled) localStorage.removeItem(storageKeys.dismissedHints);
+  }
+  saveOnboardingState(true);
+  onboardingDialog.close();
+  renderContextHint();
+}
+
+function currentHint() {
+  if (!state.hintsEnabled) return null;
+  if (state.files.length === 0) {
+    return ["add-files", "Add the files you need first. PDF Manager sends them to this server only when you run a processing tool."];
+  }
+  if (state.category === "organize" && state.files.length > 1) {
+    return ["workspace-order", "For multi-file workflows such as Merge PDFs, the visible workspace order is the order sent to the server."];
+  }
+  if (state.category === "protect") {
+    return ["protect-tools", "Protection tools create a new result. Review each option carefully; PDF permissions and sanitization can materially change a document."];
+  }
+  if (state.category === "convert") {
+    return ["conversion-availability", "Conversion and OCR availability is verified from this server. Missing dependencies are shown as unavailable instead of being guessed from the interface."];
+  }
+  return null;
+}
+
+function renderContextHint() {
+  const hint = currentHint();
+  if (!hint) {
+    contextHint.hidden = true;
+    delete contextHint.dataset.hintId;
+    return;
+  }
+  const [id, message] = hint;
+  let dismissed = [];
+  try {
+    dismissed = JSON.parse(localStorage.getItem(storageKeys.dismissedHints) || "[]");
+  } catch {
+    dismissed = [];
+  }
+  if (dismissed.includes(id)) {
+    contextHint.hidden = true;
+    return;
+  }
+  contextHint.dataset.hintId = id;
+  contextHintText.textContent = message;
+  contextHint.hidden = false;
+}
 
 function setTheme(theme) {
   if (theme === "system") document.documentElement.removeAttribute("data-theme");
@@ -391,11 +628,11 @@ function renderTools() {
   }
 
   toolGrid.innerHTML = filtered.map((tool) => `
-    <button class="tool-card" type="button" data-tool="${tool.id}" data-ready="${tool.ready === true}">
+    <button class="tool-card" type="button" data-tool="${tool.id}" data-ready="${tool.ready === true}" data-availability="${availabilityState(tool)}">
       <span>
         <span class="tool-card-top">
           <span class="tool-icon">${icon(tool.icon)}</span>
-          <span class="tool-kind">${tool.ready ? "Workbench ready" : "API available"}</span>
+          <span class="tool-kind">${availabilityLabel(tool)}</span>
         </span>
         <h3>${tool.name}</h3>
         <p>${tool.description}</p>
@@ -406,18 +643,24 @@ function renderTools() {
 
 function fieldMarkup(field) {
   const id = `field-${field.name}`;
+  if (field.type === "hidden") {
+    return `<input id="${id}" name="${field.name}" type="hidden" value="${escapeHtml(String(field.value ?? ""))}">`;
+  }
   if (field.type === "checkbox") {
     return `<label class="check-field" for="${id}"><input id="${id}" name="${field.name}" type="checkbox" ${field.value ? "checked" : ""}><span>${field.label}</span></label>`;
   }
   if (field.type === "select") {
     return `<div class="field"><label for="${id}">${field.label}</label><select class="glaze-select" id="${id}" name="${field.name}">${field.options.map(([value, label]) => `<option value="${value}" ${String(value) === String(field.value) ? "selected" : ""}>${label}</option>`).join("")}</select>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
   }
-  const inputType = ["password", "number"].includes(field.type) ? field.type : "text";
+  if (field.type === "textarea") {
+    return `<div class="field"><label for="${id}">${field.label}</label><textarea class="glaze-input field-textarea" id="${id}" name="${field.name}" ${field.required ? "required" : ""}>${escapeHtml(String(field.value ?? ""))}</textarea>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+  }
+  const inputType = ["password", "number", "color"].includes(field.type) ? field.type : "text";
   const autocomplete = field.autocomplete ? ` autocomplete="${field.autocomplete}"` : "";
   const min = field.min === undefined ? "" : ` min="${field.min}"`;
   const max = field.max === undefined ? "" : ` max="${field.max}"`;
   const step = field.step === undefined ? "" : ` step="${field.step}"`;
-  return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}${min}${max}${step}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+  return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}${min}${max}${step}${field.required ? " required" : ""}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
 }
 
 function openTool(tool) {
@@ -426,7 +669,10 @@ function openTool(tool) {
   $("#toolDialogTitle").textContent = tool.name;
   $("#toolDialogDescription").textContent = tool.description;
 
-  if (tool.ready) {
+  if (availabilityState(tool) !== "enabled") {
+    toolFields.innerHTML = `<div class="empty-state">${availabilityMessage(tool)}</div>`;
+    runTool.hidden = true;
+  } else if (tool.ready) {
     toolFields.innerHTML = `
       <div class="field">
         <label>Input</label>
@@ -438,7 +684,7 @@ function openTool(tool) {
     runTool.disabled = false;
     runTool.textContent = "Run tool";
   } else {
-    toolFields.innerHTML = '<div class="empty-state">This capability is present in the retained processing API. A dedicated Glaze workflow is planned; use API details for the current interface.</div>';
+    toolFields.innerHTML = '<div class="empty-state">This server reports the API capability as available. A dedicated Glaze workflow is still planned; use API details for the current interface.</div>';
     runTool.hidden = true;
   }
 
@@ -471,12 +717,13 @@ function buildFormData(tool) {
 
   const form = new FormData(toolForm);
   for (const field of tool.fields || []) {
-    if (field.type === "checkbox") data.append(field.name, form.has(field.name) ? "true" : "false");
-    else {
+    if (field.type === "checkbox") {
+      data.append(field.name, form.has(field.name) ? "true" : "false");
+    } else {
       const value = form.get(field.name);
       if (value !== null && String(value).length) {
-        if (field.repeatValues) {
-          String(value).split(/[\s,]+/).filter(Boolean).forEach((item) => data.append(field.name, item));
+        if (field.repeatValues || field.multiValue) {
+          String(value).split(/[\s,]+/).map((item) => item.trim()).filter(Boolean).forEach((item) => data.append(field.name, item));
         } else {
           data.append(field.name, String(value));
         }
@@ -512,6 +759,10 @@ function downloadBlob(blob, filename) {
 
 async function executeTool(tool) {
   if (state.busy) return;
+  if (availabilityState(tool) !== "enabled") {
+    showToast(availabilityMessage(tool), "error");
+    return;
+  }
   const original = runTool.textContent;
   state.busy = true;
   runTool.disabled = true;
@@ -561,17 +812,86 @@ async function checkService() {
   }
 }
 
+async function checkToolAvailability() {
+  const keys = [...new Set(Object.values(availabilityKeys))];
+  const params = new URLSearchParams();
+  for (const key of keys) params.append("endpoints", key);
+
+  try {
+    const response = await fetch(`/api/v1/config/endpoints-availability?${params.toString()}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Capability request failed with status ${response.status}.`);
+    state.availability = await response.json();
+    state.availabilityError = null;
+  } catch (error) {
+    console.warn("Unable to resolve PDF Manager endpoint availability.", error);
+    state.availability = {};
+    state.availabilityError = "unverified";
+  } finally {
+    state.availabilityResolved = true;
+    renderTools();
+    renderContextHint();
+  }
+}
+
 $("#themeToggle").addEventListener("click", toggleTheme);
+$("#guideButton").addEventListener("click", () => openOnboarding({ replay: true }));
+$("#dismissHint").addEventListener("click", () => {
+  const id = contextHint.dataset.hintId;
+  if (!id) return;
+  let dismissed = [];
+  try {
+    dismissed = JSON.parse(localStorage.getItem(storageKeys.dismissedHints) || "[]");
+  } catch {
+    dismissed = [];
+  }
+  if (!dismissed.includes(id)) dismissed.push(id);
+  localStorage.setItem(storageKeys.dismissedHints, JSON.stringify(dismissed));
+  renderContextHint();
+});
+onboardingBack.addEventListener("click", () => {
+  if (state.onboardingStep === 0) return;
+  state.onboardingStep -= 1;
+  saveOnboardingState(false);
+  renderOnboarding();
+});
+onboardingLater.addEventListener("click", () => {
+  saveOnboardingState(false);
+  onboardingDialog.close();
+});
+onboardingNext.addEventListener("click", () => {
+  if (state.onboardingStep === onboardingSteps.length - 1) {
+    finishOnboarding();
+    return;
+  }
+  state.onboardingStep += 1;
+  saveOnboardingState(false);
+  renderOnboarding();
+});
+onboardingContent.addEventListener("change", (event) => {
+  if (!event.target.matches("#onboardingHints")) return;
+  const wasEnabled = state.hintsEnabled;
+  state.hintsEnabled = event.target.checked;
+  localStorage.setItem(storageKeys.hints, String(state.hintsEnabled));
+  if (!wasEnabled && state.hintsEnabled) localStorage.removeItem(storageKeys.dismissedHints);
+  renderContextHint();
+});
+onboardingDialog.addEventListener("cancel", () => saveOnboardingState(false));
+
 setTheme(localStorage.getItem("goreecloud-pdf-theme") || "system");
 
 fileInput.addEventListener("change", () => {
   addFiles([...fileInput.files]);
   fileInput.value = "";
+  renderContextHint();
 });
 
 clearFiles.addEventListener("click", () => {
   state.files = [];
   renderFiles();
+  renderContextHint();
 });
 
 fileQueue.addEventListener("click", (event) => {
@@ -582,6 +902,7 @@ fileQueue.addEventListener("click", (event) => {
   else if (button.dataset.fileAction === "up" && index > 0) [state.files[index - 1], state.files[index]] = [state.files[index], state.files[index - 1]];
   else if (button.dataset.fileAction === "down" && index < state.files.length - 1) [state.files[index + 1], state.files[index]] = [state.files[index], state.files[index + 1]];
   renderFiles();
+  renderContextHint();
 });
 
 for (const type of ["dragenter", "dragover"]) {
@@ -596,7 +917,10 @@ for (const type of ["dragleave", "drop"]) {
     dropZone.dataset.dragging = "false";
   });
 }
-dropZone.addEventListener("drop", (event) => addFiles([...event.dataTransfer.files]));
+dropZone.addEventListener("drop", (event) => {
+  addFiles([...event.dataTransfer.files]);
+  renderContextHint();
+});
 
 $("#categoryNav").addEventListener("click", (event) => {
   const button = event.target.closest("[data-category]");
@@ -605,6 +929,7 @@ $("#categoryNav").addEventListener("click", (event) => {
   document.querySelectorAll("[data-category]").forEach((item) => item.removeAttribute("aria-current"));
   button.setAttribute("aria-current", "page");
   renderTools();
+  renderContextHint();
 });
 
 $("#toolSearch").addEventListener("input", (event) => {
@@ -621,7 +946,7 @@ toolGrid.addEventListener("click", (event) => {
 
 toolForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (state.activeTool?.ready) await executeTool(state.activeTool);
+  if (state.activeTool?.ready && state.activeTool.available === true) await executeTool(state.activeTool);
 });
 
 dialog.addEventListener("click", (event) => {
@@ -634,4 +959,7 @@ if (glazeV170.version !== "1.7.0" || glazeV170.consumerEligible !== true) {
 
 renderFiles();
 renderTools();
+renderContextHint();
 checkService();
+checkToolAvailability();
+openOnboarding();

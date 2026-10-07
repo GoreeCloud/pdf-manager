@@ -12,6 +12,8 @@
 
 PDF Manager vendors the V1.7 stable entrypoint, its inherited V1.6 runtime modules, base Glaze CSS, and MIT license. The GoreeCloud shell consumes those shared foundations and applies product-specific styles.
 
+The current Forge source also applies Glaze to first-use onboarding, replay controls, contextual guidance, capability-state labels, dependency/configuration-unavailable states, and fail-closed execution messaging. These source additions do not replace the rendered accessibility and human-visual acceptance still required below.
+
 ## Acceptance state
 
 **Source adoption implemented; consumer acceptance incomplete.**
