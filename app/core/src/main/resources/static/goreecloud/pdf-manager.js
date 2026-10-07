@@ -132,16 +132,20 @@ const tools = [
   },
   {
     id: "crop",
-    name: "Auto-crop whitespace",
+    name: "Crop pages",
     category: "edit",
     icon: "crop",
     ready: true,
     endpoint: "/api/v1/general/crop",
-    description: "Detect and remove surrounding white space on selected pages using the server's available crop implementation.",
+    description: "Automatically trim white space or crop selected pages to explicit PDF coordinates.",
     fields: [
-      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7" },
-      { name: "autoCrop", type: "hidden", value: "true" },
-      { name: "removeDataOutsideCrop", type: "hidden", value: "true" },
+      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7." },
+      { name: "autoCrop", label: "Auto-detect content bounds", type: "checkbox", value: true, help: "When enabled, manual coordinates are ignored." },
+      { name: "x", label: "X coordinate", type: "number", value: "", step: "0.1", help: "Required only for manual crop." },
+      { name: "y", label: "Y coordinate", type: "number", value: "", step: "0.1", help: "Required only for manual crop." },
+      { name: "width", label: "Crop width", type: "number", value: "", min: "0.1", step: "0.1", help: "Required only for manual crop." },
+      { name: "height", label: "Crop height", type: "number", value: "", min: "0.1", step: "0.1", help: "Required only for manual crop." },
+      { name: "removeDataOutsideCrop", label: "Remove data outside crop when supported", type: "checkbox", value: false, help: "Uses the server Ghostscript path when that capability is enabled." },
     ],
   },
   {
@@ -164,17 +168,17 @@ const tools = [
     icon: "ocr",
     ready: true,
     endpoint: "/api/v1/misc/ocr-pdf",
-    description: "Make scanned documents searchable when this server has OCRmyPDF or Tesseract available.",
+    description: "Make scans searchable using the server OCR capability and explicit processing options.",
     fields: [
-      { name: "languages", label: "OCR languages", type: "text", value: "eng", multiValue: true, help: "Comma- or line-separated Tesseract language codes, for example eng,deu." },
-      { name: "ocrType", label: "OCR mode", type: "select", value: "skip-text", options: [["skip-text", "Skip pages that already contain text"], ["Normal", "Normal"], ["force-ocr", "Force OCR on every page"]] },
+      { name: "languages", label: "OCR languages", type: "text", value: "eng", repeatValues: true, help: "Comma-, space-, or line-separated Tesseract language codes, for example eng,deu." },
+      { name: "ocrType", label: "OCR mode", type: "select", value: "skip-text", options: [["skip-text", "OCR image-only pages"], ["force-ocr", "Force OCR on every page"], ["Normal", "Normal"]] },
       { name: "ocrRenderType", label: "Text layer", type: "select", value: "hocr", options: [["hocr", "hOCR"], ["sandwich", "Sandwich"]] },
       { name: "deskew", label: "Deskew pages", type: "checkbox", value: true },
-      { name: "rotatePages", label: "Auto-correct page orientation", type: "checkbox", value: false },
+      { name: "rotatePages", label: "Auto-rotate pages", type: "checkbox", value: false },
       { name: "clean", label: "Clean input before OCR", type: "checkbox", value: false },
       { name: "cleanFinal", label: "Clean final output", type: "checkbox", value: false },
+      { name: "sidecar", label: "Include sidecar text", type: "checkbox", value: false, help: "May change the returned result into an archive containing PDF and text." },
       { name: "removeImagesAfter", label: "Remove images after OCR", type: "checkbox", value: false },
-      { name: "sidecar", label: "Include sidecar text file", type: "checkbox", value: false },
     ],
   },
   {
@@ -184,10 +188,10 @@ const tools = [
     icon: "convert",
     ready: true,
     endpoint: "/api/v1/convert/pdf/pdfa",
-    description: "Prepare archival PDF/A output using the server's available core conversion path.",
+    description: "Convert a PDF to an archival level-B PDF/A profile with optional strict validation.",
     fields: [
-      { name: "outputFormat", label: "Archival profile", type: "select", value: "pdfa-2b", options: [["pdfa-1", "PDF/A-1"], ["pdfa-2", "PDF/A-2"], ["pdfa-2b", "PDF/A-2b"], ["pdfa-3", "PDF/A-3"], ["pdfa-3b", "PDF/A-3b"]] },
-      { name: "strict", label: "Fail if requested compliance is not reached", type: "checkbox", value: false },
+      { name: "outputFormat", label: "Archival profile", type: "select", value: "pdfa-2b", options: [["pdfa-1", "PDF/A-1B"], ["pdfa-2b", "PDF/A-2B"], ["pdfa-3b", "PDF/A-3B"]] },
+      { name: "strict", label: "Require strict compliance", type: "checkbox", value: false, help: "Fail instead of returning output when compliance validation does not pass." },
     ],
   },
   { id: "office", name: "Office conversion", category: "convert", icon: "convert", description: "Convert supported office formats where dependencies are available." },
@@ -653,9 +657,9 @@ function fieldMarkup(field) {
   }
   const inputType = ["password", "number", "color"].includes(field.type) ? field.type : "text";
   const autocomplete = field.autocomplete ? ` autocomplete="${field.autocomplete}"` : "";
-  const min = field.min !== undefined ? ` min="${field.min}"` : "";
-  const max = field.max !== undefined ? ` max="${field.max}"` : "";
-  const step = field.step !== undefined ? ` step="${field.step}"` : "";
+  const min = field.min === undefined ? "" : ` min="${field.min}"`;
+  const max = field.max === undefined ? "" : ` max="${field.max}"`;
+  const step = field.step === undefined ? "" : ` step="${field.step}"`;
   return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="${inputType}" value="${escapeHtml(String(field.value ?? ""))}"${autocomplete}${min}${max}${step}${field.required ? " required" : ""}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
 }
 
@@ -718,8 +722,8 @@ function buildFormData(tool) {
     } else {
       const value = form.get(field.name);
       if (value !== null && String(value).length) {
-        if (field.multiValue) {
-          String(value).split(/[\\n,]+/).map((item) => item.trim()).filter(Boolean).forEach((item) => data.append(field.name, item));
+        if (field.repeatValues || field.multiValue) {
+          String(value).split(/[\s,]+/).map((item) => item.trim()).filter(Boolean).forEach((item) => data.append(field.name, item));
         } else {
           data.append(field.name, String(value));
         }

@@ -25,10 +25,10 @@ This file records source implemented in the current candidate; it does not conve
 - Rotate pages by 90, 180, or 270 degrees.
 - Optimize/compress with optimization, size target, linearization, normalization, and grayscale options.
 - Extract embedded images to PNG, JPEG, or GIF archive output.
-- Auto-crop surrounding whitespace on selected pages through the retained crop API.
-- OCR scanned PDFs with language, OCR mode, text-layer, deskew, orientation, cleanup, image-removal, and sidecar controls when the server reports OCR dependencies available.
-- Convert PDFs to supported PDF/A archival profiles through the retained conversion path when the server reports the capability available.
+- Crop selected pages manually or auto-detect content bounds to trim white space.
 - Rearrange pages with custom order, reverse, duplex, booklet, odd/even, duplicate, and edge-removal modes.
+- Run OCR with explicit language, mode, render-layer, deskew, rotation, cleanup, sidecar, and image-removal controls.
+- Convert PDFs to PDF/A-1B/2B/3B profiles with optional strict compliance when the server reports the conversion capability available.
 - Update or deliberately remove standard document metadata.
 - Add page numbers or Bates-style numbering with page, position, font, color, text-pattern, and zero-padding controls.
 - Add text stamps/watermarks with page selection, alphabet, size, rotation, opacity, position, margin, color, and coordinate overrides.
@@ -41,4 +41,4 @@ This file records source implemented in the current candidate; it does not conve
 
 ## Retained processing API
 
-The adopted open-source core exposes substantially broader PDF/page organization, conversion, OCR, cropping, overlays, redaction, signatures, forms, pipeline, and related endpoints. Dedicated Glaze workflows and environment-specific acceptance remain open where not listed above.
+The adopted open-source core exposes substantially broader conversion, overlays, redaction, signatures, forms, pipeline, and related endpoints. Dedicated Glaze workflows and environment-specific acceptance remain open where not listed above.

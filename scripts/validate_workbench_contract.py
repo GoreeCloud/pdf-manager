@@ -116,16 +116,19 @@ if 'type: "password"' not in js:
     fail("password workflows must use password-type input definitions")
 
 crop_block = tool_blocks.get("crop", "")
-if 'name: "autoCrop", type: "hidden", value: "true"' not in crop_block:
-    fail("auto-crop workflow must force automatic crop mode")
+for marker in ('name: "autoCrop"', 'name: "x"', 'name: "y"', 'name: "width"', 'name: "height"'):
+    if marker not in crop_block:
+        fail(f"crop workflow must expose backend crop control {marker}")
 
 ocr_block = tool_blocks.get("ocr", "")
-if 'name: "languages"' not in ocr_block or "multiValue: true" not in ocr_block:
-    fail("OCR workflow must support multiple language values")
+if 'name: "languages"' not in ocr_block or "repeatValues: true" not in ocr_block:
+    fail("OCR workflow must support repeated multipart language values")
+if "data.append(field.name, item)" not in js:
+    fail("OCR repeated language values must be appended individually")
 
 pdfa_block = tool_blocks.get("pdfa", "")
 if "pdfa-1a" in pdfa_block or "pdfa-2a" in pdfa_block or "pdfa-3a" in pdfa_block or "pdfUa" in pdfa_block:
-    fail("core-only PDF/A workflow must not advertise proprietary level-A/PDF-UA tagging")
+    fail("core-only PDF/A workflow must not advertise unavailable level-A/PDF-UA tagging")
 
 redact_block = tool_blocks.get("redact", "")
 if 'type: "textarea"' not in redact_block or 'wholeWordSearch' not in redact_block:
