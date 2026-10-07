@@ -22,6 +22,7 @@
       </a>
       <div class="top-actions">
         <span class="glaze-badge">Forge</span>
+        <button class="glaze-button" id="guideButton" type="button">Guide</button>
         <a class="glaze-button link-button" href="/swagger-ui/index.html">API</a>
         <button class="glaze-icon-button" id="themeToggle" type="button" aria-label="Toggle appearance" title="Toggle appearance">
           <svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M3 12h2.2M18.8 12H21M5.64 5.64l1.56 1.56M16.8 16.8l1.56 1.56M18.36 5.64 16.8 7.2M7.2 16.8l-1.56 1.56"/><circle cx="12" cy="12" r="4.2"/></svg>
@@ -73,6 +74,16 @@
         <div id="fileQueue" class="file-queue" aria-live="polite"></div>
       </section>
 
+      <aside id="contextHint" class="context-hint glaze-surface" aria-live="polite" hidden>
+        <div>
+          <span class="eyebrow">Hint</span>
+          <p id="contextHintText"></p>
+        </div>
+        <button id="dismissHint" class="glaze-icon-button" type="button" aria-label="Dismiss hint" title="Dismiss hint">
+          <svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </aside>
+
       <section class="section-row tools-heading">
         <div><span class="eyebrow">Tools</span><h2>Choose what happens next</h2></div>
         <label class="search-box"><span class="sr-only">Search tools</span><input class="glaze-input" id="toolSearch" type="search" placeholder="Search PDF tools"></label>
@@ -86,6 +97,20 @@
       </section>
     </main>
   </div>
+
+  <dialog id="onboardingDialog" class="onboarding-dialog glaze-overlay" aria-labelledby="onboardingTitle">
+    <div class="onboarding-progress" aria-hidden="true">
+      <span data-onboarding-dot="0"></span>
+      <span data-onboarding-dot="1"></span>
+      <span data-onboarding-dot="2"></span>
+    </div>
+    <section id="onboardingContent" class="onboarding-content"></section>
+    <div class="onboarding-actions">
+      <button id="onboardingBack" class="glaze-button" type="button">Back</button>
+      <button id="onboardingLater" class="glaze-button" type="button">Not now</button>
+      <button id="onboardingNext" class="glaze-button" data-variant="primary" type="button">Continue</button>
+    </div>
+  </dialog>
 
   <dialog id="toolDialog" class="tool-dialog glaze-overlay">
     <form method="dialog" class="dialog-close"><button class="glaze-icon-button" aria-label="Close"><svg class="glaze-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></form>

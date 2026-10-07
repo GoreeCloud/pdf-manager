@@ -24,6 +24,18 @@ Password protection is processed by the PDF Manager server. Password fields are 
 
 Tools marked **API available** exist in the retained backend but do not yet have a dedicated GoreeCloud workflow; use the API documentation for their current request contract.
 
+## Tool availability
+
+PDF Manager asks the server for current endpoint availability before allowing execution. A tool may be shown as **Dependency unavailable** when a required processor is missing, **Disabled by server** when configuration turns it off, or **Checking server** when availability has not yet been verified. Unknown availability is fail-closed: PDF Manager does not enable execution until the server confirms the capability.
+
+## First-use guide and hints
+
+On first use, PDF Manager opens a concise three-step guide covering the workbench model, server-side document processing, privacy expectations, capability truth, and contextual hints.
+
+Choose **Not now** to interrupt the guide; the current step is retained and offered again on a later visit. Completing the guide stops automatic replay. Choose **Guide** in the top bar to replay it voluntarily.
+
+Ordinary contextual hints can be dismissed individually. The final Guide step also provides a global **Show contextual hints** control that can disable or re-enable ordinary hints. Turning hints off does not suppress errors, security warnings, confirmations, service state, or other required system truth.
+
 ## Appearance
 
 The initial appearance follows the system preference. The top-bar appearance control toggles light and dark.

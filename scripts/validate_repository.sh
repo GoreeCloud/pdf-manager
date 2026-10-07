@@ -45,6 +45,32 @@ while stack:
         stack.append(target)
 
 print(f"repository-validation: Glaze module closure OK ({len(seen)} modules)")
+
+workbench_html = (root / "app/core/src/main/resources/static/api-landing.html").read_text(encoding="utf-8")
+workbench_js = (root / "app/core/src/main/resources/static/goreecloud/pdf-manager.js").read_text(encoding="utf-8")
+
+required_html_markers = {
+    'id="guideButton"': "Guide replay control",
+    'id="onboardingDialog"': "first-use onboarding dialog",
+    'id="contextHint"': "contextual hint surface",
+}
+for marker, description in required_html_markers.items():
+    if marker not in workbench_html:
+        raise SystemExit(f"missing {description}: {marker}")
+
+required_js_markers = {
+    '"/api/v1/config/endpoints-availability"': "authoritative capability availability request",
+    "tool.available !== true": "fail-closed tool execution gate",
+    "storageKeys.onboarding": "persisted onboarding state",
+    "storageKeys.hints": "persisted hint preference",
+    "openOnboarding({ replay: true })": "onboarding replay control",
+    "renderContextHint()": "contextual hint rendering",
+}
+for marker, description in required_js_markers.items():
+    if marker not in workbench_js:
+        raise SystemExit(f"missing {description}: {marker}")
+
+print("repository-validation: capability truth and onboarding contract OK")
 PY
 
 printf 'repository-validation: PASS\n'

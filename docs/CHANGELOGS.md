@@ -8,6 +8,8 @@
 - GoreeCloud-owned Glaze workbench.
 - Direct merge, split, rotate, optimize/compress, and image-extraction workflows.
 - Direct rearrange, metadata, page-numbering, text stamp/watermark, sanitize, add/remove password, repair, and flatten workflows.
+- Server-authoritative capability states for all workbench/API tool cards with fail-closed execution until availability is verified.
+- Replayable first-use onboarding plus contextual hints with persisted user controls and dismissals.
 - Glaze V1.7 runtime snapshot from `GoreeCloud/glaze@9ab08060d723b022cdf07d001e8c95bca626a764`.
 - Canonical PDF Manager icon from GoreeCloud branding authority.
 - Repository-native feature, changelog, privacy, security, architecture, upstream, and Glaze records.

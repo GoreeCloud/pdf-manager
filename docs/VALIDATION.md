@@ -31,6 +31,20 @@ This is an environment compatibility limitation rather than a GoreeCloud source 
 
 Canonical GitHub CI is pinned to Ubuntu 24.04 with Temurin JDK 25 so the native suite executes on a compatible runtime environment.
 
+## Capability-truth and onboarding candidate
+
+The current `feature/capability-aware-workflows` source passes JavaScript syntax validation, `git diff --check`, the existing 14-workflow workbench contract, source-boundary validation, and repository validation with new static assertions for:
+
+- the server-authoritative `/api/v1/config/endpoints-availability` capability request;
+- fail-closed execution when a tool is disabled or availability is unknown;
+- first-use onboarding state persistence;
+- voluntary Guide replay;
+- global contextual-hint preference;
+- per-hint dismissal;
+- required Guide, onboarding, and contextual-hint surfaces in the packaged entry source.
+
+Rendered-browser behavior, clean-profile onboarding, interruption/resume, replay, hint persistence, responsive presentation, keyboard/screen-reader behavior, and representative enabled/disabled/dependency capability states remain pending exact-head runtime/CI acceptance and are not claimed as verified here.
+
 ## Acceptance boundary
 
 These results support Forge source validation only. They do not establish Seal or Anchor, production deployment acceptance, full hostile-file security acceptance, Glaze human/accessibility acceptance, or GoreeCloud platform-system production acceptance.

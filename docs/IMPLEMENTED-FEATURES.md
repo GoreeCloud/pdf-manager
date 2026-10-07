@@ -14,6 +14,9 @@ This file records source implemented in the current candidate; it does not conve
 - Workspace file queue with duplicate suppression, deterministic ordering, removal, and reordering.
 - Real backend readiness check rather than decorative status.
 - No analytics, advertising, remote fonts, or third-party upload logic in the GoreeCloud shell.
+- Server-authoritative tool availability sourced from `/api/v1/config/endpoints-availability`, with execution blocked when availability is disabled or cannot be verified.
+- First-use three-step onboarding with resumable progress, voluntary replay through the Guide control, privacy/server-boundary education, and user-controlled contextual hints.
+- Contextual hints for file setup, merge ordering, protection workflows, and dependency-backed conversion availability, with per-hint dismissal and a global preference.
 
 ## Direct workbench workflows
 

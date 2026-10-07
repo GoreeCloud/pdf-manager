@@ -1,11 +1,19 @@
 import { glazeV170 } from "./glaze/js/glaze-v1.7.0.mjs";
 
+const storageKeys = {
+  onboarding: "goreecloud-pdf-onboarding-v1",
+  hints: "goreecloud-pdf-hints-v1",
+};
+
 const state = {
   files: [],
   category: "all",
   query: "",
   activeTool: null,
   busy: false,
+  availabilityLoaded: false,
+  hintsEnabled: localStorage.getItem(storageKeys.hints) !== "false",
+  onboardingStep: 0,
 };
 
 const icon = (name) => {
@@ -96,7 +104,7 @@ const tools = [
       { name: "format", label: "Image format", type: "select", value: "png", options: [["png", "PNG"], ["jpeg", "JPEG"], ["gif", "GIF"]] },
     ],
   },
-  { id: "crop", name: "Crop pages", category: "edit", icon: "crop", description: "Adjust visible page boundaries and content framing." },
+  { id: "crop", name: "Crop pages", category: "edit", icon: "crop", availabilityKey: "crop", description: "Adjust visible page boundaries and content framing." },
   {
     id: "rearrange",
     name: "Rearrange pages",
@@ -110,9 +118,9 @@ const tools = [
       { name: "pageNumbers", label: "Page order / duplicate count", type: "text", value: "all", help: "For Custom use values such as 3,1,2 or 1-4. Use all to preserve the current order. For Duplicate enter the number of copies." },
     ],
   },
-  { id: "ocr", name: "OCR scanned PDFs", category: "convert", icon: "ocr", description: "Make scanned documents searchable with server-side OCR." },
-  { id: "pdfa", name: "Convert to PDF/A", category: "convert", icon: "convert", description: "Prepare archival PDF/A output through the conversion API." },
-  { id: "office", name: "Office conversion", category: "convert", icon: "convert", description: "Convert supported office formats where dependencies are available." },
+  { id: "ocr", name: "OCR scanned PDFs", category: "convert", icon: "ocr", availabilityKey: "ocr-pdf", description: "Make scanned documents searchable with server-side OCR." },
+  { id: "pdfa", name: "Convert to PDF/A", category: "convert", icon: "convert", availabilityKey: "pdf-to-pdfa", description: "Prepare archival PDF/A output through the conversion API." },
+  { id: "office", name: "Office conversion", category: "convert", icon: "convert", availabilityKey: "file-to-pdf", description: "Convert supported office formats where dependencies are available." },
   {
     id: "metadata",
     name: "Document metadata",
@@ -194,7 +202,7 @@ const tools = [
       { name: "removeFonts", label: "Remove embedded fonts", type: "checkbox", value: false },
     ],
   },
-  { id: "redact", name: "Redact content", category: "protect", icon: "shield", description: "Apply actual PDF redaction rather than visual-only masking." },
+  { id: "redact", name: "Redact content", category: "protect", icon: "shield", availabilityKey: "redact", description: "Apply actual PDF redaction rather than visual-only masking." },
   {
     id: "add-password",
     name: "Add password",
@@ -252,7 +260,7 @@ const tools = [
       { name: "renderDpi", label: "Full-page render DPI", type: "text", value: "300", help: "Used only when full-page flattening is selected. Minimum 72 DPI; server maximum still applies." },
     ],
   },
-  { id: "pipeline", name: "Automation pipelines", category: "automate", icon: "automate", description: "Compose repeatable multi-step document-processing workflows." },
+  { id: "pipeline", name: "Automation pipelines", category: "automate", icon: "automate", availabilityKey: "pipeline", description: "Compose repeatable multi-step document-processing workflows." },
 ];
 
 const $ = (selector) => document.querySelector(selector);
@@ -266,6 +274,210 @@ const toolFields = $("#toolFields");
 const toolForm = $("#toolForm");
 const runTool = $("#runTool");
 const toast = $("#toast");
+const onboardingDialog = $("#onboardingDialog");
+const onboardingContent = $("#onboardingContent");
+const onboardingBack = $("#onboardingBack");
+const onboardingLater = $("#onboardingLater");
+const onboardingNext = $("#onboardingNext");
+const contextHint = $("#contextHint");
+const contextHintText = $("#contextHintText");
+
+const onboardingSteps = [
+  {
+    eyebrow: "Welcome",
+    title: "PDF work without the tool maze.",
+    body: "GoreeCloud PDF Manager is a self-hosted document workbench. Add documents once, then choose the task you want to perform.",
+    points: [
+      ["Workspace", "Keep the current input set visible and reorder files before multi-file operations."],
+      ["Tools", "Browse by task instead of navigating a directory of disconnected mini-apps."],
+      ["Results", "Processing returns a new result; browser-selected source files are not overwritten."],
+    ],
+  },
+  {
+    eyebrow: "Privacy & server boundary",
+    title: "Know where your documents go.",
+    body: "Selected files are sent to this PDF Manager server when you run a tool. The GoreeCloud shell does not send them to analytics or a third-party upload service.",
+    points: [
+      ["Same-origin", "The GoreeCloud shell loads its runtime and submits processing requests to this server."],
+      ["Evidence-bound", "Protected, sanitized, encrypted, or available states are shown only when the responsible system provides evidence."],
+      ["Self-hosted", "Administrators still control TLS, network exposure, storage, retention, and access policy for this deployment."],
+    ],
+  },
+  {
+    eyebrow: "Guidance",
+    title: "Keep hints useful, not noisy.",
+    body: "PDF Manager can show short contextual hints near the workflow you are using. You can turn ordinary hints off and replay this guide later from the top bar.",
+    points: [
+      ["Availability", "Tool availability comes from the server configuration and dependency checks."],
+      ["Security tools", "Sensitive operations explain their effect before you run them."],
+      ["Replay", "Choose Guide any time to review this onboarding again."],
+    ],
+    setting: true,
+  },
+];
+
+function availabilityKeyForTool(tool) {
+  if (tool.availabilityKey) return tool.availabilityKey;
+  if (!tool.endpoint) return null;
+  const parts = tool.endpoint.split("/").filter(Boolean);
+  if (parts[2] === "convert" && parts.length > 4) return `${parts[3]}-to-${parts[4]}`;
+  return parts.at(-1) || null;
+}
+
+function availabilityState(tool) {
+  if (tool.available === true) return "enabled";
+  if (tool.available === false) return "disabled";
+  return "unknown";
+}
+
+function availabilityLabel(tool) {
+  if (tool.available === false) {
+    if (tool.disableReason === "DEPENDENCY") return "Dependency unavailable";
+    if (tool.disableReason === "CONFIG") return "Disabled by server";
+    return "Unavailable";
+  }
+  if (tool.available !== true) return "Checking server";
+  return tool.ready ? "Workbench ready" : "API available";
+}
+
+function availabilityMessage(tool) {
+  if (tool.available === false) {
+    if (tool.disableReason === "DEPENDENCY") {
+      return "This server reports that a required processing dependency is unavailable.";
+    }
+    if (tool.disableReason === "CONFIG") {
+      return "This capability is disabled by the current server configuration.";
+    }
+    return "This server reports that the capability is unavailable.";
+  }
+  return "PDF Manager could not yet confirm this capability from the server. Execution stays disabled until availability is verified.";
+}
+
+async function loadToolAvailability() {
+  try {
+    const response = await fetch("/api/v1/config/endpoints-availability", {
+      credentials: "same-origin",
+      cache: "no-store",
+    });
+    if (!response.ok) throw new Error(`Capability request failed with status ${response.status}.`);
+    const availability = await response.json();
+    for (const tool of tools) {
+      const key = availabilityKeyForTool(tool);
+      const evidence = key ? availability[key] : null;
+      tool.available = evidence?.enabled === true;
+      tool.disableReason = evidence?.reason || (evidence ? null : "UNKNOWN");
+    }
+    state.availabilityLoaded = true;
+  } catch (error) {
+    console.warn("Tool availability could not be verified.", error);
+    state.availabilityLoaded = false;
+    for (const tool of tools) {
+      delete tool.available;
+      tool.disableReason = "UNKNOWN";
+    }
+  }
+  renderTools();
+  renderContextHint();
+}
+
+function onboardingState() {
+  try {
+    return JSON.parse(localStorage.getItem(storageKeys.onboarding) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveOnboardingState(completed) {
+  localStorage.setItem(storageKeys.onboarding, JSON.stringify({
+    completed,
+    step: state.onboardingStep,
+  }));
+}
+
+function renderOnboarding() {
+  const step = onboardingSteps[state.onboardingStep];
+  document.querySelectorAll("[data-onboarding-dot]").forEach((dot, index) => {
+    dot.dataset.active = String(index <= state.onboardingStep);
+  });
+  onboardingContent.innerHTML = `
+    <span class="eyebrow">${step.eyebrow}</span>
+    <h2 id="onboardingTitle">${step.title}</h2>
+    <p>${step.body}</p>
+    <div class="onboarding-points">
+      ${step.points.map(([title, detail]) => `<div class="onboarding-point"><b>${title}</b><span>${detail}</span></div>`).join("")}
+    </div>
+    ${step.setting ? `
+      <div class="onboarding-setting">
+        <label for="onboardingHints"><input id="onboardingHints" type="checkbox" ${state.hintsEnabled ? "checked" : ""}><span>Show contextual hints</span></label>
+        <small>Ordinary hints can be disabled without hiding security warnings, errors, confirmations, or system-status messages.</small>
+      </div>
+    ` : ""}
+  `;
+  onboardingBack.disabled = state.onboardingStep === 0;
+  onboardingNext.textContent = state.onboardingStep === onboardingSteps.length - 1 ? "Finish" : "Continue";
+}
+
+function openOnboarding({ replay = false } = {}) {
+  const saved = onboardingState();
+  if (!replay && saved?.completed === true) return;
+  state.onboardingStep = replay ? 0 : Math.min(saved?.step || 0, onboardingSteps.length - 1);
+  renderOnboarding();
+  if (!onboardingDialog.open) onboardingDialog.showModal();
+}
+
+function finishOnboarding() {
+  const hintsControl = $("#onboardingHints");
+  if (hintsControl) {
+    const wasEnabled = state.hintsEnabled;
+    state.hintsEnabled = hintsControl.checked;
+    localStorage.setItem(storageKeys.hints, String(state.hintsEnabled));
+    if (!wasEnabled && state.hintsEnabled) localStorage.removeItem(storageKeys.dismissedHints);
+  }
+  saveOnboardingState(true);
+  onboardingDialog.close();
+  renderContextHint();
+}
+
+function currentHint() {
+  if (!state.hintsEnabled) return null;
+  if (state.files.length === 0) {
+    return ["add-files", "Add the files you need first. PDF Manager sends them to this server only when you run a processing tool."];
+  }
+  if (state.category === "organize" && state.files.length > 1) {
+    return ["workspace-order", "For multi-file workflows such as Merge PDFs, the visible workspace order is the order sent to the server."];
+  }
+  if (state.category === "protect") {
+    return ["protect-tools", "Protection tools create a new result. Review each option carefully; PDF permissions and sanitization can materially change a document."];
+  }
+  if (state.category === "convert") {
+    return ["conversion-availability", "Conversion and OCR availability is verified from this server. Missing dependencies are shown as unavailable instead of being guessed from the interface."];
+  }
+  return null;
+}
+
+function renderContextHint() {
+  const hint = currentHint();
+  if (!hint) {
+    contextHint.hidden = true;
+    delete contextHint.dataset.hintId;
+    return;
+  }
+  const [id, message] = hint;
+  let dismissed = [];
+  try {
+    dismissed = JSON.parse(localStorage.getItem(storageKeys.dismissedHints) || "[]");
+  } catch {
+    dismissed = [];
+  }
+  if (dismissed.includes(id)) {
+    contextHint.hidden = true;
+    return;
+  }
+  contextHint.dataset.hintId = id;
+  contextHintText.textContent = message;
+  contextHint.hidden = false;
+}
 
 function setTheme(theme) {
   if (theme === "system") document.documentElement.removeAttribute("data-theme");
@@ -342,11 +554,11 @@ function renderTools() {
   }
 
   toolGrid.innerHTML = filtered.map((tool) => `
-    <button class="tool-card" type="button" data-tool="${tool.id}" data-ready="${tool.ready === true}">
+    <button class="tool-card" type="button" data-tool="${tool.id}" data-ready="${tool.ready === true}" data-availability="${availabilityState(tool)}">
       <span>
         <span class="tool-card-top">
           <span class="tool-icon">${icon(tool.icon)}</span>
-          <span class="tool-kind">${tool.ready ? "Workbench ready" : "API available"}</span>
+          <span class="tool-kind">${availabilityLabel(tool)}</span>
         </span>
         <h3>${tool.name}</h3>
         <p>${tool.description}</p>
@@ -374,7 +586,10 @@ function openTool(tool) {
   $("#toolDialogTitle").textContent = tool.name;
   $("#toolDialogDescription").textContent = tool.description;
 
-  if (tool.ready) {
+  if (tool.available !== true) {
+    toolFields.innerHTML = `<div class="empty-state">${availabilityMessage(tool)}</div>`;
+    runTool.hidden = true;
+  } else if (tool.ready) {
     toolFields.innerHTML = `
       <div class="field">
         <label>Input</label>
@@ -386,7 +601,7 @@ function openTool(tool) {
     runTool.disabled = false;
     runTool.textContent = "Run tool";
   } else {
-    toolFields.innerHTML = '<div class="empty-state">This capability is present in the retained processing API. A dedicated Glaze workflow is planned; use API details for the current interface.</div>';
+    toolFields.innerHTML = '<div class="empty-state">This server reports the API capability as available. A dedicated Glaze workflow is still planned; use API details for the current interface.</div>';
     runTool.hidden = true;
   }
 
@@ -454,6 +669,10 @@ function downloadBlob(blob, filename) {
 
 async function executeTool(tool) {
   if (state.busy) return;
+  if (tool.available !== true) {
+    showToast(availabilityMessage(tool), "error");
+    return;
+  }
   const original = runTool.textContent;
   state.busy = true;
   runTool.disabled = true;
@@ -504,16 +723,61 @@ async function checkService() {
 }
 
 $("#themeToggle").addEventListener("click", toggleTheme);
+$("#guideButton").addEventListener("click", () => openOnboarding({ replay: true }));
+$("#dismissHint").addEventListener("click", () => {
+  const id = contextHint.dataset.hintId;
+  if (!id) return;
+  let dismissed = [];
+  try {
+    dismissed = JSON.parse(localStorage.getItem(storageKeys.dismissedHints) || "[]");
+  } catch {
+    dismissed = [];
+  }
+  if (!dismissed.includes(id)) dismissed.push(id);
+  localStorage.setItem(storageKeys.dismissedHints, JSON.stringify(dismissed));
+  renderContextHint();
+});
+onboardingBack.addEventListener("click", () => {
+  if (state.onboardingStep === 0) return;
+  state.onboardingStep -= 1;
+  saveOnboardingState(false);
+  renderOnboarding();
+});
+onboardingLater.addEventListener("click", () => {
+  saveOnboardingState(false);
+  onboardingDialog.close();
+});
+onboardingNext.addEventListener("click", () => {
+  if (state.onboardingStep === onboardingSteps.length - 1) {
+    finishOnboarding();
+    return;
+  }
+  state.onboardingStep += 1;
+  saveOnboardingState(false);
+  renderOnboarding();
+});
+onboardingContent.addEventListener("change", (event) => {
+  if (!event.target.matches("#onboardingHints")) return;
+  const wasEnabled = state.hintsEnabled;
+  state.hintsEnabled = event.target.checked;
+  localStorage.setItem(storageKeys.hints, String(state.hintsEnabled));
+  if (!wasEnabled && state.hintsEnabled) localStorage.removeItem(storageKeys.dismissedHints);
+  renderContextHint();
+});
+onboardingDialog.addEventListener("cancel", () => saveOnboardingState(false));
+
 setTheme(localStorage.getItem("goreecloud-pdf-theme") || "system");
 
 fileInput.addEventListener("change", () => {
   addFiles([...fileInput.files]);
   fileInput.value = "";
+  renderContextHint();
 });
 
 clearFiles.addEventListener("click", () => {
   state.files = [];
   renderFiles();
+  renderContextHint();
 });
 
 fileQueue.addEventListener("click", (event) => {
@@ -524,6 +788,7 @@ fileQueue.addEventListener("click", (event) => {
   else if (button.dataset.fileAction === "up" && index > 0) [state.files[index - 1], state.files[index]] = [state.files[index], state.files[index - 1]];
   else if (button.dataset.fileAction === "down" && index < state.files.length - 1) [state.files[index + 1], state.files[index]] = [state.files[index], state.files[index + 1]];
   renderFiles();
+  renderContextHint();
 });
 
 for (const type of ["dragenter", "dragover"]) {
@@ -538,7 +803,10 @@ for (const type of ["dragleave", "drop"]) {
     dropZone.dataset.dragging = "false";
   });
 }
-dropZone.addEventListener("drop", (event) => addFiles([...event.dataTransfer.files]));
+dropZone.addEventListener("drop", (event) => {
+  addFiles([...event.dataTransfer.files]);
+  renderContextHint();
+});
 
 $("#categoryNav").addEventListener("click", (event) => {
   const button = event.target.closest("[data-category]");
@@ -547,6 +815,7 @@ $("#categoryNav").addEventListener("click", (event) => {
   document.querySelectorAll("[data-category]").forEach((item) => item.removeAttribute("aria-current"));
   button.setAttribute("aria-current", "page");
   renderTools();
+  renderContextHint();
 });
 
 $("#toolSearch").addEventListener("input", (event) => {
@@ -563,7 +832,7 @@ toolGrid.addEventListener("click", (event) => {
 
 toolForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  if (state.activeTool?.ready) await executeTool(state.activeTool);
+  if (state.activeTool?.ready && state.activeTool.available === true) await executeTool(state.activeTool);
 });
 
 dialog.addEventListener("click", (event) => {
@@ -576,4 +845,7 @@ if (glazeV170.version !== "1.7.0" || glazeV170.consumerEligible !== true) {
 
 renderFiles();
 renderTools();
+renderContextHint();
 checkService();
+loadToolAvailability();
+openOnboarding();
