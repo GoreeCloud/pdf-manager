@@ -32,6 +32,10 @@ This file records source implemented in the current candidate; it does not conve
 - Convert PDFs to DOC/DOCX/ODT when the server reports the Word conversion capability available.
 - Convert PDFs to PPT/PPTX/ODP when the server reports the presentation conversion capability available.
 - Extract tables from selected PDF pages into XLSX workbooks through the retained PDF-to-Excel endpoint.
+- Render selected PDF pages to PNG, JPEG, or GIF as a combined image or separate page images.
+- Combine ordered workspace images into a PDF with explicit page-fit, color, and auto-rotation controls.
+- Convert PDFs to EPUB or AZW3 with tablet/phone or Kindle-oriented profiles and optional chapter detection.
+- Convert supported office/text documents to PDF through the server's available conversion path.
 - Update or deliberately remove standard document metadata.
 - Add page numbers or Bates-style numbering with page, position, font, color, text-pattern, and zero-padding controls.
 - Add text stamps/watermarks with page selection, alphabet, size, rotation, opacity, position, margin, color, and coordinate overrides.
@@ -42,6 +46,8 @@ This file records source implemented in the current candidate; it does not conve
 - Remove password protection when the current password is known.
 - Attempt structural PDF repair through the server's available Ghostscript, qpdf, or PDFBox path.
 - Flatten form fields or full pages with configurable render DPI.
+- Remove embedded raster images, including images nested in PDF form XObjects.
+- Validate workspace input compatibility before submission so PDF-only, image-only, mixed PDF/image, and office/text workflows fail locally on incompatible file types.
 
 ## Retained processing API
 

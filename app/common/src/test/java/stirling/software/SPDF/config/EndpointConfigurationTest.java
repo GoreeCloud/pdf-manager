@@ -18,6 +18,9 @@ class EndpointConfigurationTest {
         assertEquals(
                 "add-watermark",
                 EndpointConfiguration.endpointKeyForUri("/api/v1/security/add-watermark"));
+        assertEquals(
+                "remove-image-pdf",
+                EndpointConfiguration.endpointKeyForUri("/api/v1/general/remove-image-pdf"));
     }
 
     @Test
@@ -28,6 +31,12 @@ class EndpointConfigurationTest {
                 "pdf-to-word", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/pdf/word"));
         assertEquals(
                 "pdf-to-xlsx", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/pdf/xlsx"));
+        assertEquals(
+                "pdf-to-epub", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/pdf/epub"));
+        assertEquals(
+                "img-to-pdf", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/img/pdf"));
+        assertEquals(
+                "file-to-pdf", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/file/pdf"));
         assertEquals(
                 "html-to-pdf", EndpointConfiguration.endpointKeyForUri("/api/v1/convert/html/pdf"));
     }

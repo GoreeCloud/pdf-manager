@@ -10,6 +10,8 @@
 - Direct rearrange, metadata, page-numbering, text stamp/watermark, sanitize, add/remove password, repair, and flatten workflows.
 - Direct crop, OCR, PDF/A, and text-redaction workflows with backend-contract validation.
 - Direct PDF-to-Word, PDF-to-presentation, PDF-to-Excel, and image stamp/watermark workflows with server-authoritative availability and multipart-file validation.
+- Direct PDF-to-images, images-to-PDF, PDF-to-EPUB/AZW3, office-to-PDF, and remove-images workflows.
+- Workspace input compatibility validation for PDF-only, image-only, mixed PDF/image, and office/text workflows before requests are submitted.
 - Server-authoritative capability states for all workbench/API tool cards with fail-closed execution until availability is verified.
 - Replayable first-use onboarding plus contextual hints with persisted user controls and dismissals.
 - Glaze V1.7 runtime snapshot from `GoreeCloud/glaze@9ab08060d723b022cdf07d001e8c95bca626a764`.
@@ -23,7 +25,7 @@
 - Gradle project identity to `GoreeCloud PDF Manager`, group `com.goreecloud.pdfmanager`, version `0.1.0-dev`.
 - Build graph to common/core only.
 - Backend-only landing page into the primary GoreeCloud workbench.
-- Workbench-ready tool count expanded from 5 to 22, including manual/automatic crop, OCR, level-B PDF/A conversion, Word/presentation/Excel export, text redaction, and image watermarking, while retaining explicit API-only state for workflows that still need stronger preview/dependency UX.
+- Workbench-ready tool count expanded from 5 to 27, including manual/automatic crop, OCR, level-B PDF/A conversion, Word/presentation/Excel export, image/PDF conversion, ebook export, office import, text redaction, and image watermarking, while retaining explicit API-only state for workflows that still need stronger preview/dependency UX.
 - Corrected the workbench submit gate to use the unified server-authoritative availability state after capability-model consolidation.
 
 ### Security and privacy

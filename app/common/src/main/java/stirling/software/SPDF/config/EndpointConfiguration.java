@@ -418,6 +418,7 @@ public class EndpointConfiguration {
         // Adding endpoints to "Other" group
         addEndpointToGroup("Other", "ocr-pdf");
         addEndpointToGroup("Other", "extract-images");
+        addEndpointToGroup("Other", "remove-image-pdf");
         addEndpointToGroup("Other", "update-metadata");
         addEndpointToGroup("Other", "flatten");
         addEndpointToGroup("Other", REMOVE_BLANKS);
@@ -518,6 +519,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "add-stamp");
         addEndpointToGroup("Java", "add-image");
         addEndpointToGroup("Java", "extract-images");
+        addEndpointToGroup("Java", "remove-image-pdf");
         addEndpointToGroup("Java", "update-metadata");
         addEndpointToGroup("Java", "cert-sign");
         addEndpointToGroup("Java", "remove-cert-sign");

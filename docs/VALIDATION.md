@@ -46,17 +46,30 @@ The capability-aware implementation includes JavaScript syntax, workbench-contra
 
 Rendered-browser behavior, clean-profile onboarding, interruption/resume, replay, hint persistence, responsive presentation, keyboard/screen-reader behavior, and representative enabled/disabled/dependency capability states remain pending exact-head runtime/CI acceptance and are not claimed as verified here.
 
-## Conversion and image-watermark candidate
+## Conversion and image-watermark merge evidence
 
-The current `feature/conversion-forms-workflows` candidate has local evidence for the 22-workflow expansion:
+The 22-workflow conversion/image-watermark expansion was verified on GitHub before and after merge:
 
-- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (22 ready workflows, server-authoritative availability)`;
+- PR #11 exact head `b37473530509e1189ab1f32132c4f67032929a2f` passed the protected **Repository and source boundary**, **Compile and package core**, and **Core test suite** checks;
+- PR #11 merged to protected `main` as GitHub-signed commit `a0956be4ded11c1a04f1fc2396fc075bc50aba12`;
+- post-merge `main` workflow run `37708434868` completed successfully on that exact merge commit.
+
+Rendered end-user acceptance remains separate from source/CI acceptance.
+
+## Document utility candidate
+
+The current `feature/document-utility-workflows` candidate has local evidence for the 27-workflow expansion:
+
+- `node --check app/core/src/main/resources/static/goreecloud/pdf-manager.js` passes;
+- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (27 ready workflows, server-authoritative availability)`;
+- `git diff --check` passes;
+- focused `EndpointConfigurationTest` execution passes with regression coverage for PDF→images, images→PDF, PDF→EPUB, office→PDF, and remove-images endpoint-key behavior;
 - `./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon` completes successfully on JDK 25;
-- focused `EndpointConfigurationTest` execution passes after adding the `/api/v1/convert/pdf/xlsx → pdf-to-xlsx` conversion-key regression assertion;
-- packaged-JAR readback confirms the PDF-to-Word, PDF-to-presentation, PDF-to-Excel, image-stamp workflow, and secondary file-input code are present in the shipped workbench asset;
-- `git diff --check` passes.
+- packaged-JAR readback confirms PDF→images, images→PDF, PDF→EPUB/AZW3, office→PDF, remove-images, expanded workspace input acceptance, and `validateWorkspaceForTool` are present in the shipped workbench assets;
+- `remove-image-pdf` is registered in the retained server availability configuration instead of bypassing the fail-closed workbench gate;
+- the direct PDF→images workflow intentionally excludes WebP because that option has an additional Python dependency not represented by the general `pdf-to-img` capability state.
 
-The focused unit-test run reports low aggregate JaCoCo percentages because only one small test class is selected; those coverage percentages are informational for this filtered run and the Gradle task completed successfully. Exact-head GitHub CI and rendered end-user acceptance remain required before this candidate can be represented as merged or runtime-accepted.
+The focused unit-test run reports low aggregate JaCoCo percentages because only one small test class is selected; those percentages are informational for the filtered run and the Gradle task completed successfully. Exact-head GitHub CI and rendered end-user acceptance remain required before this candidate can be represented as merged or runtime-accepted.
 
 ## Acceptance boundary
 
