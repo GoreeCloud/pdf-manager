@@ -2,7 +2,7 @@
 
 ## Forge convergence
 
-- Dedicated Glaze workflows for the remaining retained API, including Office-to-PDF import, signatures, forms, and pipelines.
+- Dedicated Glaze workflows for the remaining retained API, including Office-to-PDF import, signature validation/signing/timestamping, advanced form fill/create/edit flows, attachment list/rename/delete flows, and pipelines.
 - Native PDF previews, thumbnails, drag page reordering, page selection, crop handles, redaction selection, result previews, and richer progress.
 - Condition-aware tool forms so controls that do not apply to the selected mode are hidden or disabled without obscuring the server contract.
 - Replace remaining legacy Stirling-branded utility/static surfaces still reachable from retained core paths.

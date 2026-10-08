@@ -46,17 +46,29 @@ The capability-aware implementation includes JavaScript syntax, workbench-contra
 
 Rendered-browser behavior, clean-profile onboarding, interruption/resume, replay, hint persistence, responsive presentation, keyboard/screen-reader behavior, and representative enabled/disabled/dependency capability states remain pending exact-head runtime/CI acceptance and are not claimed as verified here.
 
-## Conversion and image-watermark candidate
+## Conversion and image-watermark verification
 
-The current `feature/conversion-forms-workflows` candidate has local evidence for the 22-workflow expansion:
+The 22-workflow conversion/image-watermark expansion is merged and source/build/test verified:
 
-- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (22 ready workflows, server-authoritative availability)`;
+- PR #11 exact head `b37473530509e1189ab1f32132c4f67032929a2f` passed Repository and source boundary, Compile and package core, and Core test suite in GitHub Actions run `37708184781`;
+- PR #11 merged to protected `main` as `a0956be4ded11c1a04f1fc2396fc075bc50aba12`;
+- post-merge push run `37708434868` passed the same three jobs on that exact main revision;
+- the merged topic branch was removed and the remaining non-main branches are active Dependabot branches;
+- the local pre-merge JDK 25 evidence also included repository validation, successful core JAR packaging, focused `EndpointConfigurationTest`, packaged-JAR readback, and `git diff --check`.
+
+This verifies the repository source/build/test state only. Rendered end-user conversion behavior and broader fidelity/accessibility acceptance remain open.
+
+## Forms, attachments, and signature-removal candidate
+
+The current `feature/forms-attachments-signatures` candidate has local evidence for the 26-workflow expansion:
+
+- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (26 ready workflows, server-authoritative availability)`;
 - `./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon` completes successfully on JDK 25;
-- focused `EndpointConfigurationTest` execution passes after adding the `/api/v1/convert/pdf/xlsx → pdf-to-xlsx` conversion-key regression assertion;
-- packaged-JAR readback confirms the PDF-to-Word, PDF-to-presentation, PDF-to-Excel, image-stamp workflow, and secondary file-input code are present in the shipped workbench asset;
+- focused `EndpointConfigurationTest`, `AttachmentControllerTest`, `AttachmentControllerMoreTest`, `UnlockPDFFormsControllerTest`, `UnlockPDFFormsControllerMoreTest`, and `RemoveCertSignControllerTest` runs complete successfully;
+- packaged-JAR readback confirms form unlock, add/extract attachments, certificate-signature removal, and multi-file `FormData.getAll(...)` handling are present in the shipped workbench asset;
 - `git diff --check` passes.
 
-The focused unit-test run reports low aggregate JaCoCo percentages because only one small test class is selected; those coverage percentages are informational for this filtered run and the Gradle task completed successfully. Exact-head GitHub CI and rendered end-user acceptance remain required before this candidate can be represented as merged or runtime-accepted.
+The filtered test runs report low aggregate JaCoCo percentages because only the targeted classes are selected; those coverage percentages are informational for these focused runs and the Gradle tasks completed successfully. Exact-head GitHub CI and rendered end-user acceptance remain required before this candidate can be represented as merged or runtime-accepted.
 
 ## Acceptance boundary
 
