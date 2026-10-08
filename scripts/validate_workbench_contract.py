@@ -46,10 +46,14 @@ TOOLS = {
     "page-numbers": ("misc", "/add-page-numbers", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/PageNumbersController.java", "add-page-numbers"),
     "stamp": ("misc", "/add-stamp", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/StampController.java", "add-stamp"),
     "image-stamp": ("misc", "/add-stamp", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/StampController.java", "add-stamp"),
+    "unlock-forms": ("misc", "/unlock-pdf-forms", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/UnlockPDFFormsController.java", "unlock-pdf-forms"),
+    "add-attachments": ("misc", "/add-attachments", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/AttachmentController.java", "add-attachments"),
+    "extract-attachments": ("misc", "/extract-attachments", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/AttachmentController.java", "extract-attachments"),
     "sanitize": ("security", "/sanitize-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/SanitizeController.java", "sanitize-pdf"),
     "redact": ("security", "/auto-redact", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/RedactController.java", "auto-redact"),
     "add-password": ("security", "/add-password", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/PasswordController.java", "add-password"),
     "remove-password": ("security", "/remove-password", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/PasswordController.java", "remove-password"),
+    "remove-cert-sign": ("security", "/remove-cert-sign", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/RemoveCertSignController.java", "remove-cert-sign"),
     "repair": ("misc", "/repair", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/RepairController.java", "repair"),
     "flatten": ("misc", "/flatten", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/FlattenController.java", "flatten"),
 }
@@ -71,6 +75,10 @@ if '@GetMapping("/endpoints-availability")' not in config_text:
 endpoint_configuration_text = ENDPOINT_CONFIGURATION.read_text(encoding="utf-8")
 if 'addEndpointToGroup("Convert", "pdf-to-xlsx")' not in endpoint_configuration_text:
     fail("PDF-to-Excel must participate in server-authoritative Convert availability")
+for group in ("Other", "Java"):
+    marker = f'addEndpointToGroup("{group}", "extract-attachments")'
+    if marker not in endpoint_configuration_text:
+        fail(f"extract-attachments must participate in server-authoritative {group} availability")
 
 js = JS.read_text(encoding="utf-8")
 if "/api/v1/config/endpoints-availability" not in js:
@@ -152,7 +160,7 @@ image_stamp_block = tool_blocks.get("image-stamp", "")
 for marker in ('name: "stampType"', 'value: "image"', 'name: "stampImage"', 'type: "file"'):
     if marker not in image_stamp_block:
         fail(f"image stamp workflow must expose multipart image control {marker}")
-if 'value instanceof File' not in js or 'data.append(field.name, value, value.name)' not in js:
+if 'value instanceof File' not in js or 'data.append(field.name, file, file.name)' not in js:
     fail("secondary file controls must append actual File objects to multipart requests")
 
 for tool_id in ("pdf-word", "pdf-presentation"):
@@ -163,5 +171,13 @@ for tool_id in ("pdf-word", "pdf-presentation"):
 pdf_excel_block = tool_blocks.get("pdf-excel", "")
 if 'name: "pageNumbers"' not in pdf_excel_block:
     fail("PDF-to-Excel must expose inherited page selection")
+
+attachments_block = tool_blocks.get("add-attachments", "")
+for marker in ('name: "attachments"', 'type: "file"', "multiple: true", "required: true"):
+    if marker not in attachments_block:
+        fail(f"add-attachments must expose required multi-file control {marker}")
+for marker in ("form.getAll(field.name)", 'const multiple = field.multiple ? " multiple" : ""'):
+    if marker not in js:
+        fail(f"shared file-field handling must support multiple files: {marker}")
 
 print(f"workbench-contract: PASS ({len(TOOLS)} ready workflows, server-authoritative availability)")

@@ -424,6 +424,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "extract-attachments");
         addEndpointToGroup("Other", "batch-process-attachments");
         addEndpointToGroup("Other", "list-attachments");
         addEndpointToGroup("Other", "extract-single-attachment");
@@ -546,6 +547,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "extract-attachments");
         addEndpointToGroup("Java", "batch-process-attachments");
         addEndpointToGroup("Java", "list-attachments");
         addEndpointToGroup("Java", "extract-single-attachment");

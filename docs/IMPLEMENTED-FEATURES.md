@@ -36,10 +36,14 @@ This file records source implemented in the current candidate; it does not conve
 - Add page numbers or Bates-style numbering with page, position, font, color, text-pattern, and zero-padding controls.
 - Add text stamps/watermarks with page selection, alphabet, size, rotation, opacity, position, margin, color, and coordinate overrides.
 - Add PNG/JPEG image stamps or watermarks with page selection, physical height, rotation, opacity, position, margin, and coordinate overrides.
+- Unlock supported read-only PDF form fields so they can be filled again.
+- Add one or more embedded attachments with server-enforced per-file and aggregate size limits.
+- Extract all embedded PDF attachments into a ZIP archive.
 - Sanitize PDFs by removing selected JavaScript, embedded files, metadata, links, or embedded fonts.
 - Permanently redact matching text or regular-expression patterns with whole-word, padding, color, and optional final rasterization controls.
 - Add PDF password protection with encryption-key and permission controls.
 - Remove password protection when the current password is known.
+- Remove PDF digital-signature fields and return a new unsigned document.
 - Attempt structural PDF repair through the server's available Ghostscript, qpdf, or PDFBox path.
 - Flatten form fields or full pages with configurable render DPI.
 

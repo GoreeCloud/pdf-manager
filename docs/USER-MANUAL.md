@@ -6,7 +6,7 @@ Drop PDFs or supported images into the Workspace or choose files from the device
 
 ## Direct workflows
 
-Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Sanitize PDF, Redact text, Add password, Remove password, Repair PDF, and Flatten PDF.
+Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Unlock form fields, Add attachments, Extract attachments, Sanitize PDF, Redact text, Add password, Remove password, Remove certificate signatures, Repair PDF, and Flatten PDF.
 
 1. Add required files.
 2. Select a ready tool.
@@ -23,6 +23,10 @@ For rearrangement, **Custom page order** accepts page/range expressions such as 
 Page numbering supports `{n}`, `{total}`, and `{filename}` in its text pattern. Text stamps support selected pages, opacity, rotation, grid position, margin, and optional X/Y overrides. Image stamps accept a PNG or JPEG selected from the device and use the same server stamp endpoint with explicit height, position, rotation, opacity, margin, and optional coordinate overrides.
 
 PDF-to-Word supports DOCX, DOC, and ODT. PDF-to-presentation supports PPTX, PPT, and ODP. Both remain disabled when the server reports the required conversion capability unavailable. PDF-to-Excel accepts a page selection and extracts detected tabular data into an XLSX workbook.
+
+**Unlock form fields** removes supported read-only locks from PDF form fields and creates a new result. **Add attachments** accepts multiple local files; the server enforces a 50 MB per-file limit and 200 MB total attachment limit. **Extract attachments** returns all embedded attachments as a ZIP archive and reports an error when the PDF contains none.
+
+**Remove certificate signatures** creates a new unsigned PDF by removing digital-signature fields. Use it only when signature removal is intentional; it is not signature validation and it does not preserve the removed signature as valid evidence.
 
 Sanitization defaults to removing JavaScript actions and embedded files. More destructive options such as link, metadata, and embedded-font removal remain explicit opt-ins.
 

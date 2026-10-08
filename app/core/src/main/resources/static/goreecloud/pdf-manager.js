@@ -37,10 +37,14 @@ const availabilityKeys = {
   "page-numbers": "add-page-numbers",
   stamp: "add-stamp",
   "image-stamp": "add-stamp",
+  "unlock-forms": "unlock-pdf-forms",
+  "add-attachments": "add-attachments",
+  "extract-attachments": "extract-attachments",
   sanitize: "sanitize-pdf",
   redact: "auto-redact",
   "add-password": "add-password",
   "remove-password": "remove-password",
+  "remove-cert-sign": "remove-cert-sign",
   repair: "repair",
   flatten: "flatten",
   pipeline: "pipeline",
@@ -321,6 +325,38 @@ const tools = [
     ],
   },
   {
+    id: "unlock-forms",
+    name: "Unlock form fields",
+    category: "edit",
+    icon: "edit",
+    ready: true,
+    endpoint: "/api/v1/misc/unlock-pdf-forms",
+    description: "Remove read-only locks from supported PDF form fields so they can be filled again.",
+    fields: [],
+  },
+  {
+    id: "add-attachments",
+    name: "Add attachments",
+    category: "edit",
+    icon: "inspect",
+    ready: true,
+    endpoint: "/api/v1/misc/add-attachments",
+    description: "Embed one or more local files inside a PDF without sending them to a separate upload service.",
+    fields: [
+      { name: "attachments", label: "Files to attach", type: "file", multiple: true, required: true, help: "Up to 50 MB per attachment and 200 MB total, enforced by the server." },
+    ],
+  },
+  {
+    id: "extract-attachments",
+    name: "Extract attachments",
+    category: "organize",
+    icon: "inspect",
+    ready: true,
+    endpoint: "/api/v1/misc/extract-attachments",
+    description: "Extract all embedded PDF attachments into a downloadable ZIP archive.",
+    fields: [],
+  },
+  {
     id: "sanitize",
     name: "Sanitize PDF",
     category: "protect",
@@ -387,6 +423,16 @@ const tools = [
     fields: [
       { name: "password", label: "Current password", type: "password", value: "", autocomplete: "current-password" },
     ],
+  },
+  {
+    id: "remove-cert-sign",
+    name: "Remove certificate signatures",
+    category: "protect",
+    icon: "lock",
+    ready: true,
+    endpoint: "/api/v1/security/remove-cert-sign",
+    description: "Remove PDF digital-signature fields and produce a new unsigned document.",
+    fields: [],
   },
   {
     id: "repair",
@@ -718,7 +764,8 @@ function fieldMarkup(field) {
   }
   if (field.type === "file") {
     const accept = field.accept ? ` accept="${escapeHtml(field.accept)}"` : "";
-    return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="file"${accept}${field.required ? " required" : ""}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+    const multiple = field.multiple ? " multiple" : "";
+    return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="file"${accept}${multiple}${field.required ? " required" : ""}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
   }
   const inputType = ["password", "number", "color"].includes(field.type) ? field.type : "text";
   const autocomplete = field.autocomplete ? ` autocomplete="${field.autocomplete}"` : "";
@@ -785,9 +832,10 @@ function buildFormData(tool) {
     if (field.type === "checkbox") {
       data.append(field.name, form.has(field.name) ? "true" : "false");
     } else if (field.type === "file") {
-      const value = form.get(field.name);
-      if (value instanceof File && value.size > 0) data.append(field.name, value, value.name);
-      else if (field.required) throw new Error(`${field.label || field.name} is required.`);
+      const candidates = field.multiple ? form.getAll(field.name) : [form.get(field.name)];
+      const files = candidates.filter((value) => value instanceof File && value.size > 0);
+      for (const file of files) data.append(field.name, file, file.name);
+      if (!files.length && field.required) throw new Error(`${field.label || field.name} is required.`);
     } else {
       const value = form.get(field.name);
       if (value !== null && String(value).length) {
