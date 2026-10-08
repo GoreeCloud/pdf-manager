@@ -16,6 +16,9 @@ class EndpointConfigurationTest {
                 "compress-pdf",
                 EndpointConfiguration.endpointKeyForUri("/api/v1/misc/compress-pdf"));
         assertEquals(
+                "extract-attachments",
+                EndpointConfiguration.endpointKeyForUri("/api/v1/misc/extract-attachments"));
+        assertEquals(
                 "add-watermark",
                 EndpointConfiguration.endpointKeyForUri("/api/v1/security/add-watermark"));
         assertEquals(

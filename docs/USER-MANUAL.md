@@ -6,7 +6,7 @@ Drop PDFs, supported images, or supported office/text documents into the Workspa
 
 ## Direct workflows
 
-Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, PDF to images, Images to PDF, PDF to EPUB / AZW3, Office to PDF, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Sanitize PDF, Redact text, Add password, Remove password, Repair PDF, Flatten PDF, and Remove images.
+Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, PDF to images, Images to PDF, PDF to EPUB / AZW3, Office to PDF, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Unlock form fields, Add attachments, Extract attachments, Sanitize PDF, Redact text, Add password, Remove password, Remove certificate signatures, Repair PDF, Flatten PDF, and Remove images.
 
 1. Add required files.
 2. Select a ready tool.
@@ -27,6 +27,10 @@ PDF-to-Word supports DOCX, DOC, and ODT. PDF-to-presentation supports PPTX, PPT,
 PDF-to-images supports selected pages, PNG/JPEG/GIF, combined or per-page output, color mode, DPI, and optional annotation rendering. WebP remains outside the direct Glaze workflow because it has an additional Python dependency that is not represented by the general PDF-to-image capability state. Images-to-PDF uses all workspace images in visible order and exposes page fitting, color mode, and auto-rotation.
 
 PDF-to-EPUB/AZW3 exposes reader profile and chapter-detection controls and remains unavailable unless the server reports its Calibre-backed conversion capability. Office-to-PDF accepts supported office/text documents and lets the server select its configured in-process, Unoconvert, or LibreOffice conversion path. Remove images strips embedded raster-image resources, including images nested in form XObjects.
+
+**Unlock form fields** removes supported read-only locks from PDF form fields and creates a new result. **Add attachments** accepts multiple local files; the server enforces a 50 MB per-file limit and 200 MB total attachment limit. **Extract attachments** returns all embedded attachments as a ZIP archive and reports an error when the PDF contains none.
+
+**Remove certificate signatures** creates a new unsigned PDF by removing digital-signature fields. Use it only when signature removal is intentional; it is not signature validation and it does not preserve the removed signature as valid evidence.
 
 Sanitization defaults to removing JavaScript actions and embedded files. More destructive options such as link, metadata, and embedded-font removal remain explicit opt-ins.
 
