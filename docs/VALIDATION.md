@@ -46,29 +46,33 @@ The capability-aware implementation includes JavaScript syntax, workbench-contra
 
 Rendered-browser behavior, clean-profile onboarding, interruption/resume, replay, hint persistence, responsive presentation, keyboard/screen-reader behavior, and representative enabled/disabled/dependency capability states remain pending exact-head runtime/CI acceptance and are not claimed as verified here.
 
-## Conversion and image-watermark verification
+## Conversion and image-watermark merge evidence
 
-The 22-workflow conversion/image-watermark expansion is merged and source/build/test verified:
+The 22-workflow conversion/image-watermark expansion was verified on GitHub before and after merge:
 
-- PR #11 exact head `b37473530509e1189ab1f32132c4f67032929a2f` passed Repository and source boundary, Compile and package core, and Core test suite in GitHub Actions run `37708184781`;
-- PR #11 merged to protected `main` as `a0956be4ded11c1a04f1fc2396fc075bc50aba12`;
-- post-merge push run `37708434868` passed the same three jobs on that exact main revision;
-- the merged topic branch was removed and the remaining non-main branches are active Dependabot branches;
-- the local pre-merge JDK 25 evidence also included repository validation, successful core JAR packaging, focused `EndpointConfigurationTest`, packaged-JAR readback, and `git diff --check`.
+- PR #11 exact head `b37473530509e1189ab1f32132c4f67032929a2f` passed the protected **Repository and source boundary**, **Compile and package core**, and **Core test suite** checks in workflow run `37708184781`;
+- PR #11 merged to protected `main` as GitHub-signed commit `a0956be4ded11c1a04f1fc2396fc075bc50aba12`;
+- post-merge `main` workflow run `37708434868` completed successfully on that exact merge commit.
 
-This verifies the repository source/build/test state only. Rendered end-user conversion behavior and broader fidelity/accessibility acceptance remain open.
+## Forms, attachments, and signature-removal merge evidence
 
-## Forms, attachments, and signature-removal candidate
+- PR #12 exact head `bbe1d84f4df9333783dcd08695f93f0204307b96` passed the protected three-job validation workflow in run `37709997018`;
+- PR #12 merged to protected `main` as `9519d3c312d203f849b8f7d48f4ba6bf40a434c4`;
+- post-merge workflow run `37710280996` passed **Repository and source boundary**, **Compile and package core**, and **Core test suite** on that exact merge commit.
 
-The current `feature/forms-attachments-signatures` candidate has local evidence for the 26-workflow expansion:
+## Combined document utility candidate
 
-- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (26 ready workflows, server-authoritative availability)`;
+The document-utility branch is forward-merged with PR #12's verified `main` and has fresh local evidence for the combined 31-workflow candidate:
+
+- `node --check app/core/src/main/resources/static/goreecloud/pdf-manager.js` passes;
+- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (31 ready workflows, server-authoritative availability)`;
+- focused `EndpointConfigurationTest` execution passes after synchronization;
 - `./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon` completes successfully on JDK 25;
-- focused `EndpointConfigurationTest`, `AttachmentControllerTest`, `AttachmentControllerMoreTest`, `UnlockPDFFormsControllerTest`, `UnlockPDFFormsControllerMoreTest`, and `RemoveCertSignControllerTest` runs complete successfully;
-- packaged-JAR readback confirms form unlock, add/extract attachments, certificate-signature removal, and multi-file `FormData.getAll(...)` handling are present in the shipped workbench asset;
-- `git diff --check` passes.
+- packaged-JAR readback confirms the utility workflows, form unlock, attachment add/extract, certificate-signature removal, multi-file attachment handling, expanded workspace input acceptance, and `validateWorkspaceForTool` are all present in the same shipped workbench asset;
+- `git diff --check` passes;
+- PDF→images intentionally excludes WebP until its additional Python-specific dependency can be represented by authoritative option-level capability evidence.
 
-The filtered test runs report low aggregate JaCoCo percentages because only the targeted classes are selected; those coverage percentages are informational for these focused runs and the Gradle tasks completed successfully. Exact-head GitHub CI and rendered end-user acceptance remain required before this candidate can be represented as merged or runtime-accepted.
+The focused unit-test run reports low aggregate JaCoCo percentages because only one small test class is selected; those percentages are informational for the filtered run and the Gradle task completed successfully. Exact-head GitHub CI is still required on the synchronized PR #13 head before merge. Rendered end-user behavior and broader fidelity/accessibility acceptance remain separate from source/build/test acceptance.
 
 ## Acceptance boundary
 

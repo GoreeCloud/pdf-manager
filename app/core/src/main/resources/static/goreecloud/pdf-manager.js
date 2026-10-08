@@ -32,6 +32,9 @@ const availabilityKeys = {
   "pdf-word": "pdf-to-word",
   "pdf-presentation": "pdf-to-presentation",
   "pdf-excel": "pdf-to-xlsx",
+  "pdf-images": "pdf-to-img",
+  "images-pdf": "img-to-pdf",
+  "pdf-ebook": "pdf-to-epub",
   office: "file-to-pdf",
   metadata: "update-metadata",
   "page-numbers": "add-page-numbers",
@@ -47,6 +50,7 @@ const availabilityKeys = {
   "remove-cert-sign": "remove-cert-sign",
   repair: "repair",
   flatten: "flatten",
+  "remove-images": "remove-image-pdf",
   pipeline: "pipeline",
 };
 
@@ -79,6 +83,7 @@ const tools = [
     ready: true,
     endpoint: "/api/v1/general/merge-pdfs",
     multi: true,
+    inputKind: "pdf-or-image",
     description: "Combine PDFs and supported images in the order you choose.",
     fields: [
       { name: "sortType", label: "File order", type: "select", value: "orderProvided", options: [["orderProvided", "Workspace order"], ["byFileName", "File name"], ["byDateModified", "Modified date"], ["byDateCreated", "Created date"], ["byPDFTitle", "PDF title"]] },
@@ -238,7 +243,64 @@ const tools = [
       { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7." },
     ],
   },
-  { id: "office", name: "Office to PDF", category: "convert", icon: "convert", description: "Convert supported office formats to PDF where server dependencies are available." },
+  {
+    id: "pdf-images",
+    name: "PDF to images",
+    category: "convert",
+    icon: "image",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/img",
+    description: "Render selected PDF pages to one combined image or a downloadable set of page images.",
+    fields: [
+      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7." },
+      { name: "imageFormat", label: "Image format", type: "select", value: "png", options: [["png", "PNG"], ["jpeg", "JPEG"], ["gif", "GIF"]] },
+      { name: "singleOrMultiple", label: "Output", type: "select", value: "multiple", options: [["multiple", "Separate image per page"], ["single", "Single combined image"]] },
+      { name: "colorType", label: "Color", type: "select", value: "color", options: [["color", "Color"], ["greyscale", "Greyscale"], ["blackwhite", "Black & white"]] },
+      { name: "dpi", label: "Resolution (DPI)", type: "number", value: "300", min: "72", step: "1" },
+      { name: "includeAnnotations", label: "Include annotations", type: "checkbox", value: false },
+    ],
+  },
+  {
+    id: "images-pdf",
+    name: "Images to PDF",
+    category: "convert",
+    icon: "image",
+    ready: true,
+    endpoint: "/api/v1/convert/img/pdf",
+    multi: true,
+    inputKind: "image",
+    description: "Combine workspace images into a PDF in the order shown.",
+    fields: [
+      { name: "fitOption", label: "Page fitting", type: "select", value: "fillPage", options: [["fillPage", "Fill page"], ["fitDocumentToImage", "Fit document to image"], ["fitDocumentToPage", "Fit document to page"], ["maintainAspectRatio", "Maintain aspect ratio"]] },
+      { name: "colorType", label: "Color", type: "select", value: "color", options: [["color", "Color"], ["greyscale", "Greyscale"], ["blackwhite", "Black & white"]] },
+      { name: "autoRotate", label: "Auto-rotate images", type: "checkbox", value: false },
+    ],
+  },
+  {
+    id: "pdf-ebook",
+    name: "PDF to EPUB / AZW3",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/epub",
+    description: "Create an EPUB or AZW3 ebook using the server's Calibre-backed conversion path.",
+    fields: [
+      { name: "outputFormat", label: "Ebook format", type: "select", value: "EPUB", options: [["EPUB", "EPUB"], ["AZW3", "AZW3"]] },
+      { name: "targetDevice", label: "Reader profile", type: "select", value: "TABLET_PHONE_IMAGES", options: [["TABLET_PHONE_IMAGES", "Tablet / phone — image preserving"], ["KINDLE_EINK_TEXT", "Kindle e-ink — text oriented"]] },
+      { name: "detectChapters", label: "Detect chapter headings", type: "checkbox", value: true },
+    ],
+  },
+  {
+    id: "office",
+    name: "Office to PDF",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/file/pdf",
+    inputKind: "office",
+    description: "Convert a supported office or text document to PDF using the server's available conversion path.",
+    fields: [],
+  },
   {
     id: "metadata",
     name: "Document metadata",
@@ -456,6 +518,16 @@ const tools = [
       { name: "flattenOnlyForms", label: "Flatten form fields only", type: "checkbox", value: true },
       { name: "renderDpi", label: "Full-page render DPI", type: "text", value: "300", help: "Used only when full-page flattening is selected. Minimum 72 DPI; server maximum still applies." },
     ],
+  },
+  {
+    id: "remove-images",
+    name: "Remove images",
+    category: "edit",
+    icon: "image",
+    ready: true,
+    endpoint: "/api/v1/general/remove-image-pdf",
+    description: "Remove embedded raster images, including images nested inside PDF form XObjects.",
+    fields: [],
   },
   { id: "pipeline", name: "Automation pipelines", category: "automate", icon: "automate", availabilityKey: "pipeline", description: "Compose repeatable multi-step document-processing workflows." },
 ];
@@ -684,6 +756,50 @@ function formatBytes(bytes) {
   return `${value >= 10 || unit === 0 ? value.toFixed(0) : value.toFixed(1)} ${units[unit]}`;
 }
 
+const officeExtensions = new Set(["doc", "docx", "odt", "rtf", "xls", "xlsx", "ods", "ppt", "pptx", "odp", "txt", "html", "htm", "csv"]);
+const imageExtensions = new Set(["png", "jpg", "jpeg", "gif", "bmp", "tif", "tiff", "webp"]);
+
+function extensionOf(file) {
+  const name = String(file?.name || "");
+  const index = name.lastIndexOf(".");
+  return index >= 0 ? name.slice(index + 1).toLowerCase() : "";
+}
+
+function fileMatchesInputKind(file, kind = "pdf") {
+  const extension = extensionOf(file);
+  if (kind === "any") return true;
+  if (kind === "image") return String(file.type || "").startsWith("image/") || imageExtensions.has(extension);
+  if (kind === "office") return officeExtensions.has(extension);
+  if (kind === "pdf-or-image") return extension === "pdf" || String(file.type || "").startsWith("image/") || imageExtensions.has(extension);
+  return extension === "pdf" || file.type === "application/pdf";
+}
+
+function inputExpectation(tool) {
+  const kind = tool.inputKind || "pdf";
+  if (kind === "image") return "Uses workspace image files in the order shown.";
+  if (kind === "office") return "Uses the first supported office or text document in the workspace.";
+  if (kind === "pdf-or-image") return "Uses PDFs and supported images from the workspace in the order shown.";
+  return tool.multi ? "Uses all PDF files in the workspace, in the order shown." : "Uses the first PDF in the workspace.";
+}
+
+function validateWorkspaceForTool(tool) {
+  if (!state.files.length) throw new Error("Add at least one document to the workspace first.");
+  const files = tool.multi ? state.files : [state.files[0]];
+  const kind = tool.inputKind || "pdf";
+  const invalid = files.filter((file) => !fileMatchesInputKind(file, kind));
+  if (!invalid.length) return;
+  const names = invalid.slice(0, 3).map((file) => file.name).join(", ");
+  const suffix = invalid.length > 3 ? ` and ${invalid.length - 3} more` : "";
+  const expectation = kind === "image"
+    ? "image files"
+    : kind === "office"
+      ? "supported office or text documents"
+      : kind === "pdf-or-image"
+        ? "PDFs or supported images"
+        : "PDF files";
+  throw new Error(`${tool.name} expects ${expectation}. Replace incompatible workspace input: ${names}${suffix}.`);
+}
+
 function renderFiles() {
   clearFiles.disabled = state.files.length === 0;
   if (!state.files.length) {
@@ -788,7 +904,7 @@ function openTool(tool) {
     toolFields.innerHTML = `
       <div class="field">
         <label>Input</label>
-        <small>${tool.multi ? "Uses all files in the workspace, in the order shown." : "Uses the first file in the workspace."}</small>
+        <small>${inputExpectation(tool)}</small>
       </div>
       ${(tool.fields || []).map(fieldMarkup).join("")}
     `;
@@ -822,7 +938,7 @@ function showToast(message, type = "success") {
 }
 
 function buildFormData(tool) {
-  if (!state.files.length) throw new Error("Add at least one document to the workspace first.");
+  validateWorkspaceForTool(tool);
   const data = new FormData();
   const files = tool.multi ? state.files : [state.files[0]];
   for (const file of files) data.append("fileInput", file, file.name);

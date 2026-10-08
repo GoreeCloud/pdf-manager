@@ -2,11 +2,11 @@
 
 ## Workspace
 
-Drop PDFs or supported images into the Workspace or choose files from the device. Use the up/down controls to define merge order and remove files when they are no longer needed.
+Drop PDFs, supported images, or supported office/text documents into the Workspace or choose files from the device. Use the up/down controls to define multi-file order and remove files when they are no longer needed. Each workflow validates that the files it will submit match its required input type before sending a request.
 
 ## Direct workflows
 
-Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Unlock form fields, Add attachments, Extract attachments, Sanitize PDF, Redact text, Add password, Remove password, Remove certificate signatures, Repair PDF, and Flatten PDF.
+Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, PDF to images, Images to PDF, PDF to EPUB / AZW3, Office to PDF, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Unlock form fields, Add attachments, Extract attachments, Sanitize PDF, Redact text, Add password, Remove password, Remove certificate signatures, Repair PDF, Flatten PDF, and Remove images.
 
 1. Add required files.
 2. Select a ready tool.
@@ -23,6 +23,10 @@ For rearrangement, **Custom page order** accepts page/range expressions such as 
 Page numbering supports `{n}`, `{total}`, and `{filename}` in its text pattern. Text stamps support selected pages, opacity, rotation, grid position, margin, and optional X/Y overrides. Image stamps accept a PNG or JPEG selected from the device and use the same server stamp endpoint with explicit height, position, rotation, opacity, margin, and optional coordinate overrides.
 
 PDF-to-Word supports DOCX, DOC, and ODT. PDF-to-presentation supports PPTX, PPT, and ODP. Both remain disabled when the server reports the required conversion capability unavailable. PDF-to-Excel accepts a page selection and extracts detected tabular data into an XLSX workbook.
+
+PDF-to-images supports selected pages, PNG/JPEG/GIF, combined or per-page output, color mode, DPI, and optional annotation rendering. WebP remains outside the direct Glaze workflow because it has an additional Python dependency that is not represented by the general PDF-to-image capability state. Images-to-PDF uses all workspace images in visible order and exposes page fitting, color mode, and auto-rotation.
+
+PDF-to-EPUB/AZW3 exposes reader profile and chapter-detection controls and remains unavailable unless the server reports its Calibre-backed conversion capability. Office-to-PDF accepts supported office/text documents and lets the server select its configured in-process, Unoconvert, or LibreOffice conversion path. Remove images strips embedded raster-image resources, including images nested in form XObjects.
 
 **Unlock form fields** removes supported read-only locks from PDF form fields and creates a new result. **Add attachments** accepts multiple local files; the server enforces a 50 MB per-file limit and 200 MB total attachment limit. **Extract attachments** returns all embedded attachments as a ZIP archive and reports an error when the PDF contains none.
 
