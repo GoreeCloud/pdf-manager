@@ -46,6 +46,18 @@ The capability-aware implementation includes JavaScript syntax, workbench-contra
 
 Rendered-browser behavior, clean-profile onboarding, interruption/resume, replay, hint persistence, responsive presentation, keyboard/screen-reader behavior, and representative enabled/disabled/dependency capability states remain pending exact-head runtime/CI acceptance and are not claimed as verified here.
 
+## Conversion and image-watermark candidate
+
+The current `feature/conversion-forms-workflows` candidate has local evidence for the 22-workflow expansion:
+
+- `./scripts/validate_repository.sh` passes with `workbench-contract: PASS (22 ready workflows, server-authoritative availability)`;
+- `./gradlew :stirling-pdf:bootJar -PnoSpotless --no-daemon` completes successfully on JDK 25;
+- focused `EndpointConfigurationTest` execution passes after adding the `/api/v1/convert/pdf/xlsx → pdf-to-xlsx` conversion-key regression assertion;
+- packaged-JAR readback confirms the PDF-to-Word, PDF-to-presentation, PDF-to-Excel, image-stamp workflow, and secondary file-input code are present in the shipped workbench asset;
+- `git diff --check` passes.
+
+The focused unit-test run reports low aggregate JaCoCo percentages because only one small test class is selected; those coverage percentages are informational for this filtered run and the Gradle task completed successfully. Exact-head GitHub CI and rendered end-user acceptance remain required before this candidate can be represented as merged or runtime-accepted.
+
 ## Acceptance boundary
 
 These results support Forge source validation only. They do not establish Seal or Anchor, production deployment acceptance, full hostile-file security acceptance, Glaze human/accessibility acceptance, or GoreeCloud platform-system production acceptance.

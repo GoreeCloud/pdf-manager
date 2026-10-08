@@ -29,9 +29,13 @@ This file records source implemented in the current candidate; it does not conve
 - Rearrange pages with custom order, reverse, duplex, booklet, odd/even, duplicate, and edge-removal modes.
 - Run OCR with explicit language, mode, render-layer, deskew, rotation, cleanup, sidecar, and image-removal controls.
 - Convert PDFs to PDF/A-1B/2B/3B profiles with optional strict compliance when the server reports the conversion capability available.
+- Convert PDFs to DOC/DOCX/ODT when the server reports the Word conversion capability available.
+- Convert PDFs to PPT/PPTX/ODP when the server reports the presentation conversion capability available.
+- Extract tables from selected PDF pages into XLSX workbooks through the retained PDF-to-Excel endpoint.
 - Update or deliberately remove standard document metadata.
 - Add page numbers or Bates-style numbering with page, position, font, color, text-pattern, and zero-padding controls.
 - Add text stamps/watermarks with page selection, alphabet, size, rotation, opacity, position, margin, color, and coordinate overrides.
+- Add PNG/JPEG image stamps or watermarks with page selection, physical height, rotation, opacity, position, margin, and coordinate overrides.
 - Sanitize PDFs by removing selected JavaScript, embedded files, metadata, links, or embedded fonts.
 - Permanently redact matching text or regular-expression patterns with whole-word, padding, color, and optional final rasterization controls.
 - Add PDF password protection with encryption-key and permission controls.

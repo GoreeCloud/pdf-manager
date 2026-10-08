@@ -6,7 +6,7 @@ Drop PDFs or supported images into the Workspace or choose files from the device
 
 ## Direct workflows
 
-Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, Document metadata, Page numbers, Text stamp & watermark, Sanitize PDF, Redact text, Add password, Remove password, Repair PDF, and Flatten PDF.
+Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate pages, Optimize & compress, Extract images, Crop pages, Rearrange pages, OCR scanned PDFs, Convert to PDF/A, PDF to Word, PDF to presentation, PDF to Excel, Document metadata, Page numbers, Text stamp & watermark, Image stamp & watermark, Sanitize PDF, Redact text, Add password, Remove password, Repair PDF, and Flatten PDF.
 
 1. Add required files.
 2. Select a ready tool.
@@ -20,7 +20,9 @@ OCR accepts one or more Tesseract language codes and depends on OCR capabilities
 
 For rearrangement, **Custom page order** accepts page/range expressions such as `3,1,2` or `1-4`; **Duplicate** uses the page-order field as the duplicate count.
 
-Page numbering supports `{n}`, `{total}`, and `{filename}` in its text pattern. Text stamps support selected pages, opacity, rotation, grid position, margin, and optional X/Y overrides.
+Page numbering supports `{n}`, `{total}`, and `{filename}` in its text pattern. Text stamps support selected pages, opacity, rotation, grid position, margin, and optional X/Y overrides. Image stamps accept a PNG or JPEG selected from the device and use the same server stamp endpoint with explicit height, position, rotation, opacity, margin, and optional coordinate overrides.
+
+PDF-to-Word supports DOCX, DOC, and ODT. PDF-to-presentation supports PPTX, PPT, and ODP. Both remain disabled when the server reports the required conversion capability unavailable. PDF-to-Excel accepts a page selection and extracts detected tabular data into an XLSX workbook.
 
 Sanitization defaults to removing JavaScript actions and embedded files. More destructive options such as link, metadata, and embedded-font removal remain explicit opt-ins.
 

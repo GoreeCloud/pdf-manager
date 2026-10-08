@@ -29,10 +29,14 @@ const availabilityKeys = {
   rearrange: "rearrange-pages",
   ocr: "ocr-pdf",
   pdfa: "pdf-to-pdfa",
+  "pdf-word": "pdf-to-word",
+  "pdf-presentation": "pdf-to-presentation",
+  "pdf-excel": "pdf-to-xlsx",
   office: "file-to-pdf",
   metadata: "update-metadata",
   "page-numbers": "add-page-numbers",
   stamp: "add-stamp",
+  "image-stamp": "add-stamp",
   sanitize: "sanitize-pdf",
   redact: "auto-redact",
   "add-password": "add-password",
@@ -194,7 +198,43 @@ const tools = [
       { name: "strict", label: "Require strict compliance", type: "checkbox", value: false, help: "Fail instead of returning output when compliance validation does not pass." },
     ],
   },
-  { id: "office", name: "Office conversion", category: "convert", icon: "convert", description: "Convert supported office formats where dependencies are available." },
+  {
+    id: "pdf-word",
+    name: "PDF to Word",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/word",
+    description: "Convert a PDF into a Word-compatible document using the server's available conversion path.",
+    fields: [
+      { name: "outputFormat", label: "Word format", type: "select", value: "docx", options: [["docx", "DOCX"], ["doc", "DOC"], ["odt", "ODT"]] },
+    ],
+  },
+  {
+    id: "pdf-presentation",
+    name: "PDF to presentation",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/presentation",
+    description: "Convert a PDF into a presentation format when the server conversion capability is available.",
+    fields: [
+      { name: "outputFormat", label: "Presentation format", type: "select", value: "pptx", options: [["pptx", "PPTX"], ["ppt", "PPT"], ["odp", "ODP"]] },
+    ],
+  },
+  {
+    id: "pdf-excel",
+    name: "PDF to Excel",
+    category: "convert",
+    icon: "convert",
+    ready: true,
+    endpoint: "/api/v1/convert/pdf/xlsx",
+    description: "Extract tabular content from selected PDF pages into an XLSX workbook.",
+    fields: [
+      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7." },
+    ],
+  },
+  { id: "office", name: "Office to PDF", category: "convert", icon: "convert", description: "Convert supported office formats to PDF where server dependencies are available." },
   {
     id: "metadata",
     name: "Document metadata",
@@ -257,6 +297,27 @@ const tools = [
       { name: "customColor", label: "Color", type: "text", value: "#d3d3d3", help: "Hex color." },
       { name: "overrideX", label: "Override X", type: "text", value: "-1", help: "Leave -1 to use the selected grid position." },
       { name: "overrideY", label: "Override Y", type: "text", value: "-1", help: "Leave -1 to use the selected grid position." },
+    ],
+  },
+  {
+    id: "image-stamp",
+    name: "Image stamp & watermark",
+    category: "edit",
+    icon: "image",
+    ready: true,
+    endpoint: "/api/v1/misc/add-stamp",
+    description: "Place a PNG or JPEG image on selected PDF pages with explicit size, position, rotation, and opacity.",
+    fields: [
+      { name: "stampType", type: "hidden", value: "image" },
+      { name: "stampImage", label: "Stamp image", type: "file", accept: "image/png,image/jpeg", required: true, help: "Choose a PNG or JPEG image from this device." },
+      { name: "pageNumbers", label: "Pages", type: "text", value: "all", help: "Examples: all, 1,3-5,7." },
+      { name: "fontSize", label: "Image height", type: "number", value: "80", min: "1", step: "1", help: "Height in PDF points; width follows the image aspect ratio." },
+      { name: "rotation", label: "Rotation", type: "number", value: "0", step: "1", help: "Degrees." },
+      { name: "opacity", label: "Opacity", type: "number", value: "0.5", min: "0", max: "1", step: "0.05" },
+      { name: "position", label: "Position", type: "select", value: "8", options: [["1", "Bottom left"], ["2", "Bottom center"], ["3", "Bottom right"], ["4", "Middle left"], ["5", "Middle center"], ["6", "Middle right"], ["7", "Top left"], ["8", "Top center"], ["9", "Top right"]] },
+      { name: "customMargin", label: "Margin", type: "select", value: "medium", options: [["small", "Small"], ["medium", "Medium"], ["large", "Large"], ["x-large", "Extra large"]] },
+      { name: "overrideX", label: "Override X", type: "number", value: "-1", step: "0.1", help: "Leave -1 to use the selected grid position." },
+      { name: "overrideY", label: "Override Y", type: "number", value: "-1", step: "0.1", help: "Leave -1 to use the selected grid position." },
     ],
   },
   {
@@ -655,6 +716,10 @@ function fieldMarkup(field) {
   if (field.type === "textarea") {
     return `<div class="field"><label for="${id}">${field.label}</label><textarea class="glaze-input field-textarea" id="${id}" name="${field.name}" ${field.required ? "required" : ""}>${escapeHtml(String(field.value ?? ""))}</textarea>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
   }
+  if (field.type === "file") {
+    const accept = field.accept ? ` accept="${escapeHtml(field.accept)}"` : "";
+    return `<div class="field"><label for="${id}">${field.label}</label><input class="glaze-input" id="${id}" name="${field.name}" type="file"${accept}${field.required ? " required" : ""}>${field.help ? `<small>${field.help}</small>` : ""}</div>`;
+  }
   const inputType = ["password", "number", "color"].includes(field.type) ? field.type : "text";
   const autocomplete = field.autocomplete ? ` autocomplete="${field.autocomplete}"` : "";
   const min = field.min === undefined ? "" : ` min="${field.min}"`;
@@ -719,6 +784,10 @@ function buildFormData(tool) {
   for (const field of tool.fields || []) {
     if (field.type === "checkbox") {
       data.append(field.name, form.has(field.name) ? "true" : "false");
+    } else if (field.type === "file") {
+      const value = form.get(field.name);
+      if (value instanceof File && value.size > 0) data.append(field.name, value, value.name);
+      else if (field.required) throw new Error(`${field.label || field.name} is required.`);
     } else {
       const value = form.get(field.name);
       if (value !== null && String(value).length) {

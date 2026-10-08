@@ -100,7 +100,7 @@ button,input,select{font:inherit}.skip-link{position:fixed;z-index:999;top:8px;l
 .tool-card[data-availability="disabled"]:hover{transform:none;border-color:var(--glaze-line);box-shadow:none}
 
 .capability-note{margin-bottom:14px;padding:12px 14px;border:1px solid color-mix(in srgb,var(--glaze-warning) 35%,var(--glaze-line));border-radius:14px;color:var(--glaze-muted);background:color-mix(in srgb,var(--glaze-warning) 7%,var(--glaze-surface-muted));font-size:.82rem;line-height:1.5}
-.field-textarea{min-height:120px;resize:vertical}
+.field-textarea{min-height:120px;resize:vertical}.field input[type="file"]{min-height:48px;padding:7px}.field input[type="file"]::file-selector-button{margin-right:10px;padding:9px 12px;border:1px solid var(--glaze-line);border-radius:12px;color:var(--glaze-text);background:var(--glaze-surface-muted);font-weight:800;cursor:pointer}
 
 .context-hint{margin-top:14px;padding:14px 16px;border-radius:18px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
 .context-hint[hidden]{display:none}

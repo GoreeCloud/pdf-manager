@@ -374,6 +374,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Convert", "file-to-pdf");
         addEndpointToGroup("Convert", "pdf-to-word");
         addEndpointToGroup("Convert", "pdf-to-presentation");
+        addEndpointToGroup("Convert", "pdf-to-xlsx");
         addEndpointToGroup("Convert", "pdf-to-text");
         addEndpointToGroup("Convert", "pdf-to-html");
         addEndpointToGroup("Convert", "pdf-to-xml");

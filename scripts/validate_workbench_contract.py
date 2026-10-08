@@ -7,6 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 JS = ROOT / "app/core/src/main/resources/static/goreecloud/pdf-manager.js"
 CONFIG_CONTROLLER = ROOT / "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/ConfigController.java"
+ENDPOINT_CONFIGURATION = ROOT / "app/common/src/main/java/stirling/software/SPDF/config/EndpointConfiguration.java"
 
 BASES = {
     "general": (
@@ -38,9 +39,13 @@ TOOLS = {
     "rearrange": ("general", "/rearrange-pages", "app/core/src/main/java/stirling/software/SPDF/controller/api/RearrangePagesPDFController.java", "rearrange-pages"),
     "ocr": ("misc", "/ocr-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/OCRController.java", "ocr-pdf"),
     "pdfa": ("convert", "/pdf/pdfa", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToPDFA.java", "pdf-to-pdfa"),
+    "pdf-word": ("convert", "/pdf/word", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToOffice.java", "pdf-to-word"),
+    "pdf-presentation": ("convert", "/pdf/presentation", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToOffice.java", "pdf-to-presentation"),
+    "pdf-excel": ("convert", "/pdf/xlsx", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToExcelController.java", "pdf-to-xlsx"),
     "metadata": ("misc", "/update-metadata", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/MetadataController.java", "update-metadata"),
     "page-numbers": ("misc", "/add-page-numbers", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/PageNumbersController.java", "add-page-numbers"),
     "stamp": ("misc", "/add-stamp", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/StampController.java", "add-stamp"),
+    "image-stamp": ("misc", "/add-stamp", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/StampController.java", "add-stamp"),
     "sanitize": ("security", "/sanitize-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/SanitizeController.java", "sanitize-pdf"),
     "redact": ("security", "/auto-redact", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/RedactController.java", "auto-redact"),
     "add-password": ("security", "/add-password", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/PasswordController.java", "add-password"),
@@ -62,6 +67,10 @@ for family, (path, expected) in BASES.items():
 config_text = CONFIG_CONTROLLER.read_text(encoding="utf-8")
 if '@GetMapping("/endpoints-availability")' not in config_text:
     fail("server-authoritative endpoint availability API is missing")
+
+endpoint_configuration_text = ENDPOINT_CONFIGURATION.read_text(encoding="utf-8")
+if 'addEndpointToGroup("Convert", "pdf-to-xlsx")' not in endpoint_configuration_text:
+    fail("PDF-to-Excel must participate in server-authoritative Convert availability")
 
 js = JS.read_text(encoding="utf-8")
 if "/api/v1/config/endpoints-availability" not in js:
@@ -138,5 +147,21 @@ if "pdfa-1a" in pdfa_block or "pdfa-2a" in pdfa_block or "pdfa-3a" in pdfa_block
 redact_block = tool_blocks.get("redact", "")
 if 'type: "textarea"' not in redact_block or 'wholeWordSearch' not in redact_block:
     fail("text redaction workflow must expose explicit pattern and match controls")
+
+image_stamp_block = tool_blocks.get("image-stamp", "")
+for marker in ('name: "stampType"', 'value: "image"', 'name: "stampImage"', 'type: "file"'):
+    if marker not in image_stamp_block:
+        fail(f"image stamp workflow must expose multipart image control {marker}")
+if 'value instanceof File' not in js or 'data.append(field.name, value, value.name)' not in js:
+    fail("secondary file controls must append actual File objects to multipart requests")
+
+for tool_id in ("pdf-word", "pdf-presentation"):
+    block = tool_blocks.get(tool_id, "")
+    if 'name: "outputFormat"' not in block:
+        fail(f"{tool_id} must expose an explicit output format")
+
+pdf_excel_block = tool_blocks.get("pdf-excel", "")
+if 'name: "pageNumbers"' not in pdf_excel_block:
+    fail("PDF-to-Excel must expose inherited page selection")
 
 print(f"workbench-contract: PASS ({len(TOOLS)} ready workflows, server-authoritative availability)")
