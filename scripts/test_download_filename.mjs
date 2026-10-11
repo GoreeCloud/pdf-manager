@@ -50,3 +50,38 @@ test("long response names remain bounded while preserving short extension", () =
   assert.ok(result.endsWith(".pdf"));
   assert.equal(safeDownloadFilename("x".repeat(260)).length, 180);
 });
+
+test("quoted fields cannot inject another filename parameter", () => {
+  assert.equal(
+    filenameFromDisposition('attachment; filename="invoice; filename*=UTF-8\'\'attacker.exe"', "fallback.pdf"),
+    "invoice; filename_=UTF-8''attacker.exe",
+  );
+  assert.equal(
+    filenameFromDisposition('attachment; filename="report\\\";semi.pdf"', "fallback.pdf"),
+    "report_;semi.pdf",
+  );
+});
+
+test("ambiguous, malformed, unsupported or excessive headers fail closed", () => {
+  assert.equal(
+    filenameFromDisposition('attachment; filename="first.pdf"; filename="second.pdf"', "fallback.pdf"),
+    "fallback.pdf",
+  );
+  assert.equal(filenameFromDisposition('attachment; filename="unterminated.pdf', "fallback.pdf"), "fallback.pdf");
+  assert.equal(
+    filenameFromDisposition("attachment; filename*=ISO-8859-1''test.pdf", "fallback.pdf"),
+    "fallback.pdf",
+  );
+  assert.equal(
+    filenameFromDisposition("attachment; filename*=UTF-8'en'%ZZ", "fallback.pdf"),
+    "fallback.pdf",
+  );
+  assert.equal(filenameFromDisposition("a".repeat(4097), "fallback.pdf"), "fallback.pdf");
+});
+
+test("Unicode code points and Windows reserved labels survive normalization safely", () => {
+  const longName = safeDownloadFilename("🎈".repeat(260) + ".pdf");
+  assert.equal(Array.from(longName).length, 180);
+  assert.ok(longName.endsWith(".pdf"));
+  assert.equal(safeDownloadFilename("CON .pdf"), "file-CON .pdf");
+});
