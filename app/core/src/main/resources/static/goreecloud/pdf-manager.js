@@ -1,4 +1,5 @@
 import { glazeV170 } from "./glaze/js/glaze-v1.7.0.mjs";
+import { filenameFromDisposition } from "./download-filename.mjs";
 
 const storageKeys = {
   onboarding: "goreecloud-pdf-onboarding-v1",
@@ -969,14 +970,7 @@ function buildFormData(tool) {
 }
 
 function filenameFromResponse(response, fallback) {
-  const disposition = response.headers.get("content-disposition") || "";
-  const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i);
-  if (encoded) {
-    try { return decodeURIComponent(encoded[1]); }
-    catch { return encoded[1]; }
-  }
-  const plain = disposition.match(/filename="?([^";]+)"?/i);
-  return plain?.[1] || fallback;
+  return filenameFromDisposition(response.headers.get("content-disposition"), fallback);
 }
 
 function downloadBlob(blob, filename) {
