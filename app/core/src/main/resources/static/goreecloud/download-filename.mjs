@@ -13,30 +13,70 @@ export function safeDownloadFilename(value, fallback = "download") {
       .replace(/[<>:"|?*]/g, "_")
       .replace(/^[. ]+|[. ]+$/g, "");
     if (!leaf) return "";
-    // Limit download labels without silently discarding a short extension.
+    // Count Unicode code points so truncation cannot split a surrogate pair.
+    const codepoints = Array.from(leaf);
     const dot = leaf.lastIndexOf(".");
-    const suffix = dot > 0 && leaf.length - dot <= 20 ? leaf.slice(dot) : "";
-    const shortened = leaf.length <= 180 ? leaf : leaf.slice(0, 180 - suffix.length) + suffix;
-    return /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(shortened)
-      ? `file-${shortened}`
+    const extension = dot > 0 && leaf.length - dot <= 20 ? Array.from(leaf.slice(dot)) : [];
+    const shortened = codepoints.length <= 180
+      ? leaf
+      : codepoints.slice(0, 180 - extension.length).concat(extension).join("");
+    // Windows devices remain reserved even when followed by a space and extension.
+    return /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])[ .]/i.test(shortened + ".")
+      ? "file-" + shortened
       : shortened;
   };
   return clean(value) || clean(fallback) || "download";
 }
 
+/** Split Content-Disposition parameters without treating quoted semicolons as delimiters. */
+function dispositionParameters(header) {
+  if (typeof header !== "string" || header.length > 4096) return null;
+  const parts = [];
+  let part = "";
+  let quoted = false;
+  let escaped = false;
+  for (const char of header) {
+    if (escaped) {
+      part += char;
+      escaped = false;
+    } else if (quoted && char === "\\") {
+      escaped = true;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === ";" && !quoted) {
+      parts.push(part.trim());
+      part = "";
+    } else {
+      part += char;
+    }
+  }
+  if (quoted || escaped) return null;
+  parts.push(part.trim());
+  const params = new Map();
+  for (const field of parts.slice(1)) {
+    const index = field.indexOf("=");
+    if (index < 1) continue;
+    const key = field.slice(0, index).trim().toLowerCase();
+    if (key !== "filename" && key !== "filename*") continue;
+    // Reject ambiguous duplicate names instead of choosing a guessed authority.
+    if (params.has(key)) return null;
+    params.set(key, field.slice(index + 1).trim());
+  }
+  return params;
+}
+
 export function filenameFromDisposition(disposition, fallback) {
-  if (typeof disposition !== "string") return safeDownloadFilename(fallback);
-  const encoded = disposition.match(/(?:^|;)\s*filename\*\s*=\s*UTF-8''([^;]+)/i);
-  if (encoded) {
-    let name = encoded[1].trim().replace(/^"|"$/g, "");
+  const params = dispositionParameters(disposition);
+  if (!params) return safeDownloadFilename(fallback);
+  if (params.has("filename*")) {
+    const match = /^UTF-8'[^']*'(.+)$/i.exec(params.get("filename*"));
+    if (!match) return safeDownloadFilename(fallback);
     try {
-      name = decodeURIComponent(name);
+      return safeDownloadFilename(decodeURIComponent(match[1]), fallback);
     } catch {
-      // Malformed extended values are untrusted: prefer a safe fallback.
+      // Invalid percent-encoding or UTF-8 never becomes a suggested name.
       return safeDownloadFilename(fallback);
     }
-    return safeDownloadFilename(name, fallback);
   }
-  const plain = disposition.match(/(?:^|;)\s*filename\s*=\s*(?:"([^"]*)"|([^;]*))/i);
-  return safeDownloadFilename(plain ? (plain[1] ?? plain[2]).trim() : "", fallback);
+  return safeDownloadFilename(params.get("filename") ?? "", fallback);
 }
