@@ -7,6 +7,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 python3 "$ROOT/scripts/validate_workbench_contract.py"
 node --check "$ROOT/app/core/src/main/resources/static/goreecloud/pdf-manager.js"
+node --check "$ROOT/app/core/src/main/resources/static/goreecloud/download-filename.mjs"
+node --test "$ROOT/scripts/test_download_filename.mjs"
 
 python3 - "$ROOT" <<'PY'
 import json
