@@ -1,5 +1,9 @@
 # Validation — GoreeCloud PDF Manager
 
+## Download filename safety — development candidate
+
+The workbench now normalizes server-supplied filename hints in a pure module. `scripts/test_download_filename.mjs` exercises RFC 5987/quoted filenames, decoded directory separators, malformed encoding, control and bidirectional override characters, reserved labels, fallback behavior, and bounded lengths. `scripts/validate_repository.sh` runs the test via Node. Exact-head CI and browser download UX acceptance are separate requirements; this section does not claim either without passing evidence.
+
 Validation below was performed on the Forge rebuild candidate on 2026-10-07 before the final branch update.
 
 ## Passed
