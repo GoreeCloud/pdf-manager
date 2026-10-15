@@ -31,6 +31,8 @@
 
 ### Security and privacy
 
+- Normalize server-supplied workbench download filename hints before the browser saves results, with bounded names, MIME-bound canonical suffixes, a least-privilege generic-output suffix allowlist, and regression coverage for encoded path separators, control characters, malformed/ambiguous values, reserved names, and suffix mismatches.
+
 - Restricted upstream directories excluded.
 - Same-origin UI asset/request model.
 - No optional telemetry or behavioral analytics in the GoreeCloud shell.

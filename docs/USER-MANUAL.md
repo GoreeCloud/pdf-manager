@@ -12,7 +12,7 @@ Tools marked **Workbench ready** currently include Merge PDFs, Split PDF, Rotate
 2. Select a ready tool.
 3. Review options.
 4. Run the tool.
-5. The browser downloads the returned result.
+5. The browser downloads the returned result. Server-supplied filename hints are normalized before use. Directory segments and control or bidirectional override characters are removed, recognized response media types enforce a matching suffix, and generic binary results keep only supported workbench output suffixes.
 
 For crop, **Auto-detect content bounds** ignores manual coordinates and trims detected white space on the selected pages. Manual crop requires X, Y, width, and height. Removing data outside the crop uses the server Ghostscript path when that capability is enabled.
 
