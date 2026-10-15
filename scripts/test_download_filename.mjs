@@ -54,7 +54,7 @@ test("long response names remain bounded while preserving short extension", () =
 test("quoted fields cannot inject another filename parameter", () => {
   assert.equal(
     filenameFromDisposition('attachment; filename="invoice; filename*=UTF-8\'\'attacker.exe"', "fallback.pdf"),
-    "invoice; filename_=UTF-8''attacker.exe",
+    "invoice; filename_=UTF-8''attacker",
   );
   assert.equal(
     filenameFromDisposition('attachment; filename="report\\\";semi.pdf"', "fallback.pdf"),
