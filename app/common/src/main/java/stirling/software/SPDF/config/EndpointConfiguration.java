@@ -631,6 +631,7 @@ public class EndpointConfiguration {
         addEndpointAlternative("pdf-to-html", "LibreOffice");
         addEndpointAlternative("pdf-to-html", "Pdftohtml");
         addEndpointAlternative("pdf-to-markdown", "Pdftohtml");
+        addEndpointAlternative("pdf-to-markdown", "Java");
 
         // markdown-to-pdf can use either Weasyprint or Java
         addEndpointAlternative("markdown-to-pdf", "Weasyprint");
