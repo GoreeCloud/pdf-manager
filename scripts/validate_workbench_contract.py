@@ -42,6 +42,10 @@ TOOLS = {
     "pdf-word": ("convert", "/pdf/word", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToOffice.java", "pdf-to-word"),
     "pdf-presentation": ("convert", "/pdf/presentation", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToOffice.java", "pdf-to-presentation"),
     "pdf-excel": ("convert", "/pdf/xlsx", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToExcelController.java", "pdf-to-xlsx"),
+    "pdf-images": ("convert", "/pdf/img", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertImgPDFController.java", "pdf-to-img"),
+    "images-pdf": ("convert", "/img/pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertImgPDFController.java", "img-to-pdf"),
+    "pdf-ebook": ("convert", "/pdf/epub", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertPDFToEpubController.java", "pdf-to-epub"),
+    "office": ("convert", "/file/pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/converters/ConvertOfficeController.java", "file-to-pdf"),
     "metadata": ("misc", "/update-metadata", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/MetadataController.java", "update-metadata"),
     "page-numbers": ("misc", "/add-page-numbers", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/PageNumbersController.java", "add-page-numbers"),
     "stamp": ("misc", "/add-stamp", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/StampController.java", "add-stamp"),
@@ -56,6 +60,7 @@ TOOLS = {
     "remove-cert-sign": ("security", "/remove-cert-sign", "app/core/src/main/java/stirling/software/SPDF/controller/api/security/RemoveCertSignController.java", "remove-cert-sign"),
     "repair": ("misc", "/repair", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/RepairController.java", "repair"),
     "flatten": ("misc", "/flatten", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/FlattenController.java", "flatten"),
+    "remove-images": ("general", "/remove-image-pdf", "app/core/src/main/java/stirling/software/SPDF/controller/api/misc/RemoveImagesController.java", "remove-image-pdf"),
 }
 
 
@@ -171,6 +176,53 @@ for tool_id in ("pdf-word", "pdf-presentation"):
 pdf_excel_block = tool_blocks.get("pdf-excel", "")
 if 'name: "pageNumbers"' not in pdf_excel_block:
     fail("PDF-to-Excel must expose inherited page selection")
+
+pdf_images_block = tool_blocks.get("pdf-images", "")
+for marker in ('name: "pageNumbers"', 'name: "imageFormat"', 'name: "singleOrMultiple"', 'name: "colorType"', 'name: "dpi"'):
+    if marker not in pdf_images_block:
+        fail(f"PDF-to-images workflow must expose backend conversion control {marker}")
+if '"webp"' in pdf_images_block:
+    fail("PDF-to-images must not expose WebP until its Python-specific dependency is separately evidenced")
+
+images_pdf_block = tool_blocks.get("images-pdf", "")
+if 'multi: true' not in images_pdf_block or 'inputKind: "image"' not in images_pdf_block:
+    fail("images-to-PDF must use all workspace images and enforce image inputs")
+for marker in ('name: "fitOption"', 'name: "colorType"', 'name: "autoRotate"'):
+    if marker not in images_pdf_block:
+        fail(f"images-to-PDF workflow must expose backend conversion control {marker}")
+
+pdf_ebook_block = tool_blocks.get("pdf-ebook", "")
+for marker in ('name: "outputFormat"', 'name: "targetDevice"', 'name: "detectChapters"'):
+    if marker not in pdf_ebook_block:
+        fail(f"PDF-to-ebook workflow must expose backend conversion control {marker}")
+
+office_block = tool_blocks.get("office", "")
+if 'inputKind: "office"' not in office_block:
+    fail("office-to-PDF must enforce office/text workspace input")
+
+merge_block = tool_blocks.get("merge", "")
+if 'inputKind: "pdf-or-image"' not in merge_block:
+    fail("merge must explicitly accept PDF or image workspace inputs")
+
+for marker in (
+    "function validateWorkspaceForTool(tool)",
+    "validateWorkspaceForTool(tool);",
+    'const officeExtensions = new Set',
+    'const imageExtensions = new Set',
+):
+    if marker not in js:
+        fail(f"workspace input compatibility guard is missing: {marker}")
+
+for marker in (
+    'addEndpointToGroup("Convert", "pdf-to-img")',
+    'addEndpointToGroup("Convert", "img-to-pdf")',
+    'addEndpointToGroup("Convert", "file-to-pdf")',
+    'addEndpointToGroup("Convert", "pdf-to-epub")',
+    'addEndpointToGroup("Other", "remove-image-pdf")',
+    'addEndpointToGroup("Java", "remove-image-pdf")',
+):
+    if marker not in endpoint_configuration_text:
+        fail(f"server availability registration is missing: {marker}")
 
 attachments_block = tool_blocks.get("add-attachments", "")
 for marker in ('name: "attachments"', 'type: "file"', "multiple: true", "required: true"):
