@@ -4,9 +4,10 @@
  */
 const SAFE_GENERIC_EXTENSIONS = new Set([
   "pdf", "zip",
-  "png", "jpg", "jpeg", "gif", "webp", "bmp", "tif", "tiff",
-  "txt", "rtf", "md", "html", "htm", "csv", "json", "xml",
-  "doc", "docx", "odt", "ppt", "pptx", "odp", "xls", "xlsx", "ods",
+  "png", "jpg", "jpeg", "gif",
+  "doc", "docx", "odt",
+  "ppt", "pptx", "odp",
+  "xlsx",
   "epub", "azw3",
 ]);
 
