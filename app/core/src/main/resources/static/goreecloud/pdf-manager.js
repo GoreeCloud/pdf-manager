@@ -970,7 +970,7 @@ function buildFormData(tool) {
 }
 
 function filenameFromResponse(response, fallback) {
-  return filenameFromDisposition(response.headers.get("content-disposition"), fallback);
+  return filenameFromDisposition(\n    response.headers.get("content-disposition"),\n    fallback,\n    response.headers.get("content-type"),\n  );
 }
 
 function downloadBlob(blob, filename) {
