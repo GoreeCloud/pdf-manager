@@ -320,6 +320,19 @@ class EndpointConfigurationGapTest {
             config.disableGroup("Calibre");
             assertFalse(config.isEndpointEnabled("pdf-to-epub"));
         }
+
+        @Test
+        @DisplayName("PDF-to-Markdown keeps its Java fallback when Pdftohtml is disabled")
+        void pdfToMarkdownJavaFallback() {
+            EndpointConfiguration config = buildDefault();
+            assertTrue(config.isEndpointEnabled("pdf-to-markdown"));
+
+            config.disableGroup("Pdftohtml");
+            assertTrue(config.isEndpointEnabled("pdf-to-markdown"));
+
+            config.disableGroup("Java");
+            assertFalse(config.isEndpointEnabled("pdf-to-markdown"));
+        }
     }
 
     @Nested
