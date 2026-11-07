@@ -1,0 +1,7 @@
+{
+  "ignoredFiles": [
+    "frontend/src-tauri/icons/macos/*",
+    "frontend/src-tauri/icons/linux/*",
+    "frontend/src-tauri/icons/windows/*"
+  ]
+}

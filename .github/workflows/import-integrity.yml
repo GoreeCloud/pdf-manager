@@ -1,0 +1,13 @@
+name: Import integrity
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  licensing:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify licensing boundaries and provenance
+        run: python3 scripts/verify_import.py

@@ -1,0 +1,290 @@
+package stirling.software.SPDF.controller.api.converters;
+
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TableBlock;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.node.FencedCodeBlock;
+import org.commonmark.node.IndentedCodeBlock;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.AttributeProvider;
+import org.commonmark.renderer.html.HtmlRenderer;
+import org.springframework.core.io.Resource;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+
+import io.github.pixee.security.Filenames;
+import io.swagger.v3.oas.annotations.Operation;
+
+import lombok.RequiredArgsConstructor;
+
+import stirling.software.SPDF.config.swagger.StandardPdfResponse;
+import stirling.software.SPDF.service.OfficeConversionService;
+import stirling.software.SPDF.service.OfficeToPdfService;
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.annotations.api.ConvertApi;
+import stirling.software.common.configuration.RuntimePathConfig;
+import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.api.GeneralFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
+import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.*;
+
+@ConvertApi
+@RequiredArgsConstructor
+public class ConvertMarkdownToPdf {
+
+    private static final List<Extension> MARKDOWN_EXTENSIONS = List.of(TablesExtension.create());
+
+    private static final Parser MARKDOWN_PARSER =
+            Parser.builder().extensions(MARKDOWN_EXTENSIONS).build();
+
+    private static final HtmlRenderer HTML_RENDERER =
+            HtmlRenderer.builder()
+                    .attributeProviderFactory(context -> new TableAttributeProvider())
+                    .attributeProviderFactory(context -> new CodeBlockAttributeProvider())
+                    .extensions(MARKDOWN_EXTENSIONS)
+                    .build();
+
+    private final CustomPDFDocumentFactory pdfDocumentFactory;
+    private final RuntimePathConfig runtimePathConfig;
+
+    private final TempFileManager tempFileManager;
+    private final OfficeConversionService officeConversionService;
+    private final OfficeToPdfService officeToPdfService;
+
+    private final CustomHtmlSanitizer customHtmlSanitizer;
+
+    @AutoJobPostMapping(
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            value = "/markdown/pdf",
+            resourceWeight = ResourceWeight.LARGE_WEIGHT)
+    @StandardPdfResponse
+    // A ZIP of Markdown plus its images is a first-class input here, not just a bare .md file.
+    @ToolIO(
+            accepts = {ToolFormat.MARKDOWN, ToolFormat.ZIP},
+            inputExtensions = {"md", "zip"},
+            produces = ToolFormat.PDF)
+    @Operation(
+            summary = "Convert a Markdown file to PDF",
+            description =
+                    "This endpoint takes a Markdown file or ZIP (containing Markdown + images)"
+                            + " input, converts it to HTML, and then to PDF format.")
+    public ResponseEntity<Resource> markdownToPdf(
+            @ModelAttribute GeneralFile generalFile,
+            @RequestParam(value = "useStirlingOfficeConvert", required = false)
+                    Boolean useStirlingOfficeConvert)
+            throws Exception {
+        MultipartFile fileInput = generalFile.getFileInput();
+
+        if (fileInput == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", "Markdown or ZIP");
+        }
+
+        String originalFilename = Filenames.toSimpleFileName(fileInput.getOriginalFilename());
+        if (originalFilename == null) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", ".md or .zip");
+        }
+
+        boolean isZip = originalFilename.toLowerCase().endsWith(".zip");
+        boolean isMarkdown = originalFilename.toLowerCase().endsWith(".md");
+
+        if (!isZip && !isMarkdown) {
+            throw ExceptionUtils.createIllegalArgumentException(
+                    "error.fileFormatRequired", "File must be in {0} format", ".md or .zip");
+        }
+
+        boolean officeConvert =
+                officeConversionService.replacesLibreOffice(useStirlingOfficeConvert);
+        byte[] pdfBytes;
+        String outputFilename;
+
+        if (isZip) {
+            // Handle ZIP file containing markdown + images
+            try (TempDirectory tempDir = new TempDirectory(tempFileManager)) {
+                // Extract ZIP to temp directory
+                java.nio.file.Path tempDirPath = tempDir.getPath();
+                try (java.util.zip.ZipInputStream zipIn =
+                        io.github.pixee.security.ZipSecurity.createHardenedInputStream(
+                                fileInput.getInputStream())) {
+                    java.util.zip.ZipEntry entry;
+                    while ((entry = zipIn.getNextEntry()) != null) {
+                        if (!entry.isDirectory()) {
+                            java.nio.file.Path filePath =
+                                    tempDirPath.resolve(entry.getName()).normalize();
+                            if (!filePath.startsWith(tempDirPath)) {
+                                throw new java.io.IOException(
+                                        "ZIP entry is outside of target directory: "
+                                                + entry.getName());
+                            }
+                            java.nio.file.Files.createDirectories(filePath.getParent());
+                            java.nio.file.Files.copy(zipIn, filePath);
+                        }
+                        zipIn.closeEntry();
+                    }
+                }
+
+                // Find the markdown file (look for .md files, prefer index.md or first one)
+                java.io.File markdownFile = findMarkdownFile(tempDirPath.toFile());
+                if (markdownFile == null) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.fileFormatRequired",
+                            "ZIP must contain at least one {0} file",
+                            ".md");
+                }
+
+                // Read and convert markdown to HTML
+                String markdownContent = java.nio.file.Files.readString(markdownFile.toPath());
+                String htmlContent = renderHtml(markdownContent);
+
+                // Create a new ZIP with HTML + images for WeasyPrint
+                byte[] htmlZipBytes = createHtmlZip(htmlContent, tempDirPath.toFile());
+
+                pdfBytes = convertHtml(htmlZipBytes, true, officeConvert);
+
+                outputFilename =
+                        GeneralUtils.generateFilename(
+                                originalFilename.substring(0, originalFilename.lastIndexOf('.')),
+                                ".pdf");
+            }
+        } else {
+            // Handle plain markdown file (no images)
+            String htmlContent =
+                    renderHtml(new String(fileInput.getBytes(), StandardCharsets.UTF_8));
+
+            pdfBytes =
+                    convertHtml(htmlContent.getBytes(StandardCharsets.UTF_8), false, officeConvert);
+
+            outputFilename = GeneralUtils.generateFilename(originalFilename, ".pdf");
+        }
+
+        pdfBytes = pdfDocumentFactory.createNewBytesBasedOnOldDocument(pdfBytes);
+
+        TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+        try {
+            java.nio.file.Files.write(tempOut.getPath(), pdfBytes);
+        } catch (Exception e) {
+            tempOut.close();
+            throw e;
+        }
+        return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
+    }
+
+    private byte[] convertHtml(byte[] html, boolean packaged, boolean officeConvert)
+            throws Exception {
+        if (officeConvert) {
+            return officeToPdfService.convertHtml(html, packaged);
+        }
+        return FileToPdf.convertHtmlToPdf(
+                runtimePathConfig.getWeasyPrintPath(),
+                null,
+                html,
+                packaged ? "package.zip" : "converted.html",
+                tempFileManager,
+                customHtmlSanitizer);
+    }
+
+    static String renderHtml(String markdown) {
+        return HTML_RENDERER.render(MARKDOWN_PARSER.parse(markdown));
+    }
+
+    /**
+     * Finds a markdown file in the directory. Prefers index.md, otherwise returns the first .md
+     * file found.
+     */
+    private java.io.File findMarkdownFile(java.io.File directory) throws java.io.IOException {
+        java.io.File indexMd = new java.io.File(directory, "index.md");
+        if (indexMd.exists()) {
+            return indexMd;
+        }
+
+        // Search for any .md file
+        try (java.util.stream.Stream<java.nio.file.Path> paths =
+                java.nio.file.Files.walk(directory.toPath())) {
+            return paths.filter(p -> p.toString().toLowerCase().endsWith(".md"))
+                    .findFirst()
+                    .map(java.nio.file.Path::toFile)
+                    .orElse(null);
+        }
+    }
+
+    /**
+     * Creates a ZIP file containing the HTML content and all other files (images) from the
+     * directory.
+     */
+    private byte[] createHtmlZip(String htmlContent, java.io.File sourceDir)
+            throws java.io.IOException {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+
+        try (java.util.zip.ZipOutputStream zos = new java.util.zip.ZipOutputStream(baos)) {
+            // Add HTML file to root
+            java.util.zip.ZipEntry htmlEntry = new java.util.zip.ZipEntry("index.html");
+            zos.putNextEntry(htmlEntry);
+            zos.write(htmlContent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            zos.closeEntry();
+
+            // Add all other files (images, etc.)
+            addDirectoryToZip(zos, sourceDir.toPath(), sourceDir.toPath());
+        }
+
+        return baos.toByteArray();
+    }
+
+    /** Recursively adds files from a directory to a ZIP, excluding .md files. */
+    private void addDirectoryToZip(
+            java.util.zip.ZipOutputStream zos,
+            java.nio.file.Path sourceDir,
+            java.nio.file.Path rootDir)
+            throws java.io.IOException {
+        try (java.util.stream.Stream<java.nio.file.Path> paths =
+                java.nio.file.Files.walk(sourceDir, 1)) {
+            for (java.nio.file.Path path : paths.toList()) {
+                if (java.nio.file.Files.isDirectory(path)) {
+                    if (!path.equals(sourceDir)) {
+                        addDirectoryToZip(zos, path, rootDir);
+                    }
+                } else if (!path.toString().toLowerCase().endsWith(".md")) {
+                    // Add file to ZIP, maintaining relative path structure
+                    java.nio.file.Path relativePath = rootDir.relativize(path);
+                    java.util.zip.ZipEntry entry =
+                            new java.util.zip.ZipEntry(relativePath.toString());
+                    zos.putNextEntry(entry);
+                    java.nio.file.Files.copy(path, zos);
+                    zos.closeEntry();
+                }
+            }
+        }
+    }
+}
+
+class TableAttributeProvider implements AttributeProvider {
+    @Override
+    public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+        if (node instanceof TableBlock) {
+            attributes.put("class", "table table-striped");
+        }
+    }
+}
+
+// The HTML reaches WeasyPrint with no stylesheet, and its default `white-space: pre` lets a long
+// code line run past the page margin and get clipped. Inline, because the sanitizer strips <style>
+// elements; word-wrap rather than overflow-wrap, because its CSS allowlist drops the latter.
+class CodeBlockAttributeProvider implements AttributeProvider {
+    @Override
+    public void setAttributes(Node node, String tagName, Map<String, String> attributes) {
+        if ("pre".equals(tagName)
+                && (node instanceof FencedCodeBlock || node instanceof IndentedCodeBlock)) {
+            attributes.put("style", "white-space: pre-wrap; word-wrap: break-word");
+        }
+    }
+}

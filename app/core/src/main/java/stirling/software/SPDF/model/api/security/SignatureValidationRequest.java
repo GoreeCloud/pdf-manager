@@ -1,0 +1,22 @@
+package stirling.software.SPDF.model.api.security;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import stirling.software.common.model.api.PDFFile;
+
+@Data
+@EqualsAndHashCode(callSuper = true)
+public class SignatureValidationRequest extends PDFFile {
+
+    @Schema(
+            description =
+                    "Optional X.509 certificate (PEM or DER). If given, only signatures"
+                            + " chaining to it are trusted.",
+            requiredMode = Schema.RequiredMode.NOT_REQUIRED)
+    private MultipartFile certFile;
+}

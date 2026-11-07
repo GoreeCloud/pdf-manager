@@ -1,0 +1,41 @@
+services:
+  stirling-pdf:
+    container_name: Stirling-PDF-Security-Fat-with-login
+    image: docker.stirlingpdf.com/stirlingtools/stirling-pdf:fat
+    build:
+      context: ../../../
+      dockerfile: docker/embedded/Dockerfile.fat
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f -H 'X-API-KEY: 123456789' http://localhost:8080${SYSTEM_ROOTURIPATH:-''}/api/v1/info/status | grep -q 'UP'"]
+      interval: 5s
+      timeout: 10s
+      retries: 16
+    ports:
+      - 8080:8080
+    volumes:
+      - ../../../stirling/latest/data:/usr/share/tessdata:rw
+      - ../../../stirling/latest/config:/configs:rw
+      - ../../../stirling/latest/logs:/logs:rw
+      - ../../../stirling/latest/storage:/storage:rw
+    environment:
+      DISABLE_ADDITIONAL_FEATURES: "false"
+      SECURITY_ENABLELOGIN: "true"
+      PUID: 1002
+      PGID: 1002
+      UMASK: "022"
+      SYSTEM_DEFAULTLOCALE: en-US
+      UI_APPNAME: Stirling-PDF
+      UI_HOMEDESCRIPTION: Demo site for Stirling-PDF Latest-fat with Security
+      UI_APPNAMENAVBAR: Stirling-PDF Latest-fat
+      SYSTEM_MAXFILESIZE: "100"
+      METRICS_ENABLED: "true"
+      SYSTEM_GOOGLEVISIBILITY: "true"
+      SYSTEM_ENABLEMOBILESCANNER: "true"
+      SECURITY_CUSTOMGLOBALAPIKEY: "123456789"
+      STIRLING_BILLING_ACCOUNT_LINK_ENABLED: "false"
+      # Folder management + file-storage features the cucumber
+      # `folders_and_files.feature` suite needs to upload PDFs against.
+      # The folder endpoints and the storage upload endpoint short-circuit
+      # to 403 "Storage is disabled" when this is left at its default false.
+      STORAGE_ENABLED: "true"
+    restart: on-failure:5

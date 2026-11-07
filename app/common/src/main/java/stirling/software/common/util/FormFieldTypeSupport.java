@@ -1,0 +1,486 @@
+package stirling.software.common.util;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdmodel.graphics.color.PDColor;
+import org.apache.pdfbox.pdmodel.graphics.color.PDDeviceRGB;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionNamed;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionResetForm;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionSubmitForm;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAppearanceCharacteristicsDictionary;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDCheckBox;
+import org.apache.pdfbox.pdmodel.interactive.form.PDChoice;
+import org.apache.pdfbox.pdmodel.interactive.form.PDComboBox;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDListBox;
+import org.apache.pdfbox.pdmodel.interactive.form.PDPushButton;
+import org.apache.pdfbox.pdmodel.interactive.form.PDRadioButton;
+import org.apache.pdfbox.pdmodel.interactive.form.PDSignatureField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTextField;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public enum FormFieldTypeSupport {
+    TEXT("text", "textField", PDTextField.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            PDTextField textField = new PDTextField(acroForm);
+            textField.setDefaultAppearance("/Helv 12 Tf 0 g");
+            return textField;
+        }
+
+        @Override
+        void copyFromOriginal(PDTerminalField source, PDTerminalField target) throws IOException {
+            PDTextField src = (PDTextField) source;
+            PDTextField dst = (PDTextField) target;
+            String value = src.getValueAsString();
+            if (value != null) {
+                dst.setValue(value);
+            }
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+
+        @Override
+        void applyNewFieldDefinition(
+                PDTerminalField field,
+                FormUtils.NewFormFieldDefinition definition,
+                List<String> options)
+                throws IOException {
+            PDTextField textField = (PDTextField) field;
+            if (definition.fontSize() != null && definition.fontSize() > 0) {
+                textField.setDefaultAppearance("/Helv " + definition.fontSize() + " Tf 0 g");
+            }
+            if (Boolean.TRUE.equals(definition.multiline())) {
+                textField.setMultiline(true);
+            }
+            // Comb field: evenly spaced character cells (e.g. SSN, phone). Requires
+            // a positive MaxLen and is mutually exclusive with multiline.
+            if (definition.maxLength() != null && definition.maxLength() > 0) {
+                textField.setMaxLen(definition.maxLength());
+                if (!Boolean.TRUE.equals(definition.multiline())) {
+                    try {
+                        textField.setComb(true);
+                    } catch (Exception e) {
+                        log.debug("Unable to set comb flag: {}", e.getMessage());
+                    }
+                }
+            }
+            String defaultValue = Optional.ofNullable(definition.defaultValue()).orElse("");
+            if (!defaultValue.isBlank()) {
+                FormUtils.setTextValue(textField, defaultValue);
+            }
+        }
+    },
+    CHECKBOX("checkbox", "checkBox", PDCheckBox.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            return new PDCheckBox(acroForm);
+        }
+
+        @Override
+        void copyFromOriginal(PDTerminalField source, PDTerminalField target) throws IOException {
+            PDCheckBox src = (PDCheckBox) source;
+            PDCheckBox dst = (PDCheckBox) target;
+            if (src.isChecked()) {
+                dst.check();
+            } else {
+                dst.unCheck();
+            }
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+
+        @Override
+        void applyNewFieldDefinition(
+                PDTerminalField field,
+                FormUtils.NewFormFieldDefinition definition,
+                List<String> options)
+                throws IOException {
+            PDCheckBox checkBox = (PDCheckBox) field;
+
+            if (!options.isEmpty()) {
+                checkBox.setExportValues(options);
+            }
+
+            ensureCheckBoxAppearance(checkBox);
+
+            if (FormUtils.isChecked(definition.defaultValue())) {
+                checkBox.check();
+            } else {
+                checkBox.unCheck();
+            }
+        }
+
+        private static void ensureCheckBoxAppearance(PDCheckBox checkBox) {
+            try {
+                if (checkBox.getWidgets().isEmpty()) {
+                    return;
+                }
+
+                PDAnnotationWidget widget = checkBox.getWidgets().getFirst();
+
+                PDAppearanceCharacteristicsDictionary appearanceChars =
+                        widget.getAppearanceCharacteristics();
+                if (appearanceChars == null) {
+                    appearanceChars =
+                            new PDAppearanceCharacteristicsDictionary(widget.getCOSObject());
+                    widget.setAppearanceCharacteristics(appearanceChars);
+                }
+
+                appearanceChars.setBorderColour(
+                        new PDColor(new float[] {0, 0, 0}, PDDeviceRGB.INSTANCE));
+                appearanceChars.setBackground(
+                        new PDColor(new float[] {1, 1, 1}, PDDeviceRGB.INSTANCE));
+
+                appearanceChars.setNormalCaption("4");
+
+                widget.setPrinted(true);
+                widget.setReadOnly(false);
+                widget.setHidden(false);
+
+            } catch (Exception e) {
+                log.debug("Unable to set checkbox appearance characteristics: {}", e.getMessage());
+            }
+        }
+    },
+    RADIO("radio", "radioButton", PDRadioButton.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            return new PDRadioButton(acroForm);
+        }
+
+        @Override
+        void copyFromOriginal(PDTerminalField source, PDTerminalField target) throws IOException {
+            PDRadioButton src = (PDRadioButton) source;
+            PDRadioButton dst = (PDRadioButton) target;
+            if (src.getExportValues() != null) {
+                dst.setExportValues(src.getExportValues());
+            }
+            if (src.getValue() != null) {
+                dst.setValue(src.getValue());
+            }
+        }
+    },
+    COMBOBOX("combobox", "comboBox", PDComboBox.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            return new PDComboBox(acroForm);
+        }
+
+        @Override
+        void copyFromOriginal(PDTerminalField source, PDTerminalField target) throws IOException {
+            PDComboBox src = (PDComboBox) source;
+            PDComboBox dst = (PDComboBox) target;
+            copyChoiceCharacteristics(src, dst);
+            if (src.getOptions() != null) {
+                dst.setOptions(src.getOptions());
+            }
+            if (src.getValue() != null && !src.getValue().isEmpty()) {
+                dst.setValue(src.getValue());
+            }
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+
+        @Override
+        void applyNewFieldDefinition(
+                PDTerminalField field,
+                FormUtils.NewFormFieldDefinition definition,
+                List<String> options)
+                throws IOException {
+            PDComboBox comboBox = (PDComboBox) field;
+            if (!options.isEmpty()) {
+                comboBox.setOptions(options);
+            }
+            List<String> allowedOptions = FormUtils.resolveOptions(comboBox);
+            String comboName =
+                    Optional.ofNullable(comboBox.getFullyQualifiedName())
+                            .orElseGet(comboBox::getPartialName);
+            String defaultValue = definition.defaultValue();
+            if (defaultValue != null && !defaultValue.isBlank()) {
+                String filtered =
+                        FormUtils.filterSingleChoiceSelection(
+                                defaultValue, allowedOptions, comboName);
+                if (filtered != null) {
+                    comboBox.setValue(filtered);
+                }
+            }
+        }
+    },
+    LISTBOX("listbox", "listBox", PDListBox.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            return new PDListBox(acroForm);
+        }
+
+        @Override
+        void copyFromOriginal(PDTerminalField source, PDTerminalField target) throws IOException {
+            PDListBox src = (PDListBox) source;
+            PDListBox dst = (PDListBox) target;
+            copyChoiceCharacteristics(src, dst);
+            if (src.getOptions() != null) {
+                dst.setOptions(src.getOptions());
+            }
+            if (src.getValue() != null && !src.getValue().isEmpty()) {
+                dst.setValue(src.getValue());
+            }
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+
+        @Override
+        void applyNewFieldDefinition(
+                PDTerminalField field,
+                FormUtils.NewFormFieldDefinition definition,
+                List<String> options)
+                throws IOException {
+            PDListBox listBox = (PDListBox) field;
+            listBox.setMultiSelect(Boolean.TRUE.equals(definition.multiSelect()));
+            if (!options.isEmpty()) {
+                listBox.setOptions(options);
+            }
+            List<String> allowedOptions = FormUtils.collectChoiceAllowedValues(listBox);
+            String listBoxName =
+                    Optional.ofNullable(listBox.getFullyQualifiedName())
+                            .orElseGet(listBox::getPartialName);
+            String defaultValue = definition.defaultValue();
+            if (defaultValue != null && !defaultValue.isBlank()) {
+                if (Boolean.TRUE.equals(definition.multiSelect())) {
+                    List<String> selections = FormUtils.parseMultiChoiceSelections(defaultValue);
+                    List<String> filtered =
+                            FormUtils.filterChoiceSelections(
+                                    selections, allowedOptions, listBoxName);
+                    if (!filtered.isEmpty()) {
+                        listBox.setValue(filtered);
+                    }
+                } else {
+                    String filtered =
+                            FormUtils.filterSingleChoiceSelection(
+                                    defaultValue, allowedOptions, listBoxName);
+                    if (filtered != null) {
+                        listBox.setValue(filtered);
+                    }
+                }
+            }
+        }
+    },
+    SIGNATURE("signature", "signature", PDSignatureField.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            return new PDSignatureField(acroForm);
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+        // Empty signature placeholder: no value to apply (signed later by a sign tool).
+    },
+    BUTTON("button", "pushButton", PDPushButton.class) {
+        @Override
+        PDTerminalField createField(PDAcroForm acroForm) {
+            return new PDPushButton(acroForm);
+        }
+
+        @Override
+        boolean doesNotsupportsDefinitionCreation() {
+            return false;
+        }
+
+        @Override
+        void applyNewFieldDefinition(
+                PDTerminalField field,
+                FormUtils.NewFormFieldDefinition definition,
+                List<String> options)
+                throws IOException {
+            if (field.getWidgets().isEmpty()) {
+                return;
+            }
+            PDAnnotationWidget widget = field.getWidgets().get(0);
+
+            // Visible caption (/MK /CA).
+            String caption = definition.label();
+            if (caption == null || caption.isBlank()) {
+                caption = definition.name();
+            }
+            if (caption != null && !caption.isBlank()) {
+                PDAppearanceCharacteristicsDictionary mk = widget.getAppearanceCharacteristics();
+                if (mk == null) {
+                    mk = new PDAppearanceCharacteristicsDictionary(widget.getCOSObject());
+                    widget.setAppearanceCharacteristics(mk);
+                }
+                mk.setNormalCaption(caption);
+            }
+            widget.setPrinted(true);
+
+            applyButtonAction(widget, definition.buttonAction());
+        }
+    };
+
+    /**
+     * Writes a push button's activation action from a "reset"/"print"/"uri:"/"submit:" spec,
+     * returning why it could not, or null on success. A blank spec clears the action.
+     */
+    public static String applyButtonAction(PDAnnotationWidget widget, String action) {
+        if (action == null) {
+            return null;
+        }
+        if (action.isBlank()) {
+            // An explicit blank clears the action rather than leaving the old one behind.
+            widget.getCOSObject().removeItem(COSName.A);
+            return null;
+        }
+        String spec = action.trim();
+        if (!ACTION_SPEC.matcher(spec).matches()) {
+            return "'" + action + "' is not a button action this editor understands";
+        }
+        // The editor emits "uri:" the moment that kind is picked, before a URL is typed; an
+        // empty target is not yet an action, so clear rather than write an inert one.
+        int colon = spec.indexOf(':');
+        if (colon >= 0 && spec.substring(colon + 1).isBlank()) {
+            widget.getCOSObject().removeItem(COSName.A);
+            return null;
+        }
+        try {
+            String lower = spec.toLowerCase(Locale.ROOT);
+            if (lower.equals("reset")) {
+                widget.getCOSObject().setItem(COSName.A, new PDActionResetForm().getCOSObject());
+            } else if (lower.equals("print")) {
+                PDActionNamed named = new PDActionNamed();
+                named.setN("Print");
+                widget.getCOSObject().setItem(COSName.A, named.getCOSObject());
+            } else if (lower.startsWith("uri:")) {
+                PDActionURI uri = new PDActionURI();
+                uri.setURI(spec.substring(4));
+                widget.getCOSObject().setItem(COSName.A, uri.getCOSObject());
+            } else if (lower.startsWith("submit:")) {
+                PDActionSubmitForm submit = new PDActionSubmitForm();
+                // Store the target URL on the action dictionary's /F entry.
+                submit.getCOSObject().setString(COSName.F, spec.substring(7));
+                widget.getCOSObject().setItem(COSName.A, submit.getCOSObject());
+            }
+            return null;
+        } catch (Exception e) {
+            log.debug("Unable to apply button action '{}': {}", action, e.getMessage());
+            return e.getMessage();
+        }
+    }
+
+    /** The spec forms applyButtonAction understands; anything else is reported, not dropped. */
+    private static final Pattern ACTION_SPEC =
+            Pattern.compile(
+                    "^(reset|print|uri:.*|submit:.*)$", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+
+    private static final Map<String, FormFieldTypeSupport> BY_TYPE =
+            Arrays.stream(values())
+                    .collect(
+                            Collectors.toUnmodifiableMap(
+                                    FormFieldTypeSupport::typeName, Function.identity()));
+
+    private final String typeName;
+    private final String fallbackWidgetName;
+    private final Class<? extends PDTerminalField> fieldClass;
+
+    FormFieldTypeSupport(
+            String typeName,
+            String fallbackWidgetName,
+            Class<? extends PDTerminalField> fieldClass) {
+        this.typeName = typeName;
+        this.fallbackWidgetName = fallbackWidgetName;
+        this.fieldClass = fieldClass;
+    }
+
+    public static FormFieldTypeSupport forField(PDField field) {
+        if (field == null) {
+            return null;
+        }
+        for (FormFieldTypeSupport handler : values()) {
+            if (handler.fieldClass.isInstance(field)) {
+                return handler;
+            }
+        }
+        return null;
+    }
+
+    public static FormFieldTypeSupport forTypeName(String typeName) {
+        if (typeName == null) {
+            return null;
+        }
+        return BY_TYPE.get(typeName);
+    }
+
+    private static void copyChoiceCharacteristics(PDChoice sourceField, PDChoice targetField) {
+        if (sourceField == null || targetField == null) {
+            return;
+        }
+
+        try {
+            int flags = sourceField.getCOSObject().getInt(COSName.FF);
+            targetField.getCOSObject().setInt(COSName.FF, flags);
+        } catch (Exception e) {
+            // ignore and continue
+        }
+
+        if (sourceField instanceof PDListBox sourceList
+                && targetField instanceof PDListBox targetList) {
+            try {
+                targetList.setMultiSelect(sourceList.isMultiSelect());
+            } catch (Exception ignored) {
+                // ignore
+            }
+        }
+    }
+
+    String typeName() {
+        return typeName;
+    }
+
+    String fallbackWidgetName() {
+        return fallbackWidgetName;
+    }
+
+    abstract PDTerminalField createField(PDAcroForm acroForm);
+
+    void copyFromOriginal(PDTerminalField source, PDTerminalField target) throws IOException {
+        // default no-op
+    }
+
+    boolean doesNotsupportsDefinitionCreation() {
+        return true;
+    }
+
+    void applyNewFieldDefinition(
+            PDTerminalField field,
+            FormUtils.NewFormFieldDefinition definition,
+            List<String> options)
+            throws IOException {
+        // default no-op
+    }
+}
