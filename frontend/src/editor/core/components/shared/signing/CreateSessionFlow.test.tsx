@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ComponentProps } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CreateSessionFlow } from "@editor/components/shared/signing/CreateSessionFlow";
+
+type SubmitHandler = ComponentProps<typeof CreateSessionFlow>["onSubmit"];
 import UserSelector from "@editor/components/shared/UserSelector";
 import { qk } from "@editor/query/keys";
 
@@ -76,7 +78,7 @@ function Harness({
   initialIds = [],
   initialFileSelected = true,
 }: {
-  onSubmit: ReturnType<typeof vi.fn>;
+  onSubmit: SubmitHandler;
   creating?: boolean;
   initialIds?: number[];
   initialFileSelected?: boolean;
@@ -124,7 +126,7 @@ function show({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
   client.setQueryData(qk.users(), availableUsers);
-  const onSubmit = vi.fn();
+  const onSubmit = vi.fn<SubmitHandler>();
   const content = () => (
     <QueryClientProvider client={client}>
       <MemoryRouter>
