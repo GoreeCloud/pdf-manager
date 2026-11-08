@@ -83,4 +83,25 @@ for rel in ['frontend/scripts/generate-og-image.mjs', 'frontend/scripts/sample-p
     script = (ROOT / rel).read_text()
     assert '--no-sandbox' not in script and '--disable-setuid-sandbox' not in script
     assert 'headless: true' in script
+devtools = json.loads((ROOT / 'devTools/package.json').read_text())
+devtools_lock = json.loads((ROOT / 'devTools/package-lock.json').read_text())
+assert devtools['name'] == devtools_lock['name'] == devtools_lock['packages']['']['name'] == 'goreecloud-pdf-manager-devtools'
+assert not any('/app/proprietary/' in script for script in devtools.get('scripts', {}).values())
+# Legal and privacy policy authority must not silently fall back to Stirling's policies.
+assert '  termsAndConditions: ""' in defaults
+assert '  privacyPolicy: ""' in defaults
+for rel in [
+    'app/core/src/main/java/stirling/software/SPDF/config/InitialSetup.java',
+    'app/core/src/main/java/stirling/software/SPDF/config/OpenApiConfig.java',
+    'frontend/src/editor/core/components/shared/Footer.tsx',
+    'frontend/src/editor/core/components/shared/config/configSections/LegalSection.tsx',
+]:
+    legal_source = (ROOT / rel).read_text()
+    assert 'stirlingpdf.com/terms' not in legal_source
+    assert 'stirlingpdf.com/privacy-policy' not in legal_source
+    assert 'stirling.com/terms' not in legal_source
+    assert 'stirling.com/privacy' not in legal_source
+assert 'GoreeCloud PDF Manager API' in (ROOT / 'app/core/src/main/java/stirling/software/SPDF/config/OpenApiConfig.java').read_text()
+assert 'serviceLegalHref' in (ROOT / 'frontend/src/editor/core/components/shared/Footer.tsx').read_text()
+assert 'serviceLegalHref' in (ROOT / 'frontend/src/editor/core/components/shared/config/configSections/LegalSection.tsx').read_text()
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

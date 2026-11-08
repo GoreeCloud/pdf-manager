@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useCookieConsent } from "@editor/hooks/useCookieConsent";
 import { useFooterInfo } from "@editor/hooks/useFooterInfo";
 import { Button } from "@editor/ui/Button";
+import { serviceLegalHref } from "@editor/utils/serviceLegalHref";
 
 interface FooterProps {
   privacyPolicy?: string;
@@ -37,16 +38,12 @@ export default function Footer({
 
   const { showCookiePreferences } = useCookieConsent();
 
-  // Default URLs
-  const defaultTermsUrl = "https://www.stirling.com/terms";
-  const defaultPrivacyUrl = "https://www.stirling.com/privacy";
-
-  // Use provided URLs or fall back to defaults
-  const finalTermsUrl = finalTermsAndConditions || defaultTermsUrl;
-  const finalPrivacyUrl = finalPrivacyPolicy || defaultPrivacyUrl;
-
-  // Helper to check if a value is valid (not null/undefined/empty string)
-  const isValidLink = (link?: string) => link && link.trim().length > 0;
+  // Do not represent the upstream publisher's policies as GoreeCloud's.
+  const finalPrivacyUrl = serviceLegalHref(finalPrivacyPolicy);
+  const finalTermsUrl = serviceLegalHref(finalTermsAndConditions);
+  const finalAccessibilityUrl = serviceLegalHref(finalAccessibilityStatement);
+  const finalCookieUrl = serviceLegalHref(finalCookiePolicy);
+  const finalImprintUrl = serviceLegalHref(finalImpressum);
 
   return (
     <div
@@ -68,64 +65,49 @@ export default function Footer({
           fontSize: "0.75rem",
         }}
       >
-        <a
-          className="footer-link px-3"
-          target="_blank"
+        {finalPrivacyUrl && (
+          <a className="footer-link px-3" target="_blank"
+            rel="noopener noreferrer" href={finalPrivacyUrl}>
+            {t("legal.privacy", "Privacy Policy")}
+          </a>
+        )}
+        {finalTermsUrl && (
+          <a className="footer-link px-3" target="_blank"
+            rel="noopener noreferrer" href={finalTermsUrl}>
+            {t("legal.terms", "Terms and Conditions")}
+          </a>
+        )}
+        <a className="footer-link px-3" target="_blank"
           rel="noopener noreferrer"
-          href={finalPrivacyUrl}
-        >
-          {t("legal.privacy", "Privacy Policy")}
-        </a>
-        <a
-          className="footer-link px-3"
-          target="_blank"
-          rel="noopener noreferrer"
-          href={finalTermsUrl}
-        >
-          {t("legal.terms", "Terms and Conditions")}
-        </a>
-        <a
-          className="footer-link px-3"
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://discord.gg/Cn8pWhQRxZ"
-        >
-          {t("footer.discord", "Discord")}
-        </a>
-        <a
-          className="footer-link px-3"
-          target="_blank"
-          rel="noopener noreferrer"
-          href="https://github.com/Stirling-Tools/Stirling-PDF"
-        >
+          href="https://github.com/GoreeCloud/pdf-manager/issues">
           {t("footer.issues", "GitHub")}
         </a>
-        {isValidLink(finalAccessibilityStatement) && (
+        {finalAccessibilityUrl && (
           <a
             className="footer-link px-3"
             target="_blank"
             rel="noopener noreferrer"
-            href={finalAccessibilityStatement}
+            href={finalAccessibilityUrl}
           >
             {t("legal.accessibility", "Accessibility")}
           </a>
         )}
-        {isValidLink(finalCookiePolicy) && (
+        {finalCookieUrl && (
           <a
             className="footer-link px-3"
             target="_blank"
             rel="noopener noreferrer"
-            href={finalCookiePolicy}
+            href={finalCookieUrl}
           >
             {t("legal.cookie", "Cookie Policy")}
           </a>
         )}
-        {isValidLink(finalImpressum) && (
+        {finalImprintUrl && (
           <a
             className="footer-link px-3"
             target="_blank"
             rel="noopener noreferrer"
-            href={finalImpressum}
+            href={finalImprintUrl}
           >
             {t("legal.impressum", "Impressum")}
           </a>

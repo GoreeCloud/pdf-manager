@@ -10,8 +10,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
 
-import io.micrometer.common.util.StringUtils;
-
 import jakarta.annotation.PostConstruct;
 
 import lombok.RequiredArgsConstructor;
@@ -59,20 +57,16 @@ public class InitialSetup {
         }
     }
 
-    public void initLegalUrls() throws IOException {
-        // Initialize Terms and Conditions
+    public void initLegalUrls() {
+        // The original upstream policy URLs do not describe this derivative.
+        // Legal policies must be published and explicitly configured by the operator.
+        // Missing URLs remain missing: never silently write another publisher's policies.
         String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
-        if (StringUtils.isEmpty(termsUrl)) {
-            String defaultTermsUrl = "https://www.stirlingpdf.com/terms";
-            GeneralUtils.saveKeyToSettings("legal.termsAndConditions", defaultTermsUrl);
-            applicationProperties.getLegal().setTermsAndConditions(defaultTermsUrl);
-        }
-        // Initialize Privacy Policy
         String privacyUrl = applicationProperties.getLegal().getPrivacyPolicy();
-        if (StringUtils.isEmpty(privacyUrl)) {
-            String defaultPrivacyUrl = "https://www.stirlingpdf.com/privacy-policy";
-            GeneralUtils.saveKeyToSettings("legal.privacyPolicy", defaultPrivacyUrl);
-            applicationProperties.getLegal().setPrivacyPolicy(defaultPrivacyUrl);
+        if (termsUrl == null || termsUrl.isBlank()
+                || privacyUrl == null || privacyUrl.isBlank()) {
+            log.warn("GoreeCloud PDF Manager legal policy URLs are unconfigured; "
+                    + "publish verified local service policies before release");
         }
     }
 

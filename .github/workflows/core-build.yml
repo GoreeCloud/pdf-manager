@@ -61,6 +61,8 @@ jobs:
         run: |
           gradle :stirling-pdf:test \
             --tests "stirling.software.SPDF.config.WebMvcConfigTest" \
+            --tests "stirling.software.SPDF.config.InitialSetupTest" \
+            --tests "stirling.software.SPDF.config.OpenApiConfigTest" \
             --tests "stirling.software.SPDF.controller.api.MergeControllerTest" \
             --tests "stirling.software.SPDF.controller.api.SplitPDFControllerTest" \
             --tests "stirling.software.SPDF.controller.api.RotationControllerTest" \
@@ -103,5 +105,8 @@ jobs:
             echo "ERROR: rejection did not come from GoreeCloud core-only policy"
             exit 1
           }
+      - name: Verify legal policy link safety and UI presentation
+        run: |
+          npx --no-install vitest run src/editor/core/utils/serviceLegalHref.test.ts src/editor/core/components/shared/LegalPolicySurfaces.test.tsx
       - name: Build open-core frontend
         run: npx --no-install vite build --mode core

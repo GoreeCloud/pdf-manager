@@ -1,0 +1,53 @@
+name: Lockfile dependency metadata
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: metadata-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inventory:
+    name: Offline lockfile metadata inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify Python 3.11+ with stdlib TOML support
+        run: python3 -c 'import sys, tomllib; assert sys.version_info >= (3, 11)'
+      - name: Run negative and deterministic inventory regression tests
+        run: python3 -m unittest discover -s scripts/tests -p test_locked_dependency_inventory.py -v
+      - name: Generate and verify reproducible lockfile metadata
+        run: |
+          python3 scripts/locked_dependency_inventory.py --output lockfile-metadata.json
+          python3 scripts/locked_dependency_inventory.py --output lockfile-metadata-again.json
+          cmp -s lockfile-metadata.json lockfile-metadata-again.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          inventory = json.loads(Path("lockfile-metadata.json").read_text())
+          assert inventory["bomFormat"] == "CycloneDX"
+          assert inventory["specVersion"] == "1.5"
+          assert len(inventory["components"]) > 500
+          refs = [component["bom-ref"] for component in inventory["components"]]
+          assert len(refs) == len(set(refs))
+          status = next(x["value"] for x in inventory["metadata"]["properties"]
+                        if x["name"] == "goreecloud:inventory-status")
+          assert "NOT A COMPLETE OR ATTESTED SBOM" in status
+          print("Read-only inventory validated:", len(refs), "unique package identities")
+          PY
+      - name: Upload metadata-only output (not a release SBOM)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # pinned v4 tag as verified 2026-11-08
+        with:
+          name: goreecloud-pdf-manager-lockfile-metadata
+          path: lockfile-metadata.json
+          retention-days: 7
+          if-no-files-found: error
