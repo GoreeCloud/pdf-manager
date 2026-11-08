@@ -1,0 +1,66 @@
+name: Desktop Linux compile diagnostics
+
+# This job runs third-party Rust build scripts inside a disposable GitHub runner.
+# It has no credentials or publishing permissions, and produces no installers.
+on:
+  pull_request:
+    paths:
+      - "frontend/src-tauri/**"
+      - "frontend/package.json"
+      - "frontend/package-lock.json"
+      - "frontend/vite.config.ts"
+      - ".github/workflows/desktop-linux-compile.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pdf-desktop-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-compile:
+    name: Rust desktop lib and binary compile only
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    env:
+      CARGO_INCREMENTAL: "0"
+      CARGO_BUILD_JOBS: "2"
+      CARGO_TERM_COLOR: always
+      STIRLING_FLAVOR: core
+      ENABLE_SAAS: "false"
+    steps:
+      - name: Check out untrusted development-preview source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install native Tauri v2 Linux headers
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config libssl-dev libgtk-3-dev \
+            libwebkit2gtk-4.1-dev libayatana-appindicator3-dev \
+            libxdo-dev librsvg2-dev libdbus-1-dev libsecret-1-dev
+      - name: Configure Node 24
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install locked frontend dependencies (disable lifecycle scripts)
+        working-directory: frontend
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Compile MIT-only web assets for native embedding
+        working-directory: frontend
+        run: npx --no-install vite build --mode core
+      - name: Install pinned Rust toolchain
+        run: |
+          rustup toolchain install 1.95.0 --profile minimal
+          rustup default 1.95.0
+          rustc --version
+          cargo --version
+      - name: Assert locked desktop dependency metadata
+        working-directory: frontend/src-tauri
+        run: cargo metadata --locked --no-deps --format-version 1 > /dev/null
+      - name: Typecheck native desktop Rust library and binary without packaging
+        working-directory: frontend/src-tauri
+        run: cargo check --locked --lib --bins

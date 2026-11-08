@@ -60,7 +60,18 @@ assert 'return null;' in updater
 assert 'GoreeCloud PDF Manager has no verified' in updater
 tauri = json.loads((ROOT / 'frontend/src-tauri/tauri.conf.json').read_text())
 assert tauri['productName'] == 'GoreeCloud PDF Manager'
+assert tauri['mainBinaryName'] == 'goreecloud-pdf-manager'
+assert tauri['version'] == '0.1.0'
+assert tauri['build']['beforeBuildCommand'] == 'npx --no-install vite build --mode core'
+assert '--mode core' in tauri['build']['beforeDevCommand']
+assert '--host 127.0.0.1' in tauri['build']['beforeDevCommand']
+assert tauri['build']['devUrl'] == 'http://127.0.0.1:5173'
+alternate = json.loads((ROOT / 'frontend/src-tauri/tauri.conf.port5174.json').read_text())
+assert '--mode core' in alternate['build']['beforeDevCommand']
+assert '--host 127.0.0.1' in alternate['build']['beforeDevCommand']
+assert alternate['build']['devUrl'] == 'http://127.0.0.1:5174'
 assert tauri['bundle']['active'] is False
+assert tauri['bundle']['resources'] == [], 'Preview must not require unavailable bundled server/JRE resources'
 assert tauri['bundle']['createUpdaterArtifacts'] is False
 assert 'updater' not in tauri['plugins'], 'Untrusted upstream Tauri update channel reintroduced'
 rust_root = ROOT / 'frontend/src-tauri'
@@ -69,6 +80,15 @@ assert rust_manifest['package']['name'] == 'goreecloud-pdf-manager'
 assert rust_manifest['package']['license'] == 'MIT'
 assert 'tauri-plugin-updater' not in rust_manifest['dependencies']
 rust_packages = tomllib.loads((rust_root / 'Cargo.lock').read_text())['package']
+# Keep Tauri public/native window-runtime APIs on the same minor release.
+# tauri 2.11.1 with tauri-runtime-wry 2.12.3 did not compile on Linux.
+locked_versions = {pkg['name']: pkg['version'] for pkg in rust_packages}
+assert len({
+    tuple(locked_versions[name].split('.')[:2])
+    for name in ('tauri', 'tauri-runtime', 'tauri-runtime-wry')
+}) == 1, (
+    'Incompatible Tauri native runtime versions in Cargo.lock'
+)
 assert not any(pkg['name'] in {'tauri-plugin-updater', 'zip'} for pkg in rust_packages), (
     'Unused vulnerable desktop updater dependency reintroduced'
 )
