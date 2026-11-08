@@ -21,3 +21,5 @@
 5. Keep user PDF documents and credentials out of CI and public issues; use only synthetic fixtures.
 
 GitHub is authoritative for live alert counts and dependency state. See [release gate #1](https://github.com/GoreeCloud/pdf-manager/issues/1) for open obligations.
+
+**Update-channel boundary:** The GoreeCloud frontend remote update service intentionally does not request Stirling Supabase version metadata or return upstream installer URLs. This is a fail-closed source safeguard while custom update signing/release verification is pending.

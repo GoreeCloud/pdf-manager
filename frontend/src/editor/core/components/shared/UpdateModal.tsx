@@ -105,7 +105,7 @@ function formatSize(bytes: number | null | undefined): string {
 type DesktopInstall = NonNullable<UpdateModalProps["desktopInstall"]>;
 type MigrationGuide = NonNullable<UpdateSummary["migration_guides"]>[number];
 
-const RELEASES_URL = "https://github.com/Stirling-Tools/Stirling-PDF/releases";
+const RELEASES_URL = "https://github.com/GoreeCloud/pdf-manager/releases";
 
 // Show max 10 initially to keep the modal manageable
 const INITIAL_VERSION_COUNT = 10;

@@ -14,7 +14,7 @@ GoreeCloud PDF Manager is a GoreeCloud-branded, self-hostable PDF-management pro
 
 ## Development architecture
 
-The imported server currently uses Java, Spring Boot and Gradle (`app/core`, `app/common`), and the editor frontend uses TypeScript/Vite (`frontend`). The Gradle and Vite configurations reject non-core modes; the shared build also removes an inherited task dependency on the absent proprietary module. Building requires the correct upstream toolchains and further compatibility work. Desktop packaging, upstream updater endpoints and inherited update-test scripts are disabled until independently validated. HTTPS backend proxying now verifies certificates.
+The imported server currently uses Java, Spring Boot and Gradle (`app/core`, `app/common`), and the editor frontend uses TypeScript/Vite (`frontend`). The Gradle and Vite configurations reject non-core modes; the shared build also removes an inherited task dependency on the absent proprietary module. Building requires the correct upstream toolchains and further compatibility work. Desktop packaging, upstream updater endpoints, inherited update-test scripts and in-app remote update lookups/download URLs are disabled until independently validated. HTTPS backend proxying now verifies certificates.
 
 ## Core-only developer preview
 
@@ -37,6 +37,8 @@ The helper binds the API and frontend to **127.0.0.1** only; it does not install
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. No automatic Tauri update publication is configured. This is a source-level default, **not proof of complete privacy or security assurance**.
+
+The in-app update service currently returns no remote release metadata or installer URLs, even if a legacy update screen is reached. **No GoreeCloud production update channel has been configured.** Some inherited installation/help surfaces may still link to upstream Stirling software and must be replaced before a public release.
 
 ## Next steps
 

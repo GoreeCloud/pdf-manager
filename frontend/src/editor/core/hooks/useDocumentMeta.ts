@@ -75,7 +75,7 @@ export const useDocumentMeta = (meta: MetaOptions) => {
     }
 
     // Update OpenGraph tags
-    updateOrCreateProperty("og:site_name", "Stirling PDF");
+    updateOrCreateProperty("og:site_name", "GoreeCloud PDF Manager");
     updateOrCreateProperty("og:locale", i18n.language.replace("-", "_"));
 
     if (meta.ogTitle) {
