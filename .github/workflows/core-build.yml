@@ -84,6 +84,10 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Check sandboxed development browser scripts
+        run: |
+          node --check scripts/generate-og-image.mjs
+          node --check scripts/sample-pdf/generate.mjs
       - name: Typecheck the open-core frontend
         run: npx --no-install tsc --noEmit --project tsconfig.core.vite.json
       - name: Verify update channel cannot call upstream servers

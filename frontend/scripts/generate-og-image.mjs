@@ -173,8 +173,7 @@ async function getBrowser() {
   if (_browser) return _browser;
   const { default: puppeteer } = await import("puppeteer");
   _browser = await puppeteer.launch({
-    headless: "new",
-    args: ["--no-sandbox"],
+    headless: true,
   });
   return _browser;
 }

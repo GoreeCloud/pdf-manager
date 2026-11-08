@@ -78,4 +78,9 @@ assert 'tauri_plugin_updater' not in (rust_root / 'src/lib.rs').read_text()
 commands = (rust_root / 'src/commands/updater.rs').read_text()
 assert 'updater_disabled' in commands and 'Ok(None)' in commands
 
+# Chrome sandbox is required when rendering local/HTML templates with Puppeteer.
+for rel in ['frontend/scripts/generate-og-image.mjs', 'frontend/scripts/sample-pdf/generate.mjs']:
+    script = (ROOT / rel).read_text()
+    assert '--no-sandbox' not in script and '--disable-setuid-sandbox' not in script
+    assert 'headless: true' in script
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

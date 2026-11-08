@@ -71,8 +71,7 @@ async function generatePDF() {
     // Launch Puppeteer
     console.log("🌐 Launching browser...");
     browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: true,
     });
 
     const page = await browser.newPage();
