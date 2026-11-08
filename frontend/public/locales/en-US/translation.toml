@@ -12362,6 +12362,7 @@ manage = "Manage"
 [settings.legal.documents]
 description = "Policies and legal information for this service."
 title = "Legal Documents"
+unconfigured = "No service legal policy links have been configured for this development preview."
 
 [settings.licenses]
 backendDescription = "Licenses for backend dependencies bundled with this server."

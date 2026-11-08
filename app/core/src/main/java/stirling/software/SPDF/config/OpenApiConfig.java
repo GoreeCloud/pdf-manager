@@ -1,5 +1,6 @@
 package stirling.software.SPDF.config;
 
+import java.net.URI;
 import java.util.List;
 
 import org.springdoc.core.customizers.OpenApiCustomizer;
@@ -30,7 +31,7 @@ public class OpenApiConfig {
 
     private final ApplicationProperties applicationProperties;
 
-    private static final String DEFAULT_TITLE = "Stirling PDF API";
+    private static final String DEFAULT_TITLE = "GoreeCloud PDF Manager API";
     private static final String DEFAULT_DESCRIPTION =
             "API documentation for all Server-Side processing.\n"
                     + "Please note some functionality might be UI only and missing from here.";
@@ -49,15 +50,28 @@ public class OpenApiConfig {
                         .license(
                                 new License()
                                         .name("Open-Core - MIT Licensed")
-                                        .url(
-                                                "https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/LICENSE"))
-                        .termsOfService("https://www.stirlingpdf.com/terms")
+                                        .url("https://github.com/GoreeCloud/pdf-manager/blob/main/LICENSE"))
                         .contact(
                                 new Contact()
-                                        .name("Stirling Software")
-                                        .url("https://www.stirlingpdf.com")
-                                        .email("contact@stirlingpdf.com"))
+                                        .name("GoreeCloud")
+                                        .url("https://github.com/GoreeCloud/pdf-manager"))
                         .description(DEFAULT_DESCRIPTION);
+
+        // Include an operator-configured policy only if its URL is HTTPS and
+        // contains no embedded credentials. This does not validate policy text.
+        String termsUrl = applicationProperties.getLegal().getTermsAndConditions();
+        if (termsUrl != null && !termsUrl.isBlank()) {
+            try {
+                URI terms = URI.create(termsUrl.trim());
+                if ("https".equalsIgnoreCase(terms.getScheme())
+                        && terms.getHost() != null
+                        && terms.getUserInfo() == null) {
+                    info.setTermsOfService(termsUrl.trim());
+                }
+            } catch (IllegalArgumentException ignored) {
+                // Absent/malformed policies are omitted, not replaced with upstream policies.
+            }
+        }
 
         OpenAPI openAPI = new OpenAPI().info(info).openapi("3.0.3");
 
