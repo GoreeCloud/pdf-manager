@@ -15,6 +15,10 @@ The dedicated [core HTTP smoke workflow](../.github/workflows/core-http-smoke.ym
 
 Eight offline regression tests cover syntactically valid synthetic PDF construction, multipart input, label restrictions, invalid remote/credential-bearing request URLs, missing JAR refusal, and ephemeral port selection.
 
+## Missing upstream pipeline presets
+
+The sanitized core-only source tree lacks the upstream static/pipeline/defaultWebUIConfigs assets. Its previous unconditional extraction aborted JVM startup. The preview now **skips only optional automatic pipeline preset extraction when the complete resource set is absent**. Explicit extraction is still strict and fails for incomplete/bad resources; the missing preset functionality is **not** declared restored or licensed. Java startup regression tests cover both branches.
+
 ## Security and release boundaries
 
 The app itself is **not** network-sandboxed by the workflow. Although it binds only to loopback and nonessential integrations are disabled, this test does not prove the JVM never makes outbound connections, that unknown PDFs can be safely parsed, or that temporary documents and logs meet the final GoreeShield retention policy. The test does not expose a network listener to the user's VPS or LAN. The job grants GitHub Actions **read-only** repository permissions, runs without deployment secrets, and publishes no JAR or generated PDF artifact.

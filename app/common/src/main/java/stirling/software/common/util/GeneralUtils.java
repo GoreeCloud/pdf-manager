@@ -1100,6 +1100,25 @@ public class GeneralUtils {
         }
     }
 
+    /**
+     * Whether all optional built-in pipeline presets are present.
+     *
+     * <p>The public MIT-only preview intentionally excludes some upstream resources.
+     * Do not synthesize missing presets or import restricted commercial assets.
+     * The explicit extractPipeline() operation remains strict when invoked.
+     */
+    public boolean hasBundledPipelineDefaults() {
+        return DEFAULT_VALID_PIPELINE.stream()
+                .allMatch(
+                        name ->
+                                new ClassPathResource(
+                                                "static/pipeline/"
+                                                        + DEFAULT_WEBUI_CONFIGS_DIR
+                                                        + "/"
+                                                        + name)
+                                        .exists());
+    }
+
     /*
      * Extracts the default pipeline configurations from the classpath to the installation path.
      * Creates directories if needed and copies default JSON files.

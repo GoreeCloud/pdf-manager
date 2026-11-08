@@ -48,6 +48,8 @@ GitHub CI now assembles the Java 25 / Gradle core-only Spring Boot JAR **without
 
 ## Disposable real HTTP smoke (not deployed)
 
+The sanitized MIT-core snapshot does not ship upstream pipeline preset JSON assets. The server now skips **automatic preset installation** when that optional resource set is absent, logs the limitation, and retains strict extraction validation when assets are explicitly available. This does not claim that the pipeline UI or its features work.
+
 The [nonpublishing loopback smoke workflow](.github/workflows/core-http-smoke.yml) additionally starts the actual core-only JAR on an ephemeral **127.0.0.1** port in GitHub CI and sends two **synthetic** one-page PDFs to the merge endpoint. The smoke uses no user PDFs or deployment credentials, disables authentication only inside that temporary test runner, rejects proxying/redirects, checks the health response and the PDF result, and always stops the subprocess. [Exact scope and unresolved security limits](docs/CORE-HTTP-SMOKE.md). Passing it is **not** proof of full PDF correctness, egress isolation, production authentication or legal compliance.
 
 ## Security defaults for development
