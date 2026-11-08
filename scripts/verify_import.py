@@ -52,6 +52,11 @@ defaults = (ROOT / 'app/core/src/main/resources/settings.yml.template').read_tex
 for key in ['enableAnalytics', 'enablePosthog', 'enableScarf', 'enableFeedback', 'showUpdate', 'enableDesktopInstallSlide']:
     assert f'  {key}: false' in defaults, f'Unsafe default: {key}'
 assert '    enabled: false # Self-signed server signing certificates' in defaults
+updater = (ROOT / 'frontend/src/editor/core/services/updateService.ts').read_text()
+assert 'supabase.stirling.com' not in updater
+assert 'files.stirlingpdf.com' not in updater
+assert 'return null;' in updater
+assert 'GoreeCloud PDF Manager has no verified' in updater
 tauri = json.loads((ROOT / 'frontend/src-tauri/tauri.conf.json').read_text())
 assert tauri['productName'] == 'GoreeCloud PDF Manager'
 assert tauri['bundle']['active'] is False

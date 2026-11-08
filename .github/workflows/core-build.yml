@@ -73,6 +73,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Typecheck the open-core frontend
         run: npx --no-install tsc --noEmit --project tsconfig.core.vite.json
+      - name: Verify update channel cannot call upstream servers
+        run: npx --no-install vitest run src/editor/core/services/updateService.test.ts
       - name: Verify commercial Vite flavors are rejected
         run: |
           if npx --no-install vite build --mode proprietary > /tmp/rejected-build.log 2>&1; then

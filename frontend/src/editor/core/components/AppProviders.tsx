@@ -115,8 +115,7 @@ export function AppProviders({ children }: AppProvidersProps) {
           <BannerProvider>
             <AppConfigLoader />
             <ServerDefaultsSync />
-            {/* Auto-popup on startup when a newer Stirling-PDF release is available.
-              No-ops inside Tauri — the desktop popup handles that flow. */}
+            {/* Upstream release checks are disabled until GoreeCloud has a verified update channel. */}
             <UpdateStartupPopup />
             <FileContextProvider enableUrlSync={true} enablePersistence={true}>
               <FolderProvider>
