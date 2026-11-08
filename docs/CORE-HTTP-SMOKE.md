@@ -13,7 +13,7 @@ The dedicated [core HTTP smoke workflow](../.github/workflows/core-http-smoke.ym
 - Verifies the real GET `/api/v1/info/health` returns HTTP 200 and JSON status `UP`, then sends two small **synthetic** one-page PDF documents to POST `/api/v1/general/merge-pdfs`.
 - Requires HTTP 200, an application/pdf response and plausible bounded PDF bytes. The two input fixtures were separately verified with `pdfinfo` locally; a comprehensive semantic output-page-count test is a later gate.
 
-Six offline regression tests cover syntactically valid synthetic PDF construction, multipart input, label restrictions, invalid remote/credential-bearing request URLs, missing JAR refusal, and ephemeral port selection.
+Eight offline regression tests cover syntactically valid synthetic PDF construction, multipart input, label restrictions, invalid remote/credential-bearing request URLs, missing JAR refusal, and ephemeral port selection.
 
 ## Security and release boundaries
 

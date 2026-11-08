@@ -49,6 +49,27 @@ class SyntheticSmokeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "regular core JAR"):
             smoke.smoke_core_jar(Path("/nonexistent/core.jar"), "/usr/bin/java")
 
+    def test_redacts_bounded_startup_diagnostics(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            logfile = Path(tmp) / "server.log"
+            logfile.write_text(
+                "INFO Starting Java\n"
+                "ERROR password=hunter123 token=abcdef API_KEY=noshow\n"
+                "Caused by: java.lang.IllegalStateException https://private.example/?key=abc\n"
+            )
+            detail = smoke.startup_error_summary(logfile)
+            self.assertIn("ERROR", detail)
+            for secret in ("hunter123", "abcdef", "noshow", "private.example"):
+                self.assertNotIn(secret, detail)
+            self.assertIn("<redacted>", detail)
+
+    def test_missing_log_has_bounded_status(self):
+        self.assertEqual(
+            smoke.startup_error_summary(Path("/nonexistent/synthetic.log")),
+            "no startup log available",
+        )
+
     def test_ephemeral_port_is_valid(self):
         port = smoke.select_loopback_port()
         self.assertGreaterEqual(port, 1)

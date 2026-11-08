@@ -9,6 +9,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import socket
 import subprocess
@@ -94,6 +95,29 @@ def http_open(url: str, *, data: bytes | None = None, content_type: str = ""):
     return opener.open(request, timeout=25)
 
 
+
+def startup_error_summary(path: Path) -> str:
+    """Return only bounded redacted error markers; never publish a whole log."""
+    if not path.is_file():
+        return "no startup log available"
+    with path.open("rb") as source:
+        source.seek(0, 2)
+        source.seek(max(0, source.tell() - 256 * 1024))
+        tail = source.read().decode("utf-8", errors="replace")
+    markers = ("exception", "caused by:", "error", "failed to", "application run failed")
+    entries = []
+    for raw in tail.splitlines():
+        if not any(marker in raw.lower() for marker in markers):
+            continue
+        clean = re.sub(r"\x1b\[[0-9;]*m", "", raw)
+        clean = re.sub(
+            r"(?i)\b(password|secret|token|api[_-]?key|authorization)\s*[:=]\s*[^\s,;]+",
+            r"\1=<redacted>", clean,
+        )
+        clean = re.sub(r"https?://\S+", "<url-redacted>", clean)
+        entries.append(clean[-220:])
+    return " | ".join(entries[-8:]) if entries else "no classified startup error found"
+
 def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
     if not path.is_file() or path.is_symlink():
         raise ValueError("Expected a regular core JAR file")
@@ -140,7 +164,10 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                 deadline = time.monotonic() + startup_timeout
                 while time.monotonic() < deadline:
                     if proc.poll() is not None:
-                        raise RuntimeError(f"Core JVM terminated before health check (exit {proc.returncode})")
+                        details = startup_error_summary(work / "application.log")
+                        raise RuntimeError(
+                            f"Core JVM terminated before health check (exit {proc.returncode}): {details}"
+                        )
                     try:
                         with http_open(base + "/api/v1/info/health") as response:
                             status_body = response.read(4096)
@@ -151,7 +178,8 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                         pass
                     time.sleep(1)
                 else:
-                    raise TimeoutError("Local core HTTP health check never became ready")
+                    details = startup_error_summary(work / "application.log")
+                    raise TimeoutError(f"Local core HTTP health check never became ready: {details}")
 
                 payload, content_type = multipart_pdf_payload()
                 with http_open(base + "/api/v1/general/merge-pdfs", data=payload, content_type=content_type) as response:
