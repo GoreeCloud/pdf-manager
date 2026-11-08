@@ -1,14 +1,14 @@
 {
   "$schema": "../../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "GoreeCloud PDF Manager",
-  "mainBinaryName": "Stirling-PDF",
-  "version": "3.3.0",
+  "mainBinaryName": "goreecloud-pdf-manager",
+  "version": "0.1.0",
   "identifier": "com.goreecloud.pdfmanager",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
-    "beforeDevCommand": "npx vite --mode desktop",
-    "beforeBuildCommand": "npx vite build --mode desktop"
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeDevCommand": "npx --no-install vite --mode core --host 127.0.0.1 --port 5173 --strictPort",
+    "beforeBuildCommand": "npx --no-install vite build --mode core"
   },
   "app": {
     "windows": []

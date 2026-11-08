@@ -60,6 +60,16 @@ assert 'return null;' in updater
 assert 'GoreeCloud PDF Manager has no verified' in updater
 tauri = json.loads((ROOT / 'frontend/src-tauri/tauri.conf.json').read_text())
 assert tauri['productName'] == 'GoreeCloud PDF Manager'
+assert tauri['mainBinaryName'] == 'goreecloud-pdf-manager'
+assert tauri['version'] == '0.1.0'
+assert tauri['build']['beforeBuildCommand'] == 'npx --no-install vite build --mode core'
+assert '--mode core' in tauri['build']['beforeDevCommand']
+assert '--host 127.0.0.1' in tauri['build']['beforeDevCommand']
+assert tauri['build']['devUrl'] == 'http://127.0.0.1:5173'
+alternate = json.loads((ROOT / 'frontend/src-tauri/tauri.conf.port5174.json').read_text())
+assert '--mode core' in alternate['build']['beforeDevCommand']
+assert '--host 127.0.0.1' in alternate['build']['beforeDevCommand']
+assert alternate['build']['devUrl'] == 'http://127.0.0.1:5174'
 assert tauri['bundle']['active'] is False
 assert tauri['bundle']['createUpdaterArtifacts'] is False
 assert 'updater' not in tauri['plugins'], 'Untrusted upstream Tauri update channel reintroduced'

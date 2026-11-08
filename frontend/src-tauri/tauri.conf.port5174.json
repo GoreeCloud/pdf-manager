@@ -1,7 +1,7 @@
 {
   "identifier": "com.goreecloud.pdfmanager.devport5174",
   "build": {
-    "devUrl": "http://localhost:5174",
-    "beforeDevCommand": "npx vite --mode desktop --port 5174 --strictPort"
+    "devUrl": "http://127.0.0.1:5174",
+    "beforeDevCommand": "npx --no-install vite --mode core --host 127.0.0.1 --port 5174 --strictPort"
   }
 }
