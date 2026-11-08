@@ -38,11 +38,23 @@ The inherited Tauri development/build entrypoints now select the permitted `core
 
 **Do not deploy this source for sensitive PDF processing yet.** Complete dependency review, integration testing, feature entitlement auditing, security/privacy review, GoreeCloud UI migration and platform-specific acceptance first.
 
+## Reproducible dependency metadata (not a release SBOM)
+
+A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependency_inventory.py) now records package names, exact locked versions, recorded checksums, source lockfile hashes and *unverified* npm license hints across five npm and Cargo lockfiles. Run its [six regression tests](scripts/tests/test_locked_dependency_inventory.py) or retrieve the seven-day output of [Lockfile dependency metadata CI](.github/workflows/lockfile-metadata.yml).
+
+The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/native packages, third-party assets and verified licensing. It cannot be represented as a complete SBOM or used as security/release approval. [Scope, usage and exclusions](docs/LOCKFILE-INVENTORY.md).
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest and lockfile are checked without running build scripts, **but desktop compilation and packaging remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
 
 The in-app update service currently returns no remote release metadata or installer URLs, even if a legacy update screen is reached. **No GoreeCloud production update channel has been configured.** Some inherited installation/help surfaces may still link to upstream Stirling software and must be replaced before a public release.
+
+**Desktop WebView sandbox:** The inherited filesystem and HTTP JavaScript permissions (including unrestricted file read/write and arbitrary HTTP URLs) are no longer granted to the preview WebView. Those privileges belonged to the excluded desktop edition; the retained core frontend does not import either bridge. User-selected native filesystem and network capabilities must be independently implemented as narrowly scoped flows before any future desktop release. The native Rust proxy is a distinct backend component and is not the removed JavaScript HTTP permission.
+
+## Legal-policy and support-link authority
+
+This derivative does **not** adopt Stirling PDF's Terms of Service, Privacy Policy, or official support community. Missing policy URLs remain unconfigured in the backend, API documentation, footer and settings. Policy links are shown only when explicitly configured as HTTPS URLs or safe same-origin paths; only basic URL syntax is validated, **not** the legal content or ownership. The footer directs issue reports to [GoreeCloud PDF Manager's own tracker](https://github.com/GoreeCloud/pdf-manager/issues). Before any public release the operator must establish and independently review applicable GoreeCloud terms, privacy and accessibility documents.
 
 ## Next steps
 

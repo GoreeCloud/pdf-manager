@@ -39,23 +39,43 @@ class OpenApiConfigTest {
             assertThat(openAPI).isNotNull();
             assertThat(openAPI.getOpenapi()).isEqualTo("3.0.3");
             assertThat(openAPI.getInfo()).isNotNull();
-            assertThat(openAPI.getInfo().getTitle()).isEqualTo("Stirling PDF API");
+            assertThat(openAPI.getInfo().getTitle()).isEqualTo("GoreeCloud PDF Manager API");
             // Version falls back to 1.0.0 when no implementation version on the package.
             assertThat(openAPI.getInfo().getVersion()).isNotBlank();
         }
 
         @Test
-        @DisplayName("sets license, contact and terms of service")
-        void setsLicenseAndContact() {
+        @DisplayName("uses GoreeCloud source identity without claiming unconfigured policies")
+        void omitsUnconfiguredLegalPolicies() {
             OpenAPI openAPI = config.customOpenAPI();
 
             assertThat(openAPI.getInfo().getLicense()).isNotNull();
             assertThat(openAPI.getInfo().getLicense().getName()).contains("MIT");
-            assertThat(openAPI.getInfo().getTermsOfService())
-                    .isEqualTo("https://www.stirlingpdf.com/terms");
+            assertThat(openAPI.getInfo().getLicense().getUrl())
+                    .isEqualTo("https://github.com/GoreeCloud/pdf-manager/blob/main/LICENSE");
+            assertThat(openAPI.getInfo().getTermsOfService()).isNull();
             assertThat(openAPI.getInfo().getContact()).isNotNull();
-            assertThat(openAPI.getInfo().getContact().getEmail())
-                    .isEqualTo("contact@stirlingpdf.com");
+            assertThat(openAPI.getInfo().getContact().getName()).isEqualTo("GoreeCloud");
+            assertThat(openAPI.getInfo().getContact().getUrl())
+                    .isEqualTo("https://github.com/GoreeCloud/pdf-manager");
+            assertThat(openAPI.getInfo().getContact().getEmail()).isNull();
+        }
+
+        @Test
+        @DisplayName("publishes only an explicitly configured HTTPS terms link")
+        void explicitHttpsTermsOnly() {
+            applicationProperties.getLegal().setTermsAndConditions("https://example.com/terms");
+            assertThat(config.customOpenAPI().getInfo().getTermsOfService())
+                    .isEqualTo("https://example.com/terms");
+
+            applicationProperties.getLegal().setTermsAndConditions("javascript:alert(1)");
+            assertThat(config.customOpenAPI().getInfo().getTermsOfService()).isNull();
+
+            applicationProperties.getLegal().setTermsAndConditions("https://user:secret@example.com/");
+            assertThat(config.customOpenAPI().getInfo().getTermsOfService()).isNull();
+
+            applicationProperties.getLegal().setTermsAndConditions("not a valid URI");
+            assertThat(config.customOpenAPI().getInfo().getTermsOfService()).isNull();
         }
 
         @Test

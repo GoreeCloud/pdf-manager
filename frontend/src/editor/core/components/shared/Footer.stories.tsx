@@ -9,7 +9,7 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Defaults: no overrides supplied, only the always-present links render. */
+/** Defaults: no verified legal URLs supplied, only GoreeCloud's issue link renders. */
 export const Default: Story = {
   args: {},
 };
