@@ -148,4 +148,10 @@ core_workflow = (ROOT / '.github/workflows/core-build.yml').read_text()
 assert 'inspect_synthetic_merge_result(merged, pdfinfo, pdftotext)' in semantic_smoke
 assert 'test_smoke_pdf_semantics.py' in core_workflow
 assert 'pdfinfo -v' in core_workflow and 'pdftotext -v' in core_workflow
+# Keep malformed-input fail-closed behavior and post-error health recovery
+# in the required Java CI smoke gate, not just local unit tests.
+negative_smoke = (ROOT / 'scripts/smoke_core_http.py').read_text()
+negative_ci = (ROOT / '.github/workflows/core-build.yml').read_text()
+assert 'assert_malformed_pdf_is_rejected_and_server_remains_healthy(base)' in negative_smoke
+assert 'test_smoke_invalid_upload.py' in negative_ci
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
