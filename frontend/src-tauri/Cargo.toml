@@ -1,10 +1,10 @@
 [package]
-name = "stirling-pdf"
+name = "goreecloud-pdf-manager"
 version = "0.1.0"
-description = "Stirling-PDF Desktop Application"
+description = "GoreeCloud PDF Manager Desktop Development Preview"
 authors = ["Stirling-PDF Contributors"]
-license = ""
-repository = ""
+license = "MIT"
+repository = "https://github.com/GoreeCloud/pdf-manager"
 edition = "2021"
 rust-version = "1.77.2"
 
@@ -38,7 +38,6 @@ tauri-plugin-store = "2.4.2"
 tauri-plugin-opener = "2.5.3"
 tauri-plugin-deep-link = "2.4.6"
 tauri-plugin-notification = "2.3.3"
-tauri-plugin-updater = "2"
 tauri-plugin-window-state = "2.2.1"
 keyring = { version = "3.6.1", features = ["apple-native", "windows-native"] }
 tokio = { version = "1.50", features = ["time", "sync"] }

@@ -24,6 +24,19 @@ jobs:
       - run: ./scripts/dev-core.sh verify
       - run: ./scripts/dev-core.sh help
 
+  desktop-lockfile:
+    name: Desktop Cargo metadata and policy (not a desktop build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: frontend/src-tauri
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify lockfile metadata without running build scripts
+        run: cargo metadata --locked --no-deps --format-version 1 > /dev/null
+
   java-core:
     name: Java 25 core compile and CORS regression
     runs-on: ubuntu-latest

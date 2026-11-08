@@ -36,7 +36,7 @@ The helper binds the API and frontend to **127.0.0.1** only; it does not install
 
 ## Security defaults for development
 
-The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. No automatic Tauri update publication is configured. This is a source-level default, **not proof of complete privacy or security assurance**.
+The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest and lockfile are checked without running build scripts, **but desktop compilation and packaging remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
 
 The in-app update service currently returns no remote release metadata or installer URLs, even if a legacy update screen is reached. **No GoreeCloud production update channel has been configured.** Some inherited installation/help surfaces may still link to upstream Stirling software and must be replaced before a public release.
 

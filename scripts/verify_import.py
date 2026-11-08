@@ -2,6 +2,7 @@
 """Static guard for intentionally sanitized, open-core source imports."""
 from pathlib import Path
 import json
+import tomllib
 import subprocess
 ROOT = Path(__file__).resolve().parents[1]
 excluded = [
@@ -61,5 +62,20 @@ tauri = json.loads((ROOT / 'frontend/src-tauri/tauri.conf.json').read_text())
 assert tauri['productName'] == 'GoreeCloud PDF Manager'
 assert tauri['bundle']['active'] is False
 assert tauri['bundle']['createUpdaterArtifacts'] is False
-assert tauri['plugins']['updater']['endpoints'] == []
+assert 'updater' not in tauri['plugins'], 'Untrusted upstream Tauri update channel reintroduced'
+rust_root = ROOT / 'frontend/src-tauri'
+rust_manifest = tomllib.loads((rust_root / 'Cargo.toml').read_text())
+assert rust_manifest['package']['name'] == 'goreecloud-pdf-manager'
+assert rust_manifest['package']['license'] == 'MIT'
+assert 'tauri-plugin-updater' not in rust_manifest['dependencies']
+rust_packages = tomllib.loads((rust_root / 'Cargo.lock').read_text())['package']
+assert not any(pkg['name'] in {'tauri-plugin-updater', 'zip'} for pkg in rust_packages), (
+    'Unused vulnerable desktop updater dependency reintroduced'
+)
+permissions = json.loads((rust_root / 'capabilities/default.json').read_text())['permissions']
+assert not any(str(permission).startswith('updater:') for permission in permissions)
+assert 'tauri_plugin_updater' not in (rust_root / 'src/lib.rs').read_text()
+commands = (rust_root / 'src/commands/updater.rs').read_text()
+assert 'updater_disabled' in commands and 'Ok(None)' in commands
+
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
