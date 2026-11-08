@@ -1,6 +1,6 @@
 import { MantineProvider } from "@mantine/core";
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi, type Mock } from "vitest";
 import { TextAccessibilitySection } from "@editor/tools/pdfTextEditor/components/inspector/TextAccessibilitySection";
 import { structureRole } from "@editor/tools/pdfTextEditor/model/structureTypes";
 import type {
@@ -266,8 +266,11 @@ describe("TextAccessibilitySection", () => {
 function languageControl(
   inherited: string | null,
   own: string | null,
-): TextLanguageControl & { onSet: ReturnType<typeof vi.fn> } {
-  return { language: { own, inherited }, onSet: vi.fn() };
+): TextLanguageControl & { onSet: Mock<(lang: string | null) => void> } {
+  return {
+    language: { own, inherited },
+    onSet: vi.fn<(lang: string | null) => void>(),
+  };
 }
 
 function innerControl(

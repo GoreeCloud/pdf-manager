@@ -100,7 +100,7 @@ function Harness({
         dueDate={date}
         onDueDateChange={setDate}
         creating={creating}
-        onSubmit={onSubmit}
+        onSubmit={(settings) => onSubmit(settings)}
       />
     </>
   );
