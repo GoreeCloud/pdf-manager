@@ -6,6 +6,7 @@ import { Icon } from "@editor/ui/Icon";
 import { useAppConfig } from "@editor/contexts/AppConfigContext";
 import { useFooterInfo } from "@editor/hooks/useFooterInfo";
 import { useCookieConsent } from "@editor/hooks/useCookieConsent";
+import { serviceLegalHref } from "@editor/utils/serviceLegalHref";
 
 interface LegalLink {
   key: string;
@@ -30,49 +31,28 @@ const LegalSection: React.FC = () => {
 
   const { showCookiePreferences } = useCookieConsent();
 
-  const isValidLink = (link?: string) => link && link.trim().length > 0;
+  // Do not silently fall back to the original publisher's legal policies.
+  const privacyUrl = serviceLegalHref(privacyPolicy);
+  const termsUrl = serviceLegalHref(termsAndConditions);
+  const accessibilityUrl = serviceLegalHref(accessibilityStatement);
+  const cookieUrl = serviceLegalHref(cookiePolicy);
+  const imprintUrl = serviceLegalHref(impressum);
 
   const legalLinks: LegalLink[] = [
-    {
-      key: "privacy",
-      label: t("legal.privacy", "Privacy Policy"),
-      href: isValidLink(privacyPolicy)
-        ? privacyPolicy!
-        : "https://www.stirling.com/privacy",
-    },
-    {
-      key: "terms",
-      label: t("legal.terms", "Terms and Conditions"),
-      href: isValidLink(termsAndConditions)
-        ? termsAndConditions!
-        : "https://www.stirling.com/terms",
-    },
-    ...(isValidLink(accessibilityStatement)
-      ? [
-          {
-            key: "accessibility",
-            label: t("legal.accessibility", "Accessibility"),
-            href: accessibilityStatement!,
-          },
-        ]
+    ...(privacyUrl
+      ? [{ key: "privacy", label: t("legal.privacy", "Privacy Policy"), href: privacyUrl }]
       : []),
-    ...(isValidLink(cookiePolicy)
-      ? [
-          {
-            key: "cookie",
-            label: t("legal.cookie", "Cookie Policy"),
-            href: cookiePolicy!,
-          },
-        ]
+    ...(termsUrl
+      ? [{ key: "terms", label: t("legal.terms", "Terms and Conditions"), href: termsUrl }]
       : []),
-    ...(isValidLink(impressum)
-      ? [
-          {
-            key: "impressum",
-            label: t("legal.impressum", "Impressum"),
-            href: impressum!,
-          },
-        ]
+    ...(accessibilityUrl
+      ? [{ key: "accessibility", label: t("legal.accessibility", "Accessibility"), href: accessibilityUrl }]
+      : []),
+    ...(cookieUrl
+      ? [{ key: "cookie", label: t("legal.cookie", "Cookie Policy"), href: cookieUrl }]
+      : []),
+    ...(imprintUrl
+      ? [{ key: "impressum", label: t("legal.impressum", "Impressum"), href: imprintUrl }]
       : []),
   ];
 
@@ -106,7 +86,18 @@ const LegalSection: React.FC = () => {
               )}
             </Text>
           </div>
-          <Stack gap="sm">{legalLinks.map(renderLink)}</Stack>
+          <Stack gap="sm">
+            {legalLinks.length > 0 ? (
+              legalLinks.map(renderLink)
+            ) : (
+              <Text size="xs" c="dimmed">
+                {t(
+                  "settings.legal.documents.unconfigured",
+                  "No service legal policy links have been configured for this development preview.",
+                )}
+              </Text>
+            )}
+          </Stack>
         </Stack>
       </Paper>
 

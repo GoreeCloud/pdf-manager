@@ -109,21 +109,30 @@ class InitialSetupTest {
     class LegalUrls {
 
         @Test
-        @DisplayName("sets defaults when both URLs are empty")
-        void setsDefaults() throws Exception {
+        @DisplayName("does not invent upstream legal URLs when none are configured")
+        void absentUrlsStayUnset() throws Exception {
             legal.setTermsAndConditions(null);
             legal.setPrivacyPolicy("");
             try (MockedStatic<GeneralUtils> util = mockStatic(GeneralUtils.class)) {
                 initialSetup.initLegalUrls();
 
-                assertThat(legal.getTermsAndConditions()).contains("stirlingpdf.com/terms");
-                assertThat(legal.getPrivacyPolicy()).contains("privacy-policy");
-                util.verify(
-                        () -> GeneralUtils.saveKeyToSettings(eq("legal.termsAndConditions"), any()),
-                        times(1));
-                util.verify(
-                        () -> GeneralUtils.saveKeyToSettings(eq("legal.privacyPolicy"), any()),
-                        times(1));
+                assertThat(legal.getTermsAndConditions()).isNull();
+                assertThat(legal.getPrivacyPolicy()).isEmpty();
+                util.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
+            }
+        }
+
+        @Test
+        @DisplayName("keeps a partial operator configuration without backfilling")
+        void incompleteOperatorLinksStayUnmodified() throws Exception {
+            legal.setTermsAndConditions("https://example.com/terms");
+            legal.setPrivacyPolicy(null);
+            try (MockedStatic<GeneralUtils> util = mockStatic(GeneralUtils.class)) {
+                initialSetup.initLegalUrls();
+
+                assertThat(legal.getTermsAndConditions()).isEqualTo("https://example.com/terms");
+                assertThat(legal.getPrivacyPolicy()).isNull();
+                util.verify(() -> GeneralUtils.saveKeyToSettings(any(), any()), never());
             }
         }
 

@@ -58,7 +58,7 @@ export const WithAnalyticsEnabled: Story = {
   ],
 };
 
-/** No legal documents configured — only Privacy Policy and Terms show, using the stirling.com fallback links. */
+/** No legal documents configured — no external policies are invented; show a setup notice. */
 export const MinimalLinks: Story = {
   decorators: [
     (StoryComponent) => (
