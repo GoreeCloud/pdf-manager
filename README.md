@@ -48,6 +48,8 @@ The imported application now denies cross-origin browser access unless a specifi
 
 The in-app update service currently returns no remote release metadata or installer URLs, even if a legacy update screen is reached. **No GoreeCloud production update channel has been configured.** Some inherited installation/help surfaces may still link to upstream Stirling software and must be replaced before a public release.
 
+**Desktop WebView sandbox:** The inherited filesystem and HTTP JavaScript permissions (including unrestricted file read/write and arbitrary HTTP URLs) are no longer granted to the preview WebView. Those privileges belonged to the excluded desktop edition; the retained core frontend does not import either bridge. User-selected native filesystem and network capabilities must be independently implemented as narrowly scoped flows before any future desktop release. The native Rust proxy is a distinct backend component and is not the removed JavaScript HTTP permission.
+
 ## Legal-policy and support-link authority
 
 This derivative does **not** adopt Stirling PDF's Terms of Service, Privacy Policy, or official support community. Missing policy URLs remain unconfigured in the backend, API documentation, footer and settings. Policy links are shown only when explicitly configured as HTTPS URLs or safe same-origin paths; only basic URL syntax is validated, **not** the legal content or ownership. The footer directs issue reports to [GoreeCloud PDF Manager's own tracker](https://github.com/GoreeCloud/pdf-manager/issues). Before any public release the operator must establish and independently review applicable GoreeCloud terms, privacy and accessibility documents.
