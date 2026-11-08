@@ -1,6 +1,7 @@
 """Offline tests: no code execution, license assertions, or network activity."""
 import hashlib
 import json
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -53,6 +54,23 @@ class AssetEvidenceTests(unittest.TestCase):
         y = next(v for v in x["candidates"] if v["path"] == "external.ttf")
         self.assertEqual(y["state"], "tracked-symlink-not-read")
         self.assertNotIn("sha256", y)
+
+    def test_tracked_asset_under_symlinked_parent_is_never_read(self):
+        # Reproduce a working-tree directory replaced after git add.
+        # The external target contains only generated, non-user test bytes.
+        with tempfile.TemporaryDirectory(prefix="gcpdf-synthetic-outside-") as outside:
+            outside_root = Path(outside)
+            external_bytes = b"SYNTHETIC_EXTERNAL_DIRECTORY_TEST_ONLY"
+            (outside_root / "example.ttf").write_bytes(external_bytes)
+            shutil.rmtree(self.root / "public/fonts")
+            (self.root / "public/fonts").symlink_to(outside_root, target_is_directory=True)
+
+            report = evidence.build_report(self.root)
+            entry = next(x for x in report["candidates"] if x["path"] == "public/fonts/example.ttf")
+            self.assertEqual(entry["state"], "tracked-symlink-not-read")
+            self.assertEqual(entry["license_status"], "UNVERIFIED")
+            self.assertNotIn("sha256", entry)
+            self.assertNotIn("bytes", entry)
 
     def test_deleted_staged_file_is_reported_not_opened(self):
         (self.root / "public/logo.svg").unlink()

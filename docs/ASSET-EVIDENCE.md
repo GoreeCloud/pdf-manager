@@ -2,14 +2,14 @@
 
 **Evidence status:** Source metadata only. **No individual asset redistribution or trademark rights are verified.** Not an approval to publish binary bundles, fonts, logos, icons, documents, libraries or model weights.
 
-The bounded standard-library [asset evidence collector](../scripts/tracked_asset_evidence.py) uses Git's tracked-path index to select files whose extensions match bundled fonts, images, PDF fixtures, native binaries and model formats. It hashes the bytes of each regular tracked file with SHA-256, records size, path and category, and explicitly labels **every asset** as `license_status=UNVERIFIED`. It does not open symlink targets, execute the files, install dependencies, scan untracked private files, or access a network.
+The bounded standard-library [asset evidence collector](../scripts/tracked_asset_evidence.py) uses Git's tracked-path index to select files whose extensions match bundled fonts, images, PDF fixtures, native binaries and model formats. It hashes the bytes of each regular tracked file with SHA-256, records size, path and category, and explicitly labels **every asset** as `license_status=UNVERIFIED`. It checks each path component for symlinks, verifies resolved checkout containment and, on POSIX GitHub CI, uses no-follow directory descriptors to avoid reading symlinked parent directories even if a working-tree path changes after inspection. Non-POSIX manual runs retain a best-effort component/containment check and should run against a quiescent trusted checkout. It does not deliberately open symlink targets, execute the files, install dependencies, scan untracked private files, or access a network.
 
 To reproduce against an authorized local checkout:
 
     python3 -m unittest discover -s scripts/tests -p test_tracked_asset_evidence.py -v
     python3 scripts/tracked_asset_evidence.py --output tracked-asset-evidence.json
 
-The generated JSON is not committed, so changing package or source assets automatically changes the evidence. The [read-only GitHub workflow](../.github/workflows/asset-evidence.yml) reruns seven regression tests, independently produces byte-identical output twice and retains a nonpublishing report for **seven days**.
+The generated JSON is not committed, so changing package or source assets automatically changes the evidence. The [read-only GitHub workflow](../.github/workflows/asset-evidence.yml) reruns eight regression tests, independently produces byte-identical output twice and retains a nonpublishing report for **seven days**.
 
 ## Current checked source snapshot
 
