@@ -42,6 +42,10 @@ A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependen
 
 The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/native packages, third-party assets and verified licensing. It cannot be represented as a complete SBOM or used as security/release approval. [Scope, usage and exclusions](docs/LOCKFILE-INVENTORY.md).
 
+## Nonpublishing Java core JAR verification
+
+GitHub CI now assembles the Java 25 / Gradle core-only Spring Boot JAR **without publishing it** and validates its manifest, application entrypoint, Spring Boot loader, runtime-library structure, and absence of excluded upstream proprietary/SaaS modules. The [independent archive-verification script](scripts/verify_core_jar.py) has nine positive and negative unit tests; see [scope and limitations](docs/CORE-JAR-VERIFICATION.md). This establishes package **structure** only; runnable server behavior, the full dependency and asset license review, and production acceptance remain open.
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest and lockfile are checked without running build scripts, **but desktop compilation and packaging remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
