@@ -74,9 +74,18 @@ jobs:
           mapfile -t jars < <(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' | sort)
           test "${#jars[@]}" -eq 1
           python3 scripts/verify_core_jar.py --jar "${jars[0]}"
+      - name: Prepare PDF page and text verification utilities for synthetic CI fixtures
+        run: |
+          if ! command -v pdfinfo >/dev/null 2>&1 || ! command -v pdftotext >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends poppler-utils
+          fi
+          pdfinfo -v
+          pdftotext -v
       - name: Exercise actual core JVM health and synthetic PDF merge on loopback
         run: |
           python3 -m unittest discover -s scripts/tests -p test_smoke_core_http.py -v
+          python3 -m unittest discover -s scripts/tests -p test_smoke_pdf_semantics.py -v
           jar_path="$(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' -print -quit)"
           test -n "$jar_path"
           python3 scripts/smoke_core_http.py --jar "$jar_path" --startup-timeout 150

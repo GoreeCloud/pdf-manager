@@ -141,4 +141,11 @@ core_workflow = (ROOT / '.github/workflows/core-build.yml').read_text()
 assert 'node scripts/verify-docgen-glob.mjs' in core_workflow, (
     'Docgen glob wildcard check must stay in required Node 24 CI'
 )
+# Keep semantic PDF page-count/text-order verification wired into the
+# required Java job. Mere PDF magic bytes are insufficient for a merge smoke.
+semantic_smoke = (ROOT / 'scripts/smoke_core_http.py').read_text()
+core_workflow = (ROOT / '.github/workflows/core-build.yml').read_text()
+assert 'inspect_synthetic_merge_result(merged, pdfinfo, pdftotext)' in semantic_smoke
+assert 'test_smoke_pdf_semantics.py' in core_workflow
+assert 'pdfinfo -v' in core_workflow and 'pdftotext -v' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
