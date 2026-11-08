@@ -23,10 +23,18 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
 }
 
-rootProject.name = 'Stirling PDF'
+rootProject.name = 'GoreeCloud PDF Manager'
 
 // GoreeCloud PDF Manager: redistributable, MIT-licensed core modules only.
 // The separate Stirling commercial modules are intentionally not imported.
+// Reject requests for excluded commercial flavors, instead of silently ignoring them.
+def requestedFlavor = System.getenv('STIRLING_FLAVOR')
+if (requestedFlavor && requestedFlavor.toLowerCase() != 'core') {
+    throw new GradleException('GoreeCloud PDF Manager only distributes the MIT core flavor')
+}
+if ('true'.equalsIgnoreCase(System.getenv('ENABLE_SAAS'))) {
+    throw new GradleException('SaaS/commercial modules are not distributed in this repository')
+}
 gradle.ext.disableAdditional = true
 gradle.ext.enableSaas = false
 

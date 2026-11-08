@@ -1,7 +1,6 @@
 package stirling.software.SPDF.config;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
@@ -259,130 +258,67 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // Check if running in Tauri mode
-        boolean isTauriMode =
-                Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
-
-        // Check if user has configured custom origins
-        boolean hasConfiguredOrigins =
-                applicationProperties.getSystem() != null
-                        && applicationProperties.getSystem().getCorsAllowedOrigins() != null
-                        && !applicationProperties.getSystem().getCorsAllowedOrigins().isEmpty();
-
-        if (isTauriMode) {
-            // Automatically enable CORS for Tauri desktop app
-            // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
-            logger.info("Tauri mode detected - enabling CORS for Tauri protocols (v1 and v2)");
-            registry.addMapping("/**")
-                    .allowedOriginPatterns(
-                            "http://localhost:*",
-                            "https://localhost:*",
-                            "tauri://*", // Add this for Tauri apps
-                            "tauri://localhost",
-                            "http://tauri.localhost",
-                            "https://tauri.localhost")
-                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                    .allowedHeaders(
-                            "Authorization",
-                            "Content-Type",
-                            "X-Requested-With",
-                            "Accept",
-                            "Origin",
-                            "X-API-KEY",
-                            "X-CSRF-TOKEN",
-                            "X-XSRF-TOKEN",
-                            "X-Browser-Id")
-                    .exposedHeaders(
-                            "WWW-Authenticate",
-                            "X-Total-Count",
-                            "X-Page-Number",
-                            "X-Page-Size",
-                            "Content-Disposition",
-                            "Content-Type",
-                            "X-Stirling-Skipped-Field-Edits",
-                            "X-Stirling-Skipped-Field-Edits-Total",
-                            "X-Stirling-Detected-Fields")
-                    .allowCredentials(true)
-                    .maxAge(3600);
-        } else if (hasConfiguredOrigins) {
-            // Use user-configured origins + always include Tauri origins for desktop app support
-            logger.info(
-                    "Configuring CORS with allowed origins: {}",
-                    applicationProperties.getSystem().getCorsAllowedOrigins());
-
-            // Combine user-configured origins with Tauri origins
-            List<String> allOrigins =
-                    new ArrayList<>(applicationProperties.getSystem().getCorsAllowedOrigins());
-
-            // Always include Tauri origins for desktop app compatibility
-            // Tauri v1 uses tauri://localhost, v2 uses http(s)://tauri.localhost
-            if (!allOrigins.contains("tauri://localhost")) {
-                allOrigins.add("tauri://localhost");
-            }
-            if (!allOrigins.contains("http://tauri.localhost")) {
-                allOrigins.add("http://tauri.localhost");
-            }
-            if (!allOrigins.contains("https://tauri.localhost")) {
-                allOrigins.add("https://tauri.localhost");
-            }
-
-            String[] allowedOrigins = allOrigins.toArray(new String[0]);
-
-            registry.addMapping("/**")
-                    .allowedOriginPatterns(allowedOrigins)
-                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                    .allowedHeaders(
-                            "Authorization",
-                            "Content-Type",
-                            "X-Requested-With",
-                            "Accept",
-                            "Origin",
-                            "X-API-KEY",
-                            "X-CSRF-TOKEN",
-                            "X-XSRF-TOKEN",
-                            "X-Browser-Id")
-                    .exposedHeaders(
-                            "WWW-Authenticate",
-                            "X-Total-Count",
-                            "X-Page-Number",
-                            "X-Page-Size",
-                            "Content-Disposition",
-                            "Content-Type",
-                            "X-Stirling-Skipped-Field-Edits",
-                            "X-Stirling-Skipped-Field-Edits-Total",
-                            "X-Stirling-Detected-Fields")
-                    .allowCredentials(true)
-                    .maxAge(3600);
-        } else {
-            // Default to allowing all origins when nothing is configured
-            logger.debug(
-                    "No CORS allowed origins configured in settings.yml"
-                            + " (system.corsAllowedOrigins); WebMvcConfig allowing all origins.");
-            registry.addMapping("/**")
-                    .allowedOriginPatterns("*")
-                    .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
-                    .allowedHeaders(
-                            "Authorization",
-                            "Content-Type",
-                            "X-Requested-With",
-                            "Accept",
-                            "Origin",
-                            "X-API-KEY",
-                            "X-CSRF-TOKEN",
-                            "X-XSRF-TOKEN",
-                            "X-Browser-Id")
-                    .exposedHeaders(
-                            "WWW-Authenticate",
-                            "X-Total-Count",
-                            "X-Page-Number",
-                            "X-Page-Size",
-                            "Content-Disposition",
-                            "Content-Type",
-                            "X-Stirling-Skipped-Field-Edits",
-                            "X-Stirling-Skipped-Field-Edits-Total",
-                            "X-Stirling-Detected-Fields")
-                    .allowCredentials(true)
-                    .maxAge(3600);
+        // GoreeCloud PDF Manager is same-origin by default. An empty allowlist
+        // MUST NOT expose authenticated PDF APIs to every website.
+        List<String> configuredOrigins =
+                applicationProperties.getSystem() == null
+                        ? List.of()
+                        : applicationProperties.getSystem().getCorsAllowedOrigins();
+        if (configuredOrigins == null || configuredOrigins.isEmpty()) {
+            logger.info("No cross-origin browser access configured; CORS remains disabled");
+            return;
         }
+
+        // Accept exact HTTP(S) origins only. Do not silently permit wildcard,
+        // arbitrary Tauri schemes or implicit localhost exceptions.
+        for (String origin : configuredOrigins) {
+            if (origin == null || origin.isBlank() || origin.contains("*")) {
+                throw new IllegalArgumentException("CORS origins must be exact HTTP(S) origins");
+            }
+            java.net.URI uri;
+            try {
+                uri = java.net.URI.create(origin);
+            } catch (IllegalArgumentException exception) {
+                throw new IllegalArgumentException("Invalid configured CORS origin", exception);
+            }
+            String scheme = uri.getScheme();
+            if (scheme == null
+                    || (!scheme.equalsIgnoreCase("https") && !scheme.equalsIgnoreCase("http"))
+                    || uri.getHost() == null
+                    || uri.getUserInfo() != null
+                    || (uri.getRawPath() != null && !uri.getRawPath().isEmpty())
+                    || uri.getRawQuery() != null
+                    || uri.getRawFragment() != null) {
+                throw new IllegalArgumentException("CORS origins must be exact HTTP(S) origins");
+            }
+        }
+
+        logger.info("Allowing cross-origin browser requests for {} configured origin(s)",
+                configuredOrigins.size());
+        registry.addMapping("/**")
+                .allowedOrigins(configuredOrigins.toArray(new String[0]))
+                .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                .allowedHeaders(
+                        "Authorization",
+                        "Content-Type",
+                        "X-Requested-With",
+                        "Accept",
+                        "Origin",
+                        "X-API-KEY",
+                        "X-CSRF-TOKEN",
+                        "X-XSRF-TOKEN",
+                        "X-Browser-Id")
+                .exposedHeaders(
+                        "WWW-Authenticate",
+                        "X-Total-Count",
+                        "X-Page-Number",
+                        "X-Page-Size",
+                        "Content-Disposition",
+                        "Content-Type",
+                        "X-Stirling-Skipped-Field-Edits",
+                        "X-Stirling-Skipped-Field-Edits-Total",
+                        "X-Stirling-Detected-Fields")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }

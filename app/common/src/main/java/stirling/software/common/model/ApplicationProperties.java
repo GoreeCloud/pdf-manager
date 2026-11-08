@@ -1322,18 +1322,18 @@ public class ApplicationProperties {
     public static class System {
         private String defaultLocale;
         private boolean googlevisibility;
-        private boolean showUpdate = true;
+        private boolean showUpdate = false;
         private boolean showUpdateOnlyAdmin = true;
         private boolean showSettingsWhenNoLogin = true;
         private boolean customHTMLFiles;
         private String tessdataDir;
         private boolean enableAlphaFunctionality;
-        private Boolean enableAnalytics;
-        private Boolean enablePosthog;
-        private Boolean enableScarf;
-        private Boolean enableDesktopInstallSlide = true;
+        private Boolean enableAnalytics = false;
+        private Boolean enablePosthog = false;
+        private Boolean enableScarf = false;
+        private Boolean enableDesktopInstallSlide = false;
         private boolean enableEasterEggs = true;
-        private boolean enableFeedback = true;
+        private boolean enableFeedback = false;
         private Datasource datasource;
         private boolean disableSanitize;
         private boolean stirlingOfficeConversion;
@@ -1370,8 +1370,8 @@ public class ApplicationProperties {
         @Data
         public static class ServerCertificate {
             private boolean enabled =
-                    true; // Enable server-side "Sign with Stirling-PDF" certificate
-            private String organizationName = "Stirling PDF Inc";
+                    false; // Disabled until explicit certificate trust and issuer validation.
+            private String organizationName = "GoreeCloud";
             private int validity = 365; // Certificate validity in days
             private boolean regenerateOnStartup =
                     false; // Generate a new certificate on each startup

@@ -13,7 +13,7 @@ export default function TourOverviewSlide(): SlideConfig {
       <span className={styles.bodyCopyInner}>
         <Trans
           i18nKey="onboarding.tourOverview.body"
-          defaults="Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+          defaults="Explore the available PDF tools and learn where to find the options included in this development preview."
           components={{ strong: <strong /> }}
         />
       </span>

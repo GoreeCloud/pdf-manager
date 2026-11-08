@@ -102,7 +102,7 @@ if (rootProject.ext.mavenUrl.isEmpty()) {
 jar {
     enabled = false
     manifest {
-        attributes "Implementation-Title": "Stirling-PDF",
+        attributes "Implementation-Title": "GoreeCloud PDF Manager",
             "Implementation-Version": project.version
     }
 }
@@ -485,7 +485,6 @@ subprojects {
 
         tasks.named("forkedSpringBootRun") {
             dependsOn(":common:jar")
-            dependsOn(":proprietary:jar")
         }
 
         tasks.register("copySwaggerDoc", Copy) {
