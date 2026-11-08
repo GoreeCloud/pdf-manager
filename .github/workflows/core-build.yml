@@ -73,5 +73,16 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Typecheck the open-core frontend
         run: npx --no-install tsc --noEmit --project tsconfig.core.vite.json
+      - name: Verify commercial Vite flavors are rejected
+        run: |
+          if npx --no-install vite build --mode proprietary > /tmp/rejected-build.log 2>&1; then
+            echo "ERROR: proprietary build was unexpectedly accepted"
+            exit 1
+          fi
+          grep -q "Disallowed build mode: proprietary" /tmp/rejected-build.log || {
+            cat /tmp/rejected-build.log
+            echo "ERROR: rejection did not come from GoreeCloud core-only policy"
+            exit 1
+          }
       - name: Build open-core frontend
         run: npx --no-install vite build --mode core

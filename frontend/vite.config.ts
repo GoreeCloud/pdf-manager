@@ -492,6 +492,10 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
   desktop: "./tsconfig.desktop.vite.json",
 };
 
+function getCoreBuildMode(): BuildMode {
+  return "core";
+}
+
 export default defineConfig(async ({ mode, command }) => {
   // Dev-only browser-tab label (worktree folder basename) surfaced by the
   // top-level dev tasks so concurrent worktrees have distinguishable tabs.
@@ -517,7 +521,9 @@ export default defineConfig(async ({ mode, command }) => {
   if (explicitMode && explicitMode !== "core") {
     throw new Error(`Disallowed build mode: ${explicitMode}; use --mode core`);
   }
-  const effectiveMode: BuildMode = "core";
+  // Keep the declared BuildMode union for existing Vite config branches,
+  // but return only the permitted core flavor at runtime.
+  const effectiveMode: BuildMode = getCoreBuildMode();
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
@@ -696,7 +702,11 @@ export default defineConfig(async ({ mode, command }) => {
       modulePreload: {
         // Lazy chunks can import the entry again. An upfront link lets Vite reuse
         // its preload instead of fetching an already-running module in WebKit.
-        resolveDependencies: (filename, deps, { hostType }) =>
+        resolveDependencies: (
+          filename: string,
+          deps: string[],
+          { hostType }: { hostType: "html" | "js" },
+        ) =>
           hostType === "html" ? [filename, ...deps] : deps,
       },
       // The real precompression runs below, so Vite's gzip measurement is
