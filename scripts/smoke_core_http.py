@@ -118,6 +118,65 @@ def startup_error_summary(path: Path) -> str:
         entries.append(clean[-220:])
     return " | ".join(entries[-8:]) if entries else "no classified startup error found"
 
+
+def inspect_synthetic_merge_result(
+    merged: bytes, pdfinfo: str, pdftotext: str
+) -> dict[str, object]:
+    """Verify the real response is a readable two-page PDF with ordered fixture text.
+
+    Poppler is used only as an external CI verification tool, never bundled,
+    deployed, or asked to parse actual user documents by this script.
+    """
+    if len(merged) < 200 or len(merged) > MAX_RESULT_BYTES or not merged.startswith(b"%PDF-"):
+        raise ValueError("Synthetic merge response must be bounded PDF bytes")
+    for executable in (pdfinfo, pdftotext):
+        if not Path(executable).is_absolute() or not Path(executable).is_file():
+            raise ValueError("PDF semantic checks require trusted absolute executable paths")
+
+    verification_environment = {
+        "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
+        "LANG": "C",
+        "LC_ALL": "C",
+    }
+    for executable, arguments, label in (
+        (pdfinfo, ["-"], "PDF metadata"),
+        (pdftotext, ["-layout", "-", "-"], "PDF page text"),
+    ):
+        try:
+            result = subprocess.run(
+                [executable, *arguments],
+                input=merged,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                env=verification_environment,
+                timeout=12,
+                check=False,
+            )
+        except subprocess.TimeoutExpired as exc:
+            raise RuntimeError(f"{label} verifier timed out") from exc
+        if result.returncode != 0:
+            # Do not print converter output: it may eventually include file content.
+            raise RuntimeError(f"{label} verifier rejected the synthetic merged PDF")
+        if len(result.stdout) > 8192:
+            raise RuntimeError(f"{label} verifier produced oversized output")
+        if label == "PDF metadata":
+            matching_pages = re.findall(rb"(?m)^Pages:[ \t]*(\d+)[ \t]*$", result.stdout)
+            if len(matching_pages) != 1 or matching_pages[0] != b"2":
+                raise RuntimeError("Synthetic merge must have exactly two readable PDF pages")
+        else:
+            try:
+                page_texts = [
+                    section.strip() for section in result.stdout.decode("utf-8", errors="strict").split("\f")
+                    if section.strip()
+                ]
+            except UnicodeError as exc:
+                raise RuntimeError("Synthetic merged PDF page text was not decodable") from exc
+            if page_texts != ["Alpha", "Beta"]:
+                raise RuntimeError("Synthetic merge did not preserve both pages and their order")
+
+    return {"pages": 2, "synthetic_page_content_and_order_verified": True}
+
+
 def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
     if not path.is_file() or path.is_symlink():
         raise ValueError("Expected a regular core JAR file")
@@ -190,10 +249,16 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                         raise RuntimeError("PDF merge did not respond with application/pdf")
                     if len(merged) > MAX_RESULT_BYTES or len(merged) < 200 or not merged.startswith(b"%PDF-"):
                         raise RuntimeError("PDF merge returned invalid or oversized PDF bytes")
+                pdfinfo = shutil.which("pdfinfo")
+                pdftotext = shutil.which("pdftotext")
+                if not pdfinfo or not pdftotext:
+                    raise RuntimeError("Poppler pdfinfo and pdftotext are required for the semantic smoke gate")
+                semantic = inspect_synthetic_merge_result(merged, pdfinfo, pdftotext)
                 return {
                     "result": "PASS",
-                    "evidence": "Loopback health=UP and synthetic two-file PDF merge returned PDF content",
+                    "evidence": "Loopback health=UP and synthetic two-file PDF merge preserved two pages and ordered text",
                     "output_bytes": len(merged),
+                    **semantic,
                     "runtime_and_auth_security_audited": False,
                     "input_pdf_safety_audited": False,
                     "production_deployed": False,
