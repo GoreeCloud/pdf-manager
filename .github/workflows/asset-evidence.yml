@@ -1,0 +1,47 @@
+name: Tracked binary asset provenance evidence
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: asset-evidence-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  assets:
+    name: Offline bundled-asset metadata inventory
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout repository read-only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify stdlib-only asset inventory regressions
+        run: python3 -m unittest discover -s scripts/tests -p test_tracked_asset_evidence.py -v
+      - name: Generate and byte-compare deterministic metadata
+        run: |
+          python3 scripts/tracked_asset_evidence.py --output tracked-asset-evidence.json
+          python3 scripts/tracked_asset_evidence.py --output tracked-asset-evidence-again.json
+          cmp -s tracked-asset-evidence.json tracked-asset-evidence-again.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('tracked-asset-evidence.json').read_text())
+          assert report['candidate_count'] > 250
+          assert report['candidate_count'] == report['hashed_count']
+          assert all(x['license_status'] == 'UNVERIFIED' for x in report['candidates'])
+          assert all('sha256' in x for x in report['candidates'])
+          print('Evidence ONLY:', report['candidate_count'], 'unreviewed assets')
+          PY
+      - name: Retain nonrelease asset evidence for seven days
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: goreecloud-pdf-manager-tracked-asset-evidence
+          path: tracked-asset-evidence.json
+          if-no-files-found: error
+          retention-days: 7
