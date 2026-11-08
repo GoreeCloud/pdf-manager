@@ -172,9 +172,8 @@ class WebMvcConfigTest {
     }
 
     @Nested
-    @DisplayName("addCorsMappings")
+    @DisplayName("addCorsMappings - GoreeCloud exact allowlist")
     class AddCorsMappings {
-
         private CorsRegistry registry;
         private CorsRegistration registration;
 
@@ -186,69 +185,60 @@ class WebMvcConfigTest {
         }
 
         @Test
-        @DisplayName("Tauri mode adds a mapping with Tauri origin patterns")
-        void tauriModeBranch() {
+        @DisplayName("default denies all cross-origin access")
+        void emptyAllowlistDoesNotRegisterCors() {
+            when(applicationProperties.getSystem()).thenReturn(system);
+            when(system.getCorsAllowedOrigins()).thenReturn(List.of());
+            config.addCorsMappings(registry);
+            verify(registry, org.mockito.Mockito.never()).addMapping(anyString());
+        }
+
+        @Test
+        @DisplayName("missing system settings deny cross-origin access")
+        void missingSystemDoesNotRegisterCors() {
+            when(applicationProperties.getSystem()).thenReturn(null);
+            config.addCorsMappings(registry);
+            verify(registry, org.mockito.Mockito.never()).addMapping(anyString());
+        }
+
+        @Test
+        @DisplayName("only explicit HTTPS origins are allowlisted")
+        void configuredOriginsAreExact() {
+            when(applicationProperties.getSystem()).thenReturn(system);
+            when(system.getCorsAllowedOrigins())
+                    .thenReturn(List.of("https://app.example.com", "http://localhost:5173"));
+
+            config.addCorsMappings(registry);
+
+            verify(registry).addMapping("/**");
+            ArgumentCaptor<String[]> origins = ArgumentCaptor.forClass(String[].class);
+            verify(registration).allowedOrigins(origins.capture());
+            assertThat(origins.getValue())
+                    .containsExactly("https://app.example.com", "http://localhost:5173");
+        }
+
+        @Test
+        @DisplayName("a Tauri system property does not grant implicit CORS access")
+        void tauriPropertyDoesNotOverrideEmptyAllowlist() {
             System.setProperty(TAURI_PROP, "true");
-            // hasConfiguredOrigins is evaluated before the Tauri check, so getSystem() is
-            // consulted.
             when(applicationProperties.getSystem()).thenReturn(system);
             when(system.getCorsAllowedOrigins()).thenReturn(List.of());
-
             config.addCorsMappings(registry);
-
-            verify(registry).addMapping("/**");
+            verify(registry, org.mockito.Mockito.never()).addMapping(anyString());
         }
 
         @Test
-        @DisplayName("uses configured origins and appends Tauri origins when present")
-        void configuredOriginsBranch() {
+        @DisplayName("wildcard and non-HTTP origins are rejected")
+        void unsafeOriginsAreRejected() {
             when(applicationProperties.getSystem()).thenReturn(system);
-            when(system.getCorsAllowedOrigins())
-                    .thenReturn(new java.util.ArrayList<>(List.of("https://app.example.com")));
-
-            config.addCorsMappings(registry);
-
-            verify(registry).addMapping("/**");
-            // origins consulted twice (presence check + value use)
-            verify(system, atLeastOnce()).getCorsAllowedOrigins();
-        }
-
-        @Test
-        @DisplayName("configured origins keep an already-present Tauri origin unduplicated")
-        void configuredOriginsAlreadyContainTauri() {
-            when(applicationProperties.getSystem()).thenReturn(system);
-            when(system.getCorsAllowedOrigins())
-                    .thenReturn(
-                            new java.util.ArrayList<>(
-                                    List.of(
-                                            "tauri://localhost",
-                                            "http://tauri.localhost",
-                                            "https://tauri.localhost")));
-
-            config.addCorsMappings(registry);
-
-            verify(registry).addMapping("/**");
-        }
-
-        @Test
-        @DisplayName("default branch allows all origins when nothing configured")
-        void defaultBranchAllowsAll() {
-            when(applicationProperties.getSystem()).thenReturn(system);
-            when(system.getCorsAllowedOrigins()).thenReturn(List.of());
-
-            config.addCorsMappings(registry);
-
-            verify(registry).addMapping("/**");
-        }
-
-        @Test
-        @DisplayName("default branch also triggers when system is null")
-        void defaultBranchWhenSystemNull() {
-            lenient().when(applicationProperties.getSystem()).thenReturn(null);
-
-            config.addCorsMappings(registry);
-
-            verify(registry).addMapping("/**");
+            for (String value : List.of("*", "https://*.example.com",
+                    "tauri://localhost", "https://example.com/path",
+                    "https://user:pass@example.com")) {
+                when(system.getCorsAllowedOrigins()).thenReturn(List.of(value));
+                org.junit.jupiter.api.Assertions.assertThrows(
+                        IllegalArgumentException.class, () -> config.addCorsMappings(registry));
+            }
+            verify(registry, org.mockito.Mockito.never()).addMapping(anyString());
         }
     }
 

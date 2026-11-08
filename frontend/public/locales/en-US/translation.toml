@@ -5989,7 +5989,7 @@ passwordRequired = "Password is required"
 signIn = "Sign in"
 validating = "Validating invitation..."
 validationError = "Failed to validate invitation link"
-welcome = "Welcome to Stirling PDF"
+welcome = "Welcome to GoreeCloud PDF Manager"
 welcomeSubtitle = "Complete your account setup to get started"
 welcomeTitle = "You've been invited!"
 
@@ -6492,7 +6492,7 @@ title = "Check out the Stirling Processor"
 [onboarding.saas.freeEditor]
 freeLine = "The editor is now <free>completely free</free>."
 premium = "We've added loads of new features, including <strong>Policies</strong> and <strong>Agent Chat</strong>."
-title = "Welcome to Stirling"
+title = "Welcome to GoreeCloud PDF Manager"
 
 [onboarding.saas.team]
 addButton = "Add"
@@ -6521,12 +6521,12 @@ seePlans = "See Plans →"
 upgrade = "Upgrade now →"
 
 [onboarding.tourOverview]
-body = "Stirling PDF V2 ships with dozens of tools and a refreshed layout. Take a quick tour to see what changed and where to find the features you need."
+body = "Explore the available PDF tools and learn where to find the options included in this development preview."
 title = "Tour Overview"
 
 [onboarding.welcomeSlide]
-body = "Stirling PDF is now ready for teams of all sizes. This update includes a new layout, powerful new admin capabilities, and our most requested feature - <strong>Edit Text</strong>."
-title = "Welcome to Stirling"
+body = "GoreeCloud PDF Manager is an open-core development preview. Start with available PDF tools; some upstream commercial capabilities are not included."
+title = "Welcome to GoreeCloud PDF Manager"
 
 [onboarding.whatsNew]
 activeFilesView = "Use Active Files to see everything you have open and pick what to work on."

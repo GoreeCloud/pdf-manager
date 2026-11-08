@@ -502,23 +502,22 @@ export default defineConfig(async ({ mode, command }) => {
   // Relative to this config, not process.cwd(), so .env* load wherever vite is run from.
   const env = loadEnv(mode, import.meta.dirname, "");
 
-  // Effective mode: --mode > STIRLING_FLAVOR > ENABLE_SAAS > DISABLE_ADDITIONAL_FEATURES > proprietary.
+  // MIT_ONLY_CORE_BUILD: fail closed for all excluded upstream flavors.
+  // Unspecified Vite modes ("development", "production") resolve to core.
   const explicitMode = (VALID_MODES as readonly string[]).includes(mode)
     ? (mode as BuildMode)
     : null;
   const flavor = (process.env.STIRLING_FLAVOR ?? "").toLowerCase();
-  const flavorMode: BuildMode | null =
-    flavor === "core" || flavor === "proprietary" || flavor === "saas"
-      ? flavor
-      : null;
-  const effectiveMode: BuildMode =
-    explicitMode ??
-    flavorMode ??
-    (process.env.ENABLE_SAAS === "true"
-      ? "saas"
-      : process.env.DISABLE_ADDITIONAL_FEATURES === "true"
-        ? "core"
-        : "proprietary");
+  if (flavor && flavor !== "core") {
+    throw new Error("GoreeCloud PDF Manager supports only the MIT core build flavor");
+  }
+  if (process.env.ENABLE_SAAS === "true") {
+    throw new Error("Commercial and SaaS build modes are not distributed");
+  }
+  if (explicitMode && explicitMode !== "core") {
+    throw new Error(`Disallowed build mode: ${explicitMode}; use --mode core`);
+  }
+  const effectiveMode: BuildMode = "core";
 
   const tsconfigProject = TSCONFIG_MAP[effectiveMode];
 
@@ -539,7 +538,7 @@ export default defineConfig(async ({ mode, command }) => {
   const backendProxy = {
     target: backendUrl,
     changeOrigin: true,
-    secure: false,
+    secure: true,
     xfwd: true,
   };
 
