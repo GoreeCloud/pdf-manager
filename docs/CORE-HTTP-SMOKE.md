@@ -2,7 +2,7 @@
 
 **Development evidence only.** This test does not deploy a server, enable remote access, publish binaries, or validate application security in production.
 
-The dedicated [core HTTP smoke workflow](../.github/workflows/core-http-smoke.yml) builds the MIT-core-only Spring Boot JAR using Java 25 and the pinned Gradle version. It runs the [core JAR structure verifier](../scripts/verify_core_jar.py) and [loopback HTTP smoke](../scripts/smoke_core_http.py) on a disposable CI runner.
+The existing branch-protected [Java 25 core CI job](../.github/workflows/core-build.yml) builds the MIT-core-only Spring Boot JAR using Java 25 and the pinned Gradle version. It runs the [core JAR structure verifier](../scripts/verify_core_jar.py) and [loopback HTTP smoke](../scripts/smoke_core_http.py) on a disposable CI runner.
 
 ## Test contract
 
