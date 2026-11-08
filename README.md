@@ -62,7 +62,7 @@ The sanitized MIT-core snapshot does not ship upstream pipeline preset JSON asse
 
 The [required Java core CI check](.github/workflows/core-build.yml) now starts the core-only JAR on ephemeral 127.0.0.1 in GitHub CI, checks its health response, and merges two synthetic one-page PDFs. The real output is checked with CI-only PDF inspection tools for **exactly two readable pages containing Alpha followed by Beta**; unexpected page counts, missing or reversed content fail. The test uses no user documents or deployment credentials, refuses proxies and HTTP redirects, and always terminates the subprocess. [Bounded test contract and limitations](docs/CORE-HTTP-SMOKE.md). Passing it does **not** certify arbitrary PDFs, malware isolation, authentication or legal compliance.
 
-The same isolated CI smoke also sends an intentionally truncated **synthetic** PDF, requires a **client-error HTTP 400** rather than success or a server error, and checks the JVM still returns health UP. This does not establish safety for arbitrary or malicious uploads.
+The same isolated CI smoke also sends an intentionally truncated **synthetic** PDF, requires **HTTP 400** rather than success or a server error, and checks the JVM still returns health UP. The merge controller now rejects a failed PDF prevalidation **before** invoking its native merge engine, with focused Java regressions. This does not establish safety for arbitrary or malicious uploads.
 
 ## Security defaults for development
 

@@ -297,6 +297,14 @@ public class MergeController {
                 }
             }
 
+            // Pre-validation previously recorded invalid indexes but proceeded to JPDFium,
+            // where a generic IOException could incorrectly become an HTTP 500. Reject
+            // known malformed client PDFs before invoking the native merge engine.
+            if (!invalidIndexes.isEmpty()) {
+                throw ExceptionUtils.createMultiplePdfCorruptedException(
+                        new IOException("One or more uploaded PDF files failed pre-validation"));
+            }
+
             int[] pageCounts;
             try {
                 pageCounts =

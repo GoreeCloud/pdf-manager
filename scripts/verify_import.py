@@ -154,4 +154,8 @@ negative_smoke = (ROOT / 'scripts/smoke_core_http.py').read_text()
 negative_ci = (ROOT / '.github/workflows/core-build.yml').read_text()
 assert 'assert_malformed_pdf_is_rejected_and_server_remains_healthy(base)' in negative_smoke
 assert 'test_smoke_invalid_upload.py' in negative_ci
+merge_controller = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/controller/api/MergeController.java').read_text()
+assert 'if (!invalidIndexes.isEmpty())' in merge_controller
+assert 'ExceptionUtils.createMultiplePdfCorruptedException(' in merge_controller
+assert 'MalformedPdfMergeTest' in negative_ci
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

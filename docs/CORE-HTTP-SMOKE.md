@@ -19,7 +19,7 @@ Twenty-five offline regression tests cover synthetic PDF construction, multipart
 
 ## Synthetic malformed-input resilience
 
-After the successful two-page merge, the same isolated test also submits a valid generated PDF followed by a deliberately truncated PDF without page objects. The upload must be rejected with HTTP 400 rather than returning a document or a server error. The test then checks that the already-running JVM still reports HTTP 200 and status UP. Response bodies, uploaded bytes and stack traces are never printed. This covers only one deterministic malformed input, not denial-of-service resilience, parser fuzzing, resource exhaustion or general hostile-PDF acceptance.
+After the successful two-page merge, the same isolated test also submits a valid generated PDF followed by a deliberately truncated PDF without page objects. The controller now acts on its existing prevalidation failures *before* native merging and raises its typed corrupted-PDF client exception; two targeted Java tests guard this behavior. The upload must be rejected with HTTP 400 rather than returning a document or a server error. The test then checks that the already-running JVM still reports HTTP 200 and status UP. Response bodies, uploaded bytes and stack traces are never printed. This covers only one deterministic malformed input, not denial-of-service resilience, parser fuzzing, resource exhaustion or general hostile-PDF acceptance.
 
 ## Missing upstream pipeline presets
 
