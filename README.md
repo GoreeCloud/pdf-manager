@@ -32,6 +32,8 @@ cd ..
 
 The helper binds the API and frontend to **127.0.0.1** only; it does not install software, supply credentials, enable public hosting or bypass release validation. The API and frontend may also be launched separately with `backend` and `frontend`. If the local Java/Gradle toolchain is unavailable, use the read-only [GitHub core-build CI workflow](.github/workflows/core-build.yml) to verify compilation.
 
+For development-only PDF sample generation and Open Graph previews, the imported Puppeteer scripts use Chrome's normal browser sandbox. They do not disable Chromium isolation or automatically download a browser during the locked `npm ci --ignore-scripts` setup. These helper scripts have syntax checks in CI; actual browser execution and handling of untrusted HTML are not validated.
+
 **Do not deploy this source for sensitive PDF processing yet.** Complete dependency review, integration testing, feature entitlement auditing, security/privacy review, GoreeCloud UI migration and platform-specific acceptance first.
 
 ## Security defaults for development
