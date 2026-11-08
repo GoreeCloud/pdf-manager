@@ -1,0 +1,65 @@
+name: Nonpublishing core HTTP smoke
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle/**"
+      - "scripts/smoke_core_http.py"
+      - "scripts/tests/test_smoke_core_http.py"
+      - "scripts/verify_core_jar.py"
+      - ".github/workflows/core-http-smoke.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle/**"
+      - "scripts/smoke_core_http.py"
+      - "scripts/tests/test_smoke_core_http.py"
+      - "scripts/verify_core_jar.py"
+      - ".github/workflows/core-http-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: core-loopback-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  core-http-smoke:
+    name: Loopback health and synthetic PDF merge
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      STIRLING_FLAVOR: core
+      DISABLE_ADDITIONAL_FEATURES: "true"
+      ENABLE_SAAS: "false"
+      SECURITY_ENABLELOGIN: "false"
+    steps:
+      - name: Check out source with read-only permissions
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install Java 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5 (verified 2026-11-08)
+        with:
+          distribution: temurin
+          java-version: "25"
+      - name: Prepare pinned Gradle 9.7.1
+        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        with:
+          gradle-version: "9.7.1"
+      - name: Run offline synthetic PDF and loopback contract tests
+        run: python3 -m unittest discover -s scripts/tests -p test_smoke_core_http.py -v
+      - name: Assemble nonpublishing core JAR
+        run: gradle :stirling-pdf:bootJar -PbuildWithFrontend=false --no-daemon --stacktrace
+      - name: Inspect JAR and exercise real loopback core endpoints
+        run: |
+          mapfile -t jars < <(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' | sort)
+          test "${#jars[@]}" -eq 1
+          python3 scripts/verify_core_jar.py --jar "${jars[0]}"
+          python3 scripts/smoke_core_http.py --jar "${jars[0]}" --startup-timeout 150
