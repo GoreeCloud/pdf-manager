@@ -38,6 +38,10 @@ The inherited Tauri development/build entrypoints now select the permitted `core
 
 **Do not deploy this source for sensitive PDF processing yet.** Complete dependency review, integration testing, feature entitlement auditing, security/privacy review, GoreeCloud UI migration and platform-specific acceptance first.
 
+## Bundled assets and licensing evidence (not legal clearance)
+
+A read-only [tracked asset inventory](scripts/tracked_asset_evidence.py) now hashes source-bundled font, icon, image, PDF fixture and native/model file candidates without executing them. [Evidence scope and unresolved per-asset license review](docs/ASSET-EVIDENCE.md). The generated metadata is explicitly **not proof of rights to redistribute any asset**; nonpublishing seven-day CI evidence supports manual release-gate review.
+
 ## Reproducible dependency metadata (not a release SBOM)
 
 A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependency_inventory.py) now records package names, exact locked versions, recorded checksums, source lockfile hashes and *unverified* npm license hints across five npm and Cargo lockfiles. Run its [six regression tests](scripts/tests/test_locked_dependency_inventory.py) or retrieve the seven-day output of [Lockfile dependency metadata CI](.github/workflows/lockfile-metadata.yml).
