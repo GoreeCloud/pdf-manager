@@ -21,6 +21,8 @@ Excluded paths:
 
 Additionally omitted from this baseline: upstream CI/workflows, agent instructions, development-container and editor-private setup files, proprietary-mode environment presets, environment values containing third-party public API identifiers, and bundled private-key test fixtures. Test fixtures must be regenerated before relevant tests. Upstream branding and commercial-only capabilities are not GoreeCloud-created features.
 
+**Desktop updater exclusion:** The development preview removes `tauri-plugin-updater`, its obsolete update-signing material and native updater permissions because there is no GoreeCloud-controlled release/signing channel. The existing native command names fail closed; automatic update support must be independently designed, reviewed and tested before a future desktop release. This is a GoreeCloud-only modification, not an upstream source-licensing change.
+
 **History:** This sanitized snapshot is a new root commit. Importing upstream history would include restricted blobs from earlier revisions and is intentionally not done. Preserve the upstream URL and revision for auditability and future core-only updates.
 
 **Unverified:** End-to-end core functionality, package-level license metadata consistency, third-party assets, complete GoreeCloud UI rebrand, security, privacy, builds, desktop distribution and releases remain subject to separate review.
