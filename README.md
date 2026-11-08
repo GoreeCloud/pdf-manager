@@ -44,9 +44,13 @@ A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependen
 
 The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/native packages, third-party assets and verified licensing. It cannot be represented as a complete SBOM or used as security/release approval. [Scope, usage and exclusions](docs/LOCKFILE-INVENTORY.md).
 
+## Unresolved dependency advisories and compatibility gate
+
+The November 8 [advisory remediation review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) records **five still-open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
+
 ## Nonpublishing Java core JAR verification
 
-GitHub CI now assembles the Java 25 / Gradle core-only Spring Boot JAR **without publishing it** and validates its manifest, application entrypoint, Spring Boot loader, runtime-library structure, and absence of excluded upstream proprietary/SaaS modules. The [independent archive-verification script](scripts/verify_core_jar.py) has nine positive and negative unit tests; see [scope and limitations](docs/CORE-JAR-VERIFICATION.md). This establishes package **structure** only; runnable server behavior, the full dependency and asset license review, and production acceptance remain open.
+GitHub CI now assembles the Java 25 / Gradle core-only Spring Boot JAR **without publishing it** and validates its manifest, application entrypoint, Spring Boot loader, runtime-library structure, and absence of excluded upstream proprietary/SaaS modules. The [independent archive-verification script](scripts/verify_core_jar.py) has nine positive and negative unit tests; see [scope and limitations](docs/CORE-JAR-VERIFICATION.md). This archive inspection alone establishes **structure**; the separate real loopback server startup/merge gate below now passes, while full dependency and asset license review, PDF correctness/security, and production acceptance remain open.
 
 ## Disposable real HTTP smoke (not deployed)
 
@@ -56,7 +60,7 @@ The [required Java core CI check](.github/workflows/core-build.yml) additionally
 
 ## Security defaults for development
 
-The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest and lockfile are checked without running build scripts, **but desktop compilation and packaging remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
+The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest/lockfile guard and native Linux `cargo check --locked --lib --bins` now pass hosted CI, **but installer packaging, native runtime, and cross-platform desktop acceptance remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
 
 The in-app update service currently returns no remote release metadata or installer URLs, even if a legacy update screen is reached. **No GoreeCloud production update channel has been configured.** Some inherited installation/help surfaces may still link to upstream Stirling software and must be replaced before a public release.
 

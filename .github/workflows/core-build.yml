@@ -99,6 +99,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install locked dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Verify Storybook docgen glob wildcard compatibility
+        run: node scripts/verify-docgen-glob.mjs
       - name: Check sandboxed development browser scripts
         run: |
           node --check scripts/generate-og-image.mjs

@@ -132,4 +132,13 @@ assert 'initBundledPipelinePresets();' in core_setup
 assert 'GeneralUtils.hasBundledPipelineDefaults()' in core_setup
 assert 'public boolean hasBundledPipelineDefaults()' in general_utils
 assert 'public void extractPipeline() throws IOException' in general_utils
+# Require the actual frontend CI job to exercise the Storybook docgen
+# wildcard integration, not merely accept an npm lockfile after an unsafe
+# transitive glob/minimatch major-version override.
+docgen_contract = ROOT / 'frontend/scripts/verify-docgen-glob.mjs'
+assert docgen_contract.is_file(), 'Missing docgen glob wildcard regression gate'
+core_workflow = (ROOT / '.github/workflows/core-build.yml').read_text()
+assert 'node scripts/verify-docgen-glob.mjs' in core_workflow, (
+    'Docgen glob wildcard check must stay in required Node 24 CI'
+)
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
