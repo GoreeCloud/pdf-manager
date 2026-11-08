@@ -83,4 +83,8 @@ for rel in ['frontend/scripts/generate-og-image.mjs', 'frontend/scripts/sample-p
     script = (ROOT / rel).read_text()
     assert '--no-sandbox' not in script and '--disable-setuid-sandbox' not in script
     assert 'headless: true' in script
+devtools = json.loads((ROOT / 'devTools/package.json').read_text())
+devtools_lock = json.loads((ROOT / 'devTools/package-lock.json').read_text())
+assert devtools['name'] == devtools_lock['name'] == devtools_lock['packages']['']['name'] == 'goreecloud-pdf-manager-devtools'
+assert not any('/app/proprietary/' in script for script in devtools.get('scripts', {}).values())
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

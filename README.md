@@ -36,6 +36,12 @@ For development-only PDF sample generation and Open Graph previews, the imported
 
 **Do not deploy this source for sensitive PDF processing yet.** Complete dependency review, integration testing, feature entitlement auditing, security/privacy review, GoreeCloud UI migration and platform-specific acceptance first.
 
+## Reproducible dependency metadata (not a release SBOM)
+
+A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependency_inventory.py) now records package names, exact locked versions, recorded checksums, source lockfile hashes and *unverified* npm license hints across five npm and Cargo lockfiles. Run its [six regression tests](scripts/tests/test_locked_dependency_inventory.py) or retrieve the seven-day output of [Lockfile dependency metadata CI](.github/workflows/lockfile-metadata.yml).
+
+The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/native packages, third-party assets and verified licensing. It cannot be represented as a complete SBOM or used as security/release approval. [Scope, usage and exclusions](docs/LOCKFILE-INVENTORY.md).
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest and lockfile are checked without running build scripts, **but desktop compilation and packaging remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
