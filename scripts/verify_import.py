@@ -82,7 +82,10 @@ rust_packages = tomllib.loads((rust_root / 'Cargo.lock').read_text())['package']
 # Keep Tauri public/native window-runtime APIs on the same minor release.
 # tauri 2.11.1 with tauri-runtime-wry 2.12.3 did not compile on Linux.
 locked_versions = {pkg['name']: pkg['version'] for pkg in rust_packages}
-assert locked_versions['tauri'].split('.')[:2] == locked_versions['tauri-runtime-wry'].split('.')[:2], (
+assert len({
+    tuple(locked_versions[name].split('.')[:2])
+    for name in ('tauri', 'tauri-runtime', 'tauri-runtime-wry')
+}) == 1, (
     'Incompatible Tauri native runtime versions in Cargo.lock'
 )
 assert not any(pkg['name'] in {'tauri-plugin-updater', 'zip'} for pkg in rust_packages), (
