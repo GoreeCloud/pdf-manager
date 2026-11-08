@@ -201,7 +201,7 @@ def assert_malformed_pdf_is_rejected_and_server_remains_healthy(base: str) -> No
         response_status = exc.code
         exc.close()  # Never log the error body, request bytes or stack traces.
     if response_status != 400:
-        raise RuntimeError("Synthetic corrupted PDF must be rejected with HTTP 400")
+        raise RuntimeError(f"Synthetic corrupted PDF got HTTP {response_status}; required HTTP 400")
     try:
         with http_open(base + "/api/v1/info/health") as response:
             if response.status != 200:
