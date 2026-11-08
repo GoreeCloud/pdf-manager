@@ -64,6 +64,7 @@ jobs:
             --tests "stirling.software.SPDF.config.InitialSetupTest" \
             --tests "stirling.software.SPDF.config.OpenApiConfigTest" \
             --tests "stirling.software.SPDF.controller.api.MergeControllerTest" \
+            --tests "stirling.software.SPDF.controller.api.MalformedPdfMergeTest" \
             --tests "stirling.software.SPDF.controller.api.SplitPDFControllerTest" \
             --tests "stirling.software.SPDF.controller.api.RotationControllerTest" \
             -PbuildWithFrontend=false --no-daemon --stacktrace
@@ -86,6 +87,7 @@ jobs:
         run: |
           python3 -m unittest discover -s scripts/tests -p test_smoke_core_http.py -v
           python3 -m unittest discover -s scripts/tests -p test_smoke_pdf_semantics.py -v
+          python3 -m unittest discover -s scripts/tests -p test_smoke_invalid_upload.py -v
           jar_path="$(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' -print -quit)"
           test -n "$jar_path"
           python3 scripts/smoke_core_http.py --jar "$jar_path" --startup-timeout 150

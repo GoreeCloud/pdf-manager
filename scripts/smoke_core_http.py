@@ -54,10 +54,17 @@ def synthetic_pdf(label: str) -> bytes:
     return bytes(result)
 
 
-def multipart_pdf_payload() -> tuple[bytes, str]:
+def multipart_pdf_payload(
+    documents: tuple[bytes, bytes] | None = None,
+) -> tuple[bytes, str]:
+    """Encode exactly two controlled synthetic PDFs as multipart form data."""
+    if documents is None:
+        documents = (synthetic_pdf("Alpha"), synthetic_pdf("Beta"))
+    if len(documents) != 2:
+        raise ValueError("The smoke fixture requires exactly two documents")
     boundary = "goreecloud-ci-synthetic-pdf-boundary"
     chunks = []
-    for index, pdf in enumerate((synthetic_pdf("Alpha"), synthetic_pdf("Beta")), start=1):
+    for index, pdf in enumerate(documents, start=1):
         chunks.extend((
             f"--{boundary}\r\n".encode(),
             (f'Content-Disposition: form-data; name="fileInput"; '
@@ -177,6 +184,35 @@ def inspect_synthetic_merge_result(
     return {"pages": 2, "synthetic_page_content_and_order_verified": True}
 
 
+
+def assert_malformed_pdf_is_rejected_and_server_remains_healthy(base: str) -> None:
+    """A deterministic malformed second fixture must fail as client input, not crash JVM."""
+    invalid = b"%PDF-1.4\n% generated truncated fixture without any PDF objects\n"
+    payload, content_type = multipart_pdf_payload((synthetic_pdf("Alpha"), invalid))
+    response_status: int
+    try:
+        with http_open(
+            base + "/api/v1/general/merge-pdfs",
+            data=payload,
+            content_type=content_type,
+        ) as response:
+            response_status = response.status
+    except urllib.error.HTTPError as exc:
+        response_status = exc.code
+        exc.close()  # Never log the error body, request bytes or stack traces.
+    if response_status != 400:
+        raise RuntimeError(f"Synthetic corrupted PDF got HTTP {response_status}; required HTTP 400")
+    try:
+        with http_open(base + "/api/v1/info/health") as response:
+            if response.status != 200:
+                raise RuntimeError("Core health check failed after malformed PDF upload")
+            health = json.loads(response.read(4096))
+    except (ValueError, json.JSONDecodeError) as exc:
+        raise RuntimeError("Core health response invalid after malformed PDF upload") from exc
+    if health.get("status") != "UP":
+        raise RuntimeError("Core did not remain healthy after malformed PDF upload")
+
+
 def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
     if not path.is_file() or path.is_symlink():
         raise ValueError("Expected a regular core JAR file")
@@ -254,11 +290,14 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                 if not pdfinfo or not pdftotext:
                     raise RuntimeError("Poppler pdfinfo and pdftotext are required for the semantic smoke gate")
                 semantic = inspect_synthetic_merge_result(merged, pdfinfo, pdftotext)
+                assert_malformed_pdf_is_rejected_and_server_remains_healthy(base)
                 return {
                     "result": "PASS",
                     "evidence": "Loopback health=UP and synthetic two-file PDF merge preserved two pages and ordered text",
                     "output_bytes": len(merged),
                     **semantic,
+                    "malformed_synthetic_pdf_rejected_http_400": True,
+                    "jvm_healthy_after_invalid_upload": True,
                     "runtime_and_auth_security_audited": False,
                     "input_pdf_safety_audited": False,
                     "production_deployed": False,

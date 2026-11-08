@@ -15,7 +15,11 @@ The existing branch-protected [Java 25 core CI job](../.github/workflows/core-bu
 - The CI-only, separately installed Poppler pdfinfo and pdftotext utilities parse the **actual merged response** from standard input. The gate requires **exactly two readable pages containing Alpha then Beta**, in their original order. Incorrect count, text, order or parsing failures reject the run; no response bytes or extracted text are published.
 - Tools run as subprocesses without a shell or proxy configuration; verifier output and timeout are bounded, executable paths are checked and conversion errors never echo document contents. Poppler is a testing utility, not shipped with GoreeCloud. If absent on the disposable runner, the workflow installs the signed Ubuntu poppler-utils package.
 
-Twenty offline regression tests cover synthetic PDF construction, multipart upload, loopback-only HTTP, bounded diagnostics and rejection of malformed, missing, reversed or oversized merged-PDF results. An independent local experiment merged two synthetic PDFs using pdfunite, then verified pages and content with pdfinfo and pdftotext.
+Twenty-five offline regression tests cover synthetic PDF construction, multipart upload, loopback-only HTTP, bounded diagnostics and rejection of malformed, missing, reversed or oversized merged-PDF results. An independent local experiment merged two synthetic PDFs using pdfunite, then verified pages and content with pdfinfo and pdftotext.
+
+## Synthetic malformed-input resilience
+
+After the successful two-page merge, the same isolated test also submits a valid generated PDF followed by a deliberately truncated PDF without page objects. The controller now acts on its existing prevalidation failures *before* native merging and raises its typed corrupted-PDF client exception; two targeted Java tests guard this behavior. The upload must be rejected with HTTP 400 rather than returning a document or a server error. The test then checks that the already-running JVM still reports HTTP 200 and status UP. Response bodies, uploaded bytes and stack traces are never printed. This covers only one deterministic malformed input, not denial-of-service resilience, parser fuzzing, resource exhaustion or general hostile-PDF acceptance.
 
 ## Missing upstream pipeline presets
 
