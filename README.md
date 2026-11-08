@@ -42,6 +42,8 @@ The imported application now denies cross-origin browser access unless a specifi
 
 The in-app update service currently returns no remote release metadata or installer URLs, even if a legacy update screen is reached. **No GoreeCloud production update channel has been configured.** Some inherited installation/help surfaces may still link to upstream Stirling software and must be replaced before a public release.
 
+**Desktop WebView sandbox:** The inherited filesystem and HTTP JavaScript permissions (including unrestricted file read/write and arbitrary HTTP URLs) are no longer granted to the preview WebView. Those privileges belonged to the excluded desktop edition; the retained core frontend does not import either bridge. User-selected native filesystem and network capabilities must be independently implemented as narrowly scoped flows before any future desktop release. The native Rust proxy is a distinct backend component and is not the removed JavaScript HTTP permission.
+
 ## Next steps
 
 1. Resolve missing commercial-module imports and make the complete MIT-only backend and frontend reproducibly buildable.
