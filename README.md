@@ -16,6 +16,22 @@ GoreeCloud PDF Manager is a GoreeCloud-branded, self-hostable PDF-management pro
 
 The imported server currently uses Java, Spring Boot and Gradle (`app/core`, `app/common`), and the editor frontend uses TypeScript/Vite (`frontend`). The Gradle and Vite configurations reject non-core modes; the shared build also removes an inherited task dependency on the absent proprietary module. Building requires the correct upstream toolchains and further compatibility work. Desktop packaging, upstream updater endpoints and inherited update-test scripts are disabled until independently validated. HTTPS backend proxying now verifies certificates.
 
+## Core-only developer preview
+
+The current source build uses **JDK 25**, **Gradle 9.7.1** and **Node.js 24**. No Gradle wrapper JAR is bundled in this snapshot; use an independently installed Gradle 9.7.1 CLI. Do not use upstream proprietary or SaaS modes, inherited engine scripts, or desktop installers.
+
+For a locally isolated development machine (not a public server):
+
+```bash
+cd frontend
+npm ci --ignore-scripts --no-audit --no-fund
+cd ..
+./scripts/dev-core.sh verify
+./scripts/dev-core.sh both
+```
+
+The helper binds the API and frontend to **127.0.0.1** only; it does not install software, supply credentials, enable public hosting or bypass release validation. The API and frontend may also be launched separately with `backend` and `frontend`. If the local Java/Gradle toolchain is unavailable, use the read-only [GitHub core-build CI workflow](.github/workflows/core-build.yml) to verify compilation.
+
 **Do not deploy this source for sensitive PDF processing yet.** Complete dependency review, integration testing, feature entitlement auditing, security/privacy review, GoreeCloud UI migration and platform-specific acceptance first.
 
 ## Security defaults for development
