@@ -34,7 +34,22 @@ public class InitialSetup {
         initSecretKey();
         initLegalUrls();
         initSetAppVersion();
-        GeneralUtils.extractPipeline();
+        initBundledPipelinePresets();
+    }
+
+    /**
+     * Install optional default pipeline presets only if the complete resource set ships
+     * with the core build. Missing optional resources cannot block PDF processing startup.
+     * An explicitly requested extraction still fails on absent or corrupt assets.
+     */
+    public void initBundledPipelinePresets() throws IOException {
+        if (GeneralUtils.hasBundledPipelineDefaults()) {
+            GeneralUtils.extractPipeline();
+        } else {
+            log.warn(
+                    "Built-in pipeline presets are not shipped with this MIT-core preview; "
+                            + "preset installation is disabled until separately reviewed");
+        }
     }
 
     public void initUUIDKey() throws IOException {

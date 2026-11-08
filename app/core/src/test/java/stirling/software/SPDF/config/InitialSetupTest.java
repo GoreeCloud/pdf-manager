@@ -32,6 +32,31 @@ class InitialSetupTest {
     }
 
     @Nested
+    @DisplayName("initBundledPipelinePresets")
+    class BundledPipelinePresets {
+
+        @Test
+        @DisplayName("skips optional defaults when they are absent")
+        void missingDefaultsDoNotBlockStartup() throws Exception {
+            try (MockedStatic<GeneralUtils> util = mockStatic(GeneralUtils.class)) {
+                util.when(GeneralUtils::hasBundledPipelineDefaults).thenReturn(false);
+                initialSetup.initBundledPipelinePresets();
+                util.verify(GeneralUtils::extractPipeline, never());
+            }
+        }
+
+        @Test
+        @DisplayName("still invokes strict extraction when all presets are bundled")
+        void existingDefaultsUseStrictExtraction() throws Exception {
+            try (MockedStatic<GeneralUtils> util = mockStatic(GeneralUtils.class)) {
+                util.when(GeneralUtils::hasBundledPipelineDefaults).thenReturn(true);
+                initialSetup.initBundledPipelinePresets();
+                util.verify(GeneralUtils::extractPipeline, times(1));
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("initUUIDKey")
     class UuidKey {
 

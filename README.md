@@ -48,6 +48,12 @@ The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/nat
 
 GitHub CI now assembles the Java 25 / Gradle core-only Spring Boot JAR **without publishing it** and validates its manifest, application entrypoint, Spring Boot loader, runtime-library structure, and absence of excluded upstream proprietary/SaaS modules. The [independent archive-verification script](scripts/verify_core_jar.py) has nine positive and negative unit tests; see [scope and limitations](docs/CORE-JAR-VERIFICATION.md). This establishes package **structure** only; runnable server behavior, the full dependency and asset license review, and production acceptance remain open.
 
+## Disposable real HTTP smoke (not deployed)
+
+The sanitized MIT-core snapshot does not ship upstream pipeline preset JSON assets. The server now skips **automatic preset installation** when that optional resource set is absent, logs the limitation, and retains strict extraction validation when assets are explicitly available. This does not claim that the pipeline UI or its features work.
+
+The [required Java core CI check](.github/workflows/core-build.yml) additionally starts the actual core-only JAR on an ephemeral **127.0.0.1** port in GitHub CI and sends two **synthetic** one-page PDFs to the merge endpoint. The smoke uses no user PDFs or deployment credentials, disables authentication only inside that temporary test runner, rejects proxying/redirects, checks the health response and the PDF result, and always stops the subprocess. [Exact scope and unresolved security limits](docs/CORE-HTTP-SMOKE.md). Passing it is **not** proof of full PDF correctness, egress isolation, production authentication or legal compliance.
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest and lockfile are checked without running build scripts, **but desktop compilation and packaging remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.

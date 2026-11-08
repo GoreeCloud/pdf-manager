@@ -124,4 +124,12 @@ for rel in [
 assert 'GoreeCloud PDF Manager API' in (ROOT / 'app/core/src/main/java/stirling/software/SPDF/config/OpenApiConfig.java').read_text()
 assert 'serviceLegalHref' in (ROOT / 'frontend/src/editor/core/components/shared/Footer.tsx').read_text()
 assert 'serviceLegalHref' in (ROOT / 'frontend/src/editor/core/components/shared/config/configSections/LegalSection.tsx').read_text()
+# The sanitized core deliberately lacks inherited pipeline preset resources.
+# Optional preset setup cannot abort all unrelated PDF features on startup.
+core_setup = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/config/InitialSetup.java').read_text()
+general_utils = (ROOT / 'app/common/src/main/java/stirling/software/common/util/GeneralUtils.java').read_text()
+assert 'initBundledPipelinePresets();' in core_setup
+assert 'GeneralUtils.hasBundledPipelineDefaults()' in core_setup
+assert 'public boolean hasBundledPipelineDefaults()' in general_utils
+assert 'public void extractPipeline() throws IOException' in general_utils
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

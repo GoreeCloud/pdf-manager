@@ -74,6 +74,12 @@ jobs:
           mapfile -t jars < <(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' | sort)
           test "${#jars[@]}" -eq 1
           python3 scripts/verify_core_jar.py --jar "${jars[0]}"
+      - name: Exercise actual core JVM health and synthetic PDF merge on loopback
+        run: |
+          python3 -m unittest discover -s scripts/tests -p test_smoke_core_http.py -v
+          jar_path="$(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' -print -quit)"
+          test -n "$jar_path"
+          python3 scripts/smoke_core_http.py --jar "$jar_path" --startup-timeout 150
 
   frontend-core:
     name: Node 24 open-core frontend
