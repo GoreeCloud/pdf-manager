@@ -34,6 +34,8 @@ The helper binds the API and frontend to **127.0.0.1** only; it does not install
 
 For development-only PDF sample generation and Open Graph previews, the imported Puppeteer scripts use Chrome's normal browser sandbox. They do not disable Chromium isolation or automatically download a browser during the locked `npm ci --ignore-scripts` setup. These helper scripts have syntax checks in CI; actual browser execution and handling of untrusted HTML are not validated.
 
+The inherited Tauri development/build entrypoints now select the permitted `core` Vite mode, use loopback-only development URLs, and consistently identify the binary/version as `goreecloud-pdf-manager` v0.1.0. Desktop packaging remains disabled. The preview's Tauri build configuration also excludes missing packaged Java/JRE files; a future native release must supply and verify a compatible GoreeCloud server payload and JRE rather than using absent upstream bundles. The isolated [native Linux compile diagnostic](.github/workflows/desktop-linux-compile.yml) is a source-compatibility gate, not approval to ship native installers.
+
 **Do not deploy this source for sensitive PDF processing yet.** Complete dependency review, integration testing, feature entitlement auditing, security/privacy review, GoreeCloud UI migration and platform-specific acceptance first.
 
 ## Bundled assets and licensing evidence (not legal clearance)

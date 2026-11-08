@@ -544,15 +544,6 @@ pub async fn is_first_launch(app_handle: AppHandle) -> Result<bool, String> {
     Ok(!setup_completed)
 }
 
-/// Read the configured update mode from the tauri store.
-///
-/// Returns [`UpdateMode::Prompt`] when the store is unavailable or no mode
-/// has been set — the prompt-the-user flow is the safe default for normal,
-/// non-managed installs.
-pub(crate) fn read_update_mode(app_handle: &AppHandle) -> UpdateMode {
-    read_update_mode_info(app_handle).mode
-}
-
 /// Read the configured update mode AND whether it's locked by provisioning.
 pub(crate) fn read_update_mode_info(app_handle: &AppHandle) -> UpdateModeInfo {
     match app_handle.store(STORE_FILE) {
