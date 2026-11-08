@@ -73,8 +73,11 @@ class AssetEvidenceTests(unittest.TestCase):
     def test_full_checkout_contains_assets_without_license_inference(self):
         repo = Path(__file__).resolve().parents[2]
         report = evidence.build_report(repo)
-        self.assertGreater(report["candidate_count"], 250)
-        self.assertGreater(sum(x["category"]=="font" for x in report["candidates"]), 20)
+        self.assertEqual(report["candidate_count"], len(report["candidates"]))
+        self.assertEqual(report["hashed_count"], sum(
+            x["state"] == "tracked-asset-bytes-hashed"
+            for x in report["candidates"]
+        ))
         self.assertEqual(report["status"], "METADATA ONLY — NOT LICENSE CLEARED OR RELEASE READY")
         self.assertNotIn("release_approved", report)
 

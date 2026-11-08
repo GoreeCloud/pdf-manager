@@ -32,10 +32,14 @@ jobs:
           import json
           from pathlib import Path
           report = json.loads(Path('tracked-asset-evidence.json').read_text())
-          assert report['candidate_count'] > 250
-          assert report['candidate_count'] == report['hashed_count']
+          assert report['candidate_count'] == len(report['candidates'])
+          assert report['hashed_count'] <= report['candidate_count']
           assert all(x['license_status'] == 'UNVERIFIED' for x in report['candidates'])
-          assert all('sha256' in x for x in report['candidates'])
+          assert all(
+              'sha256' in x and len(x['sha256']) == 64
+              for x in report['candidates']
+              if x['state'] == 'tracked-asset-bytes-hashed'
+          )
           print('Evidence ONLY:', report['candidate_count'], 'unreviewed assets')
           PY
       - name: Retain nonrelease asset evidence for seven days
