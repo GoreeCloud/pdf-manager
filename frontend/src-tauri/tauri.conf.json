@@ -30,10 +30,7 @@
       "icons/macos/app.icns",
       "icons/macos/app-512.png"
     ],
-    "resources": [
-      "libs/*.jar",
-      "runtime/jre/**/*"
-    ],
+    "resources": [],
     "fileAssociations": [
       {
         "ext": [

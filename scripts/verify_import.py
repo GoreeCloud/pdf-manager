@@ -71,6 +71,7 @@ assert '--mode core' in alternate['build']['beforeDevCommand']
 assert '--host 127.0.0.1' in alternate['build']['beforeDevCommand']
 assert alternate['build']['devUrl'] == 'http://127.0.0.1:5174'
 assert tauri['bundle']['active'] is False
+assert tauri['bundle']['resources'] == [], 'Preview must not require unavailable bundled server/JRE resources'
 assert tauri['bundle']['createUpdaterArtifacts'] is False
 assert 'updater' not in tauri['plugins'], 'Untrusted upstream Tauri update channel reintroduced'
 rust_root = ROOT / 'frontend/src-tauri'
