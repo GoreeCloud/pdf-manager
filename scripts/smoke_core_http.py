@@ -233,6 +233,23 @@ def assert_no_file_merge_is_rejected(base: str) -> None:
         raise RuntimeError(f"Empty PDF merge received HTTP {status}; expected 400")
 
 
+
+def fetch_synthetic_merged_pdf(base: str) -> bytes:
+    """Fetch a bounded successful merge of two generated PDF fixtures."""
+    payload, content_type = multipart_pdf_payload()
+    with http_open(
+        base + "/api/v1/general/merge-pdfs", data=payload, content_type=content_type
+    ) as response:
+        if response.status != 200:
+            raise RuntimeError(f"Synthetic PDF merge returned HTTP {response.status}")
+        if not response.headers.get("Content-Type", "").lower().startswith("application/pdf"):
+            raise RuntimeError("Synthetic PDF merge returned an unexpected content type")
+        merged = response.read(MAX_RESULT_BYTES + 1)
+        if len(merged) > MAX_RESULT_BYTES or len(merged) < 200 or not merged.startswith(b"%PDF-"):
+            raise RuntimeError("Synthetic PDF merge returned invalid or oversized PDF bytes")
+    return merged
+
+
 def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
     if not path.is_file() or path.is_symlink():
         raise ValueError("Expected a regular core JAR file")
@@ -296,15 +313,7 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                     details = startup_error_summary(work / "application.log")
                     raise TimeoutError(f"Local core HTTP health check never became ready: {details}")
 
-                payload, content_type = multipart_pdf_payload()
-                with http_open(base + "/api/v1/general/merge-pdfs", data=payload, content_type=content_type) as response:
-                    merged = response.read(MAX_RESULT_BYTES + 1)
-                    if response.status != 200:
-                        raise RuntimeError(f"PDF merge returned HTTP {response.status}")
-                    if not response.headers.get("Content-Type", "").lower().startswith("application/pdf"):
-                        raise RuntimeError("PDF merge did not respond with application/pdf")
-                    if len(merged) > MAX_RESULT_BYTES or len(merged) < 200 or not merged.startswith(b"%PDF-"):
-                        raise RuntimeError("PDF merge returned invalid or oversized PDF bytes")
+                merged = fetch_synthetic_merged_pdf(base)
                 pdfinfo = shutil.which("pdfinfo")
                 pdftotext = shutil.which("pdftotext")
                 if not pdfinfo or not pdftotext:
@@ -312,6 +321,8 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                 semantic = inspect_synthetic_merge_result(merged, pdfinfo, pdftotext)
                 assert_malformed_pdf_is_rejected_and_server_remains_healthy(base)
                 assert_no_file_merge_is_rejected(base)
+                recovered = fetch_synthetic_merged_pdf(base)
+                inspect_synthetic_merge_result(recovered, pdfinfo, pdftotext)
                 return {
                     "result": "PASS",
                     "evidence": "Loopback health=UP and synthetic two-file PDF merge preserved two pages and ordered text",
@@ -320,6 +331,7 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                     "malformed_synthetic_pdf_rejected_http_400": True,
                     "jvm_healthy_after_invalid_upload": True,
                     "empty_file_merge_rejected_http_400": True,
+                    "valid_merge_recovered_after_rejected_uploads": True,
                     "runtime_and_auth_security_audited": False,
                     "input_pdf_safety_audited": False,
                     "production_deployed": False,

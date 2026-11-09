@@ -1,14 +1,59 @@
 """Offline tests of synthetic PDF fixture and loopback-only request policy."""
+import io
 import re
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import smoke_core_http as smoke
 
 
 class SyntheticSmokeTests(unittest.TestCase):
+    def test_bounded_synthetic_merge_fetch_before_and_after_bad_inputs(self):
+        class MockResponse(io.BytesIO):
+            status = 200
+            headers = {"Content-Type": "application/pdf"}
+
+        merged = b"%PDF-1.4\\n" + b"x" * 320
+        calls = []
+
+        def fake_open(url, *, data, content_type):
+            calls.append((url, data, content_type))
+            return MockResponse(merged)
+
+        with patch.object(smoke, "http_open", side_effect=fake_open):
+            self.assertEqual(
+                smoke.fetch_synthetic_merged_pdf("http://127.0.0.1:9090"), merged
+            )
+            self.assertEqual(
+                smoke.fetch_synthetic_merged_pdf("http://127.0.0.1:9090"), merged
+            )
+        self.assertEqual(len(calls), 2)
+        for url, data, content_type in calls:
+            self.assertEqual(url, "http://127.0.0.1:9090/api/v1/general/merge-pdfs")
+            self.assertEqual(data.count(b"%PDF-"), 2)
+            self.assertIn("boundary=", content_type)
+
+    def test_post_error_merge_requires_pdf_content_type(self):
+        class MockResponse(io.BytesIO):
+            status = 200
+            headers = {"Content-Type": "text/plain"}
+
+        with patch.object(smoke, "http_open", return_value=MockResponse(b"bad response")):
+            with self.assertRaisesRegex(RuntimeError, "content type"):
+                smoke.fetch_synthetic_merged_pdf("http://127.0.0.1:9090")
+
+    def test_post_error_merge_rejects_empty_pdf_success(self):
+        class MockResponse(io.BytesIO):
+            status = 200
+            headers = {"Content-Type": "application/pdf"}
+
+        with patch.object(smoke, "http_open", return_value=MockResponse(b"%PDF-")):
+            with self.assertRaisesRegex(RuntimeError, "invalid or oversized"):
+                smoke.fetch_synthetic_merged_pdf("http://127.0.0.1:9090")
+
     def test_pdf_header_xref_and_offsets(self):
         pdf = smoke.synthetic_pdf("Alpha")
         self.assertTrue(pdf.startswith(b"%PDF-1.4"))
