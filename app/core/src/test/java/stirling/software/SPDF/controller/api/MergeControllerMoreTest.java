@@ -1,6 +1,7 @@
 package stirling.software.SPDF.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.awt.Color;
@@ -40,6 +41,7 @@ import stirling.software.SPDF.model.api.general.MergePdfsRequest;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.service.PdfMetadataService;
+import stirling.software.common.util.ExceptionUtils.FileValidationException;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 
@@ -178,24 +180,29 @@ class MergeControllerMoreTest {
         }
 
         @Test
-        @DisplayName("null fileInput is treated as an empty set and still returns OK")
-        void nullFileInput() throws Exception {
+        @DisplayName("missing fileInput must be rejected as a client validation error")
+        void nullFileInput() {
             MergePdfsRequest req = new MergePdfsRequest();
             req.setFileInput(null);
             req.setSortType("orderProvided");
             req.setRemoveCertSign(false);
-            ResponseEntity<Resource> response = mergeController.mergePdfs(req, null);
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-            assertThat(response.getBody()).isNotNull();
+            assertThatThrownBy(() -> mergeController.mergePdfs(req, null))
+                    .isInstanceOf(FileValidationException.class);
         }
 
         @Test
-        @DisplayName("empty file array returns an empty (zero-byte) body")
-        void emptyFileArray() throws Exception {
-            ResponseEntity<Resource> response =
-                    mergeController.mergePdfs(
-                            request(new MockMultipartFile[0], "orderProvided", false, false), null);
-            assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        @DisplayName("empty file array must not create a successful zero-byte PDF")
+        void emptyFileArray() {
+            assertThatThrownBy(
+                            () ->
+                                    mergeController.mergePdfs(
+                                            request(
+                                                    new MockMultipartFile[0],
+                                                    "orderProvided",
+                                                    false,
+                                                    false),
+                                            null))
+                    .isInstanceOf(FileValidationException.class);
         }
     }
 

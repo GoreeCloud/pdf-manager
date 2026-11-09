@@ -158,4 +158,8 @@ merge_controller = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/contro
 assert 'if (!invalidIndexes.isEmpty())' in merge_controller
 assert 'ExceptionUtils.createMultiplePdfCorruptedException(' in merge_controller
 assert 'MalformedPdfMergeTest' in negative_ci
+# Zero-file merges must not succeed with an invalid PDF response.
+assert 'ExceptionUtils.createFileNullOrEmptyException()' in merge_controller
+assert 'assert_no_file_merge_is_rejected(base)' in negative_smoke
+assert 'MergeControllerMoreTest' in negative_ci
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
