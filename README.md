@@ -95,6 +95,17 @@ The same isolated CI smoke also sends an intentionally truncated **synthetic** P
 
 The PDF merge API now refuses a request with **no uploaded files** with the established HTTP 400 file-validation response, before creating any temporary or native document resources. The isolated Java smoke sends an empty synthetic multipart request to verify that it cannot return a successful zero-byte PDF. The same CI JVM must then successfully merge **another** pair of generated PDFs after both rejected uploads, with both page count and ordered text verified. This guards bounded synthetic recovery only; it does not impose new file-size or account-level policy.
 
+### Development preview PDF upload bounds
+
+The core's imported 2,000 MB multipart defaults are reduced to **128 MiB per
+file / 256 MiB per request** (explicitly overrideable through
+SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE and
+SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE after operator risk review).
+The existing HTTP 413 handler is exercised in the synthetic Java CI smoke
+with a test-only 32 KiB file ceiling; a valid merge must still work afterward.
+These input-size bounds do not make arbitrary PDFs safe or certify production
+resource isolation. See [HTTP smoke scope](docs/CORE-HTTP-SMOKE.md).
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest/lockfile guard and native Linux `cargo check --locked --lib --bins` now pass hosted CI, **but installer packaging, native runtime, and cross-platform desktop acceptance remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.

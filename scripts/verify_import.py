@@ -188,4 +188,11 @@ assert asset_notice.is_file()
 assert 'redistribution_rights": "UNVERIFIED"' in asset_notice.read_text()
 assert 'test_asset_notice_review_queue.py' in asset_workflow
 assert 'asset-license-notice-queue.json' in asset_workflow
+# Do not regress to the upstream 2GB multipart defaults or drop live HTTP 413.
+application_properties = (ROOT / 'app/core/src/main/resources/application.properties').read_text()
+assert 'SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:128MB' in application_properties
+assert 'SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:256MB' in application_properties
+assert 'assert_oversized_synthetic_upload_is_rejected(base)' in negative_smoke
+assert '"oversized_synthetic_pdf_rejected_http_413": True' in negative_smoke
+assert 'test_smoke_invalid_upload.py' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
