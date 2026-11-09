@@ -97,7 +97,7 @@
   },
   "plugins": {
     "shell": {
-      "open": true
+      "open": false
     },
     "fs": {
       "requireLiteralLeadingDot": false
