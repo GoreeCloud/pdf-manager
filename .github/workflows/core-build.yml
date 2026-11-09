@@ -117,6 +117,8 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify Storybook docgen glob wildcard compatibility
         run: node scripts/verify-docgen-glob.mjs
+      - name: Verify actual Storybook mocker patched version and redirect API
+        run: node scripts/verify-storybook-mocker.mjs
       - name: Build a nonpublishing MIT-core-only Storybook docgen preview
         run: |
           CI=true STORYBOOK_DISABLE_TELEMETRY=1 npx --no-install storybook build --config-dir .storybook-core --output-dir "$RUNNER_TEMP/gcpdf-core-storybook"

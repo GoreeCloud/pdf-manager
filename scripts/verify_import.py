@@ -188,4 +188,10 @@ assert asset_notice.is_file()
 assert 'redistribution_rights": "UNVERIFIED"' in asset_notice.read_text()
 assert 'test_asset_notice_review_queue.py' in asset_workflow
 assert 'asset-license-notice-queue.json' in asset_workflow
+# Do not reintroduce Storybook's vulnerable Vitest mocker dependency without
+# checking the exact module that Storybook itself resolves.
+mocker_contract = ROOT / 'frontend/scripts/verify-storybook-mocker.mjs'
+assert mocker_contract.is_file()
+assert "manifest.version, '4.1.12'" in mocker_contract.read_text()
+assert 'node scripts/verify-storybook-mocker.mjs' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

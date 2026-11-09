@@ -54,6 +54,16 @@ A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependen
 
 The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/native packages, third-party assets and verified licensing. It cannot be represented as a complete SBOM or used as security/release approval. [Scope, usage and exclusions](docs/LOCKFILE-INVENTORY.md).
 
+## Storybook mocker advisory compatibility gate
+
+The [Storybook-scoped mocker review](docs/STORYBOOK-MOCKER-ADVISORY-REMEDIATION-2026-11-08.md)
+replaces the vulnerable @vitest/mocker 3.2.4 selected by Storybook 9
+with patched 4.1.12 while retaining the current Storybook version.
+The required Node 24 CI resolves and tests the **actual Storybook mocker
+package and synthetic redirect API**, in addition to the MIT-core Storybook
+build. This **unsupported upstream major dependency override** is a temporary
+compatibility bridge, not full Storybook or security/legal/release acceptance.
+
 ## Narrow Storybook docgen security compatibility bridge
 
 The [scoped docgen advisory remediation](docs/STORYBOOK-DOCGEN-ADVISORY-REMEDIATION-2026-11-08.md)
