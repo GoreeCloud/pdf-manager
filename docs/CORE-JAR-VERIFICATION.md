@@ -24,6 +24,17 @@ The standard-library-only verifier inspects the archive without executing, extra
 
 Nine fixtures test expected structure and rejection of invalid or duplicate archives, missing launch classes or libraries, old upstream branding, prohibited modules and symlink input.
 
+## Nonpublishing embedded dependency inventory
+
+The same required Java 25 CI job additionally performs the [runtime library
+evidence check](CORE-RUNTIME-LIBRARY-EVIDENCE.md) against the **actual compiled
+archive**. It hashes the contents of each nested BOOT-INF/lib/*.jar, records
+its uncompressed byte count and filename, and compares two independently
+generated JSON reports for exact reproducibility. The inventory is kept only
+inside the disposable runner; it is not uploaded as a package or release asset.
+Neither existence nor hashing of a nested JAR establishes licensing rights or
+security acceptance.
+
 ## What this does not prove
 
 The archive is built with frontend assets disabled, so web UI inclusion is not tested. This static check does not start a server, exercise actual HTTP upload/processing, validate authentication or tenant isolation, inspect nested dependency classes/assets and embedded licenses, execute malware scans, evaluate third-party rights, or sign or distribute anything. Filename-level exclusion checking is not proof that restricted code could never enter another transitive artifact.

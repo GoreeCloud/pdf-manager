@@ -162,4 +162,11 @@ assert 'MalformedPdfMergeTest' in negative_ci
 assert 'ExceptionUtils.createFileNullOrEmptyException()' in merge_controller
 assert 'assert_no_file_merge_is_rejected(base)' in negative_smoke
 assert 'MergeControllerMoreTest' in negative_ci
+# The runnable JAR's actual embedded dependency manifest must be generated
+# and deterministically compared in the existing required Java build job.
+runtime_evidence_script = ROOT / 'scripts/runtime_jar_inventory.py'
+assert runtime_evidence_script.is_file()
+assert 'test_runtime_jar_inventory.py' in core_workflow
+assert 'scripts/runtime_jar_inventory.py --jar' in core_workflow
+assert 'cmp /tmp/gcpdf-core-libraries-a.json /tmp/gcpdf-core-libraries-b.json' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

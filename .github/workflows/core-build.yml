@@ -76,6 +76,10 @@ jobs:
           mapfile -t jars < <(find app/core/build/libs -maxdepth 1 -type f -name '*.jar' | sort)
           test "${#jars[@]}" -eq 1
           python3 scripts/verify_core_jar.py --jar "${jars[0]}"
+          python3 -m unittest discover -s scripts/tests -p test_runtime_jar_inventory.py -v
+          python3 scripts/runtime_jar_inventory.py --jar "${jars[0]}" --output /tmp/gcpdf-core-libraries-a.json
+          python3 scripts/runtime_jar_inventory.py --jar "${jars[0]}" --output /tmp/gcpdf-core-libraries-b.json
+          cmp /tmp/gcpdf-core-libraries-a.json /tmp/gcpdf-core-libraries-b.json
       - name: Prepare PDF page and text verification utilities for synthetic CI fixtures
         run: |
           if ! command -v pdfinfo >/dev/null 2>&1 || ! command -v pdftotext >/dev/null 2>&1; then
