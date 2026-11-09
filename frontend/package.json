@@ -166,6 +166,12 @@
     ]
   },
   "overrides": {
+    "@joshwooding/vite-plugin-react-docgen-typescript": {
+      "glob": {
+        ".": "13.0.7",
+        "minimatch": "11.0.1"
+      }
+    },
     "devalue": "^5.9.4",
     "pako": "^2.2.0",
     "tsconfck": {

@@ -48,9 +48,22 @@ A Python-standard-library-only [lockfile inventory tool](scripts/locked_dependen
 
 The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/native packages, third-party assets and verified licensing. It cannot be represented as a complete SBOM or used as security/release approval. [Scope, usage and exclusions](docs/LOCKFILE-INVENTORY.md).
 
+## Narrow Storybook docgen security compatibility bridge
+
+The [scoped docgen advisory remediation](docs/STORYBOOK-DOCGEN-ADVISORY-REMEDIATION-2026-11-08.md)
+replaces the old vulnerable `glob 10` / `minimatch 9` **only in the actual
+Storybook docgen dependency tree** with tested `glob 13.0.7` / patched
+`minimatch 11.0.1`. Direct Storybook 9 and docgen plugin versions remain
+unchanged. Required Node CI verifies the resolved package versions,
+wildcard glob behavior, and a **nonpublishing MIT-core-only Storybook build**;
+the original full upstream Storybook configuration still refers to excluded
+commercial modules and is not a functioning core preview. The two scoped
+major-version overrides are a temporary compatibility bridge, **not an
+upstream-supported update, source/license clearance, or Stable release approval**.
+
 ## Unresolved dependency advisories and compatibility gate
 
-The November 8 [advisory remediation review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) records **five still-open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
+The November 8 [baseline advisory review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) originally recorded **five open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
 
 ## Runtime dependency provenance evidence
 
