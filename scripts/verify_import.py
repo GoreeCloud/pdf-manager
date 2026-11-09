@@ -176,4 +176,8 @@ assert core_storybook.is_file()
 assert 'Tokens.stories.tsx' in core_storybook.read_text()
 assert 'storybook build --config-dir .storybook-core' in core_workflow
 assert "assert.equal(minimatchVersion, '11.0.1'" in docgen_contract.read_text()
+# Health UP alone is insufficient to show request-level recovery after
+# both malformed-input and empty multipart upload rejection.
+assert 'recovered = fetch_synthetic_merged_pdf(base)' in negative_smoke
+assert 'inspect_synthetic_merge_result(recovered, pdfinfo, pdftotext)' in negative_smoke
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
