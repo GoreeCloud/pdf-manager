@@ -196,4 +196,11 @@ assert native_graph_script.is_file()
 assert 'test_native_advisory_paths.py' in advisory_workflow
 assert 'native_advisory_paths.py --output' in advisory_workflow
 assert 'retention-days: 7' in advisory_workflow
+# Do not regress to the upstream 2GB multipart defaults or drop live HTTP 413.
+application_properties = (ROOT / 'app/core/src/main/resources/application.properties').read_text()
+assert 'SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE:128MB' in application_properties
+assert 'SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:256MB' in application_properties
+assert 'assert_oversized_synthetic_upload_is_rejected(base)' in negative_smoke
+assert '"oversized_synthetic_pdf_rejected_http_413": True' in negative_smoke
+assert 'test_smoke_invalid_upload.py' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
