@@ -102,7 +102,7 @@ public class MergeController {
             if (idx >= 0) {
                 ordered.add(remaining.remove(idx));
             } else {
-                log.debug("Filename from order list not found in uploaded files: {}", name);
+                log.debug("Unmatched upload order reference; keeping remaining files in supplied order");
             }
         }
 
@@ -163,7 +163,7 @@ public class MergeController {
             try (PDDocument doc = pdfDocumentFactory.load(file)) {
                 pageIndex += doc.getNumberOfPages();
             } catch (IOException e) {
-                ExceptionUtils.logException("document loading for TOC generation", e);
+                log.debug("TOC source loading failed ({})", e.getClass().getSimpleName());
                 pageIndex++;
             }
         }
@@ -206,14 +206,12 @@ public class MergeController {
                             }
                         }
                     } catch (Exception e) {
-                        log.debug(
-                                "Unable to read XMP metadata dates from uploaded file: {}",
-                                e.getMessage());
+                        log.debug("Uploaded PDF XMP date parsing failed ({})", e.getClass().getSimpleName());
                     }
                 }
             }
         } catch (IOException e) {
-            log.debug("Unable to read PDF dates from uploaded file: {}", e.getMessage());
+            log.debug("Uploaded PDF date parsing failed ({})", e.getClass().getSimpleName());
         }
         return 0L;
     }
@@ -266,7 +264,7 @@ public class MergeController {
             log.info("Reordering files based on fileOrder parameter");
             files = reorderFilesByProvidedOrder(files, fileOrder);
         } else {
-            log.info("Sorting files based on sortType: {}", request.getSortType());
+            log.debug("Applying selected merge file sorting mode");
             Arrays.sort(files, getSortComparator(request.getSortType()));
         }
 
@@ -283,7 +281,7 @@ public class MergeController {
                     try {
                         tempFile = convertImageToPdf(multipartFile);
                     } catch (Exception e) {
-                        ExceptionUtils.logException("image to PDF conversion for merge", e);
+                        log.debug("Image-to-PDF conversion fallback ({})", e.getClass().getSimpleName());
                         tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
                     }
                 } else {
@@ -294,7 +292,8 @@ public class MergeController {
 
                 try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
                 } catch (Exception e) {
-                    ExceptionUtils.logException("PDF pre-validate", e);
+                    log.debug("Uploaded PDF pre-validation rejected content ({})",
+                            e.getClass().getSimpleName());
                     invalidIndexes.add(index);
                 }
             }
@@ -312,7 +311,7 @@ public class MergeController {
                 pageCounts =
                         mergeWithJpdfium(inputPaths, files, generateToc, mt.getFile().toPath());
             } catch (IOException e) {
-                ExceptionUtils.logException("PDF merge", e);
+                log.warn("Native PDF merge rejected input ({})", e.getClass().getSimpleName());
                 if (PdfErrorUtils.isCorruptedPdfError(e)) {
                     throw ExceptionUtils.createMultiplePdfCorruptedException(e);
                 }
@@ -324,10 +323,7 @@ public class MergeController {
                 try (PdfDocument check = PdfDocument.open(mt.getFile().toPath())) {
                     sigFlattenNeeded = !check.signatures().isEmpty();
                 } catch (Exception e) {
-                    log.debug(
-                            "JPDFium signature pre-check failed; falling back to PDFBox flatten:"
-                                    + " {}",
-                            e.getMessage());
+                    log.debug("PDF signature pre-check fallback ({})", e.getClass().getSimpleName());
                     sigFlattenNeeded = true;
                 }
                 if (!sigFlattenNeeded) {
@@ -377,9 +373,9 @@ public class MergeController {
                 outputTempFile.close();
             }
             if (ex instanceof IOException && PdfErrorUtils.isCorruptedPdfError((IOException) ex)) {
-                log.warn("Corrupted PDF detected in merge pdf process: {}", ex.getMessage());
+                log.warn("Corrupted PDF detected during merge; client input rejected");
             } else {
-                log.error("Error in merge pdf process", ex);
+                log.error("PDF merge failed ({})", ex.getClass().getSimpleName());
             }
             throw ex;
         } finally {

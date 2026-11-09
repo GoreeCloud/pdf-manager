@@ -131,6 +131,21 @@ the effective parser; a valid merge must still work afterward.
 These input-size bounds do not make arbitrary PDFs safe or certify production
 resource isolation. See [HTTP smoke scope](docs/CORE-HTTP-SMOKE.md).
 
+### GoreeShield PDF merge log data minimization
+
+The core merge controller no longer logs the unmatched client-supplied
+filename, requested sort text, parser exception messages, or full
+exception stack traces that can include local filenames, document
+metadata or upload-derived content. It logs only stable operation
+categories and exception **class names**. The read-only required Java
+workflow runs five static source regressions; real Java PDF merge
+behavior and HTTP input validation remain independently tested.
+
+This is a **narrow controller-level privacy improvement**, not an
+application-wide logging audit: other controllers, global error
+handlers, native third-party libraries and reverse-proxy access logs
+require separate privacy review before production.
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest/lockfile guard and native Linux `cargo check --locked --lib --bins` now pass hosted CI, **but installer packaging, native runtime, and cross-platform desktop acceptance remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.
