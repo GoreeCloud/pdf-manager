@@ -81,6 +81,16 @@ upstream-supported update, source/license clearance, or Stable release approval*
 
 The November 8 [baseline advisory review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) originally recorded **five open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
 
+## Native Rust advisory path evidence (not remediation)
+
+A new [offline Cargo.lock dependency-path report](docs/NATIVE-RUST-ADVISORY-PATHS.md)
+shows the candidate route from the GoreeCloud Tauri desktop root through
+GTK to vulnerable glib 0.18.5 and through tauri-utils, PHF and its code
+generator to rand 0.7.3. Ten synthetic graph tests and a read-only CI job
+produce deterministic metadata; no Rust code runs in this evidence job.
+These source paths do not verify OS/feature reachability, runtime exploitation,
+third-party license rights, patched dependencies or production approval.
+
 ## Runtime dependency provenance evidence
 
 Required Java CI now also inventories and SHA-256 hashes every embedded
@@ -104,6 +114,17 @@ The [required Java core CI check](.github/workflows/core-build.yml) now starts t
 The same isolated CI smoke also sends an intentionally truncated **synthetic** PDF, requires **HTTP 400** rather than success or a server error, and checks the JVM still returns health UP. The merge controller now rejects a failed PDF prevalidation **before** invoking its native merge engine, with focused Java regressions. This does not establish safety for arbitrary or malicious uploads.
 
 The PDF merge API now refuses a request with **no uploaded files** with the established HTTP 400 file-validation response, before creating any temporary or native document resources. The isolated Java smoke sends an empty synthetic multipart request to verify that it cannot return a successful zero-byte PDF. The same CI JVM must then successfully merge **another** pair of generated PDFs after both rejected uploads, with both page count and ordered text verified. This guards bounded synthetic recovery only; it does not impose new file-size or account-level policy.
+
+### Development preview PDF upload bounds
+
+The core's imported 2,000 MB multipart defaults are reduced to **128 MiB per
+file / 256 MiB per request** (explicitly overrideable through
+SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE and
+SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE after operator risk review).
+The existing HTTP 413 handler is exercised in the synthetic Java CI smoke
+with a test-only 32 KiB file ceiling; a valid merge must still work afterward.
+These input-size bounds do not make arbitrary PDFs safe or certify production
+resource isolation. See [HTTP smoke scope](docs/CORE-HTTP-SMOKE.md).
 
 ## Security defaults for development
 
