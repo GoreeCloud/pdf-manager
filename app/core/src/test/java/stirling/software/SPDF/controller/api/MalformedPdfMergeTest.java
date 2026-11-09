@@ -71,6 +71,13 @@ class MalformedPdfMergeTest {
     }
 
     @Test
+    void nullMultipartPartIsRejectedAsClientInputBeforeNativeProcessing() throws Exception {
+        assertThatThrownBy(() -> controller.mergePdfs(request(validPdf(), null), null))
+                .isInstanceOf(
+                        stirling.software.common.util.ExceptionUtils.FileValidationException.class);
+    }
+
+    @Test
     void truncatedPdfIsRejectedWithTypedCorruptedFileException() throws Exception {
         var truncated = new MockMultipartFile(
                 "fileInput",

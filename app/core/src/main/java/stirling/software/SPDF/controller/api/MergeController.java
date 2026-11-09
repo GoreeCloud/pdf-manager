@@ -111,7 +111,9 @@ public class MergeController {
     }
 
     private Comparator<MultipartFile> getSortComparator(String sortType) {
-        return switch (sortType) {
+        // Missing sortType is equivalent to the stable upload order. Avoid
+        // letting an optional client field trigger a NullPointerException/500.
+        return switch (sortType == null ? "orderProvided" : sortType) {
             case "byFileName" ->
                     Comparator.comparing(
                             (MultipartFile mf) -> {
@@ -258,6 +260,13 @@ public class MergeController {
         // client request before allocating temporary files or native resources.
         if (files == null || files.length == 0) {
             throw ExceptionUtils.createFileNullOrEmptyException();
+        }
+        // Client-bound multipart arrays can contain null slots. Reject them
+        // before comparator callbacks or temporary/native resource allocation.
+        for (MultipartFile file : files) {
+            if (file == null) {
+                throw ExceptionUtils.createFileNullOrEmptyException();
+            }
         }
 
         if (fileOrder != null && !fileOrder.isBlank()) {
