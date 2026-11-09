@@ -108,6 +108,24 @@ class InvalidUploadTests(unittest.TestCase):
                         "http://127.0.0.1:12345"
                     )
 
+    def test_aggregate_exceeded_rejected_even_when_each_file_is_small(self):
+        request, calls = fake_http(bad_code=413)
+        with patch.object(smoke, "http_open", side_effect=request):
+            smoke.assert_aggregate_synthetic_upload_is_rejected(
+                "http://127.0.0.1:12345")
+        self.assertEqual(len(calls), 1)
+        self.assertGreater(len(calls[0][1]), 64 * 1024)
+        self.assertLess(len(calls[0][1]), 72 * 1024)
+        self.assertEqual(calls[0][1].count(b"%PDF-"), 2)
+        self.assertIn("multipart/form-data; boundary=", calls[0][2])
+
+    def test_aggregate_limit_client_error_cannot_be_success(self):
+        request, _ = fake_http(bad_code=200)
+        with patch.object(smoke, "http_open", side_effect=request):
+            with self.assertRaisesRegex(RuntimeError, "required HTTP 413"):
+                smoke.assert_aggregate_synthetic_upload_is_rejected(
+                    "http://127.0.0.1:12345")
+
     def test_wrong_number_of_docs_rejected_before_request(self):
         for docs in ((), (smoke.synthetic_pdf("Alpha"),)):
             with self.assertRaisesRegex(ValueError, "exactly two"):
