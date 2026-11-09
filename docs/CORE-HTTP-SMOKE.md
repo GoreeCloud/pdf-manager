@@ -38,8 +38,14 @@ decompression, network isolation or tenant quota protection.
 To verify the actual servlet parser rather than just configuration metadata,
 the nonpublishing Java smoke temporarily sets **32 KiB per file / 64 KiB per
 request** for its single ephemeral loopback JVM. It sends an in-memory **about
-40 KiB synthetic PDF part** in a request below 64 KiB and requires HTTP 413,
-then merges valid documents again on the **same** Java process. No user PDF,
+40 KiB synthetic PDF part** in a request below 64 KiB and requires HTTP 413.
+Another request uses two **individually under-32 KiB** PDF parts whose
+combined multipart body exceeds the independent 64 KiB request cap; this
+must also return **HTTP 413**. A valid merge then follows both errors on
+the **same** Java process. The custom Spring MultipartConfigElement honors
+the independent file and aggregate defaults, explicit SPRING_* environment
+limits and legacy settings.yml fileUploadLimit, and rejects malformed
+limits at startup instead of falling back to 2,000 MB. No user PDF,
 payload/error body, file or secrets are uploaded to CI logs. All defaults and
 environment overrides are limited to this source build/runtime; a signed
 desktop app and network-facing operation remain unapproved.
