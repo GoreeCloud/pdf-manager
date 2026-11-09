@@ -113,6 +113,8 @@ The [required Java core CI check](.github/workflows/core-build.yml) now starts t
 
 The same isolated CI smoke also sends an intentionally truncated **synthetic** PDF, requires **HTTP 400** rather than success or a server error, and checks the JVM still returns health UP. The merge controller now rejects a failed PDF prevalidation **before** invoking its native merge engine, with focused Java regressions. This does not establish safety for arbitrary or malicious uploads.
 
+The merge API also rejects null slots in its multipart input array before sorting or opening native files; an absent optional sortType defaults to stable upload order instead of returning a NullPointerException/HTTP 500. The required real Java controller suite covers both conditions.
+
 The PDF merge API now refuses a request with **no uploaded files** with the established HTTP 400 file-validation response, before creating any temporary or native document resources. The isolated Java smoke sends an empty synthetic multipart request to verify that it cannot return a successful zero-byte PDF. The same CI JVM must then successfully merge **another** pair of generated PDFs after both rejected uploads, with both page count and ordered text verified. This guards bounded synthetic recovery only; it does not impose new file-size or account-level policy.
 
 ### Development preview PDF upload bounds
