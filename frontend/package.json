@@ -166,6 +166,7 @@
     ]
   },
   "overrides": {
+    "storybook": { "@vitest/mocker": "4.1.12" },
     "@joshwooding/vite-plugin-react-docgen-typescript": {
       "glob": {
         ".": "13.0.7",
