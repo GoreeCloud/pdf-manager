@@ -214,4 +214,13 @@ assert 'test_smoke_invalid_upload.py' in core_workflow
 assert 'if (file == null)' in merge_controller
 assert 'sortType == null ? "orderProvided" : sortType' in merge_controller
 assert 'MergeControllerMoreTest' in core_workflow
+# The custom MultipartConfigElement must honor separate request/file caps.
+multipart_java = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/config/MultipartConfiguration.java').read_text()
+assert 'DEFAULT_FILE_LIMIT = "128MB"' in multipart_java
+assert 'DEFAULT_REQUEST_LIMIT = "256MB"' in multipart_java
+assert 'factory.setMaxRequestSize(DataSize.ofBytes(requestBytes));' in multipart_java
+assert 'factory.setMaxFileSize(DataSize.ofBytes(fileBytes));' in multipart_java
+assert 'MultipartConfigurationTest' in core_workflow
+assert 'assert_aggregate_synthetic_upload_is_rejected(base)' in negative_smoke
+assert '"aggregate_synthetic_request_rejected_http_413": True' in negative_smoke
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

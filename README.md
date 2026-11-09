@@ -123,8 +123,13 @@ The core's imported 2,000 MB multipart defaults are reduced to **128 MiB per
 file / 256 MiB per request** (explicitly overrideable through
 SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE and
 SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE after operator risk review).
-The existing HTTP 413 handler is exercised in the synthetic Java CI smoke
-with a test-only 32 KiB file ceiling; a valid merge must still work afterward.
+The real Spring MultipartConfigElement bean now retains **independent**
+file/request limits, respects explicit Spring overrides and the legacy
+settings.yml per-file limit, clamps inconsistent values to the aggregate
+budget and fails closed on malformed limits rather than silently reverting
+to 2,000 MB. Eight required Java configuration regressions and hosted
+synthetic HTTP **413 for both over-file and over-total requests** validate
+the effective parser; a valid merge must still work afterward.
 These input-size bounds do not make arbitrary PDFs safe or certify production
 resource isolation. See [HTTP smoke scope](docs/CORE-HTTP-SMOKE.md).
 
