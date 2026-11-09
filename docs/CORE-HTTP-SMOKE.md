@@ -25,6 +25,25 @@ After the successful two-page merge, the same isolated test also submits a valid
 
 A second negative case submits a correctly terminated multipart/form-data body with **zero file parts**. The core merge endpoint must reject missing inputs with HTTP 400 using its existing typed file validation exception, rather than producing an invalid zero-byte document or consuming native resources. Focused Java tests cover both null and empty file arrays; the real loopback test verifies the HTTP response. The original two-page success and corrupted-input health tests remain mandatory. After both negative cases, the **same still-running JVM** must process another freshly generated synthetic two-file merge whose returned PDF is independently inspected for exactly two pages with ordered Alpha/Beta content. This checks functional recovery, not merely liveness.
 
+## Bounded multipart uploads and HTTP 413 recovery
+
+The inherited Spring Boot defaults permitted an individual multipart file
+and an aggregate request up to 2,000 MB each, a high resource-exhaustion risk
+for a development-only preview. The core now uses a **128 MiB per-file and
+256 MiB total-request default**, independently enforced by the multipart
+parser and still configurable by explicit environment variables after resource
+and authorization review. This does **not** provide CPU, page-count, image
+decompression, network isolation or tenant quota protection.
+
+To verify the actual servlet parser rather than just configuration metadata,
+the nonpublishing Java smoke temporarily sets **32 KiB per file / 64 KiB per
+request** for its single ephemeral loopback JVM. It sends an in-memory **about
+40 KiB synthetic PDF part** in a request below 64 KiB and requires HTTP 413,
+then merges valid documents again on the **same** Java process. No user PDF,
+payload/error body, file or secrets are uploaded to CI logs. All defaults and
+environment overrides are limited to this source build/runtime; a signed
+desktop app and network-facing operation remain unapproved.
+
 ## Missing upstream pipeline presets
 
 The sanitized core-only source tree lacks the upstream static/pipeline/defaultWebUIConfigs assets. Its previous unconditional extraction aborted JVM startup. The preview now **skips only optional automatic pipeline preset extraction when the complete resource set is absent**. Explicit extraction is still strict and fails for incomplete/bad resources; the missing preset functionality is **not** declared restored or licensed. Java startup regression tests cover both branches.

@@ -86,6 +86,28 @@ class InvalidUploadTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "expected 400"):
                 smoke.assert_no_file_merge_is_rejected("http://127.0.0.1:12345")
 
+    def test_oversized_synthetic_pdf_rejected_as_413(self):
+        request, calls = fake_http(bad_code=413)
+        with patch.object(smoke, "http_open", side_effect=request):
+            smoke.assert_oversized_synthetic_upload_is_rejected(
+                "http://127.0.0.1:12345"
+            )
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0][1].count(b"%PDF-"), 2)
+        self.assertLess(len(calls[0][1]), 64 * 1024)
+        self.assertGreater(len(calls[0][1]), 32 * 1024)
+        self.assertNotIn(b"password=", calls[0][1])
+        self.assertIn("boundary=", calls[0][2])
+
+    def test_oversized_upload_must_not_succeed_or_be_server_error(self):
+        for code in (200, 400, 500, 503):
+            request, _ = fake_http(bad_code=code)
+            with patch.object(smoke, "http_open", side_effect=request):
+                with self.assertRaisesRegex(RuntimeError, "required HTTP 413"):
+                    smoke.assert_oversized_synthetic_upload_is_rejected(
+                        "http://127.0.0.1:12345"
+                    )
+
     def test_wrong_number_of_docs_rejected_before_request(self):
         for docs in ((), (smoke.synthetic_pdf("Alpha"),)):
             with self.assertRaisesRegex(ValueError, "exactly two"):
