@@ -52,6 +52,16 @@ The output is **metadata only**. It omits the resolved Gradle/Java graph, OS/nat
 
 The November 8 [advisory remediation review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) records **five still-open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
 
+## Runtime dependency provenance evidence
+
+Required Java CI now also inventories and SHA-256 hashes every embedded
+BOOT-INF/lib/*.jar in the actual executable core archive, byte-compares
+two independent reports and refuses suspicious nested-library paths, symlinks,
+unexpected members and excessive expansion. See the
+[bounded runtime dependency metadata contract](docs/CORE-RUNTIME-LIBRARY-EVIDENCE.md).
+**All embedded library licenses and vulnerability statuses remain unverified**;
+this is not a complete SBOM, signed attestation or permission to publish.
+
 ## Nonpublishing Java core JAR verification
 
 GitHub CI now assembles the Java 25 / Gradle core-only Spring Boot JAR **without publishing it** and validates its manifest, application entrypoint, Spring Boot loader, runtime-library structure, and absence of excluded upstream proprietary/SaaS modules. The [independent archive-verification script](scripts/verify_core_jar.py) has nine positive and negative unit tests; see [scope and limitations](docs/CORE-JAR-VERIFICATION.md). This archive inspection alone establishes **structure**; the separate real loopback server startup/merge gate below now passes, while full dependency and asset license review, PDF correctness/security, and production acceptance remain open.

@@ -158,4 +158,11 @@ merge_controller = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/contro
 assert 'if (!invalidIndexes.isEmpty())' in merge_controller
 assert 'ExceptionUtils.createMultiplePdfCorruptedException(' in merge_controller
 assert 'MalformedPdfMergeTest' in negative_ci
+# The runnable JAR's actual embedded dependency manifest must be generated
+# and deterministically compared in the existing required Java build job.
+runtime_evidence_script = ROOT / 'scripts/runtime_jar_inventory.py'
+assert runtime_evidence_script.is_file()
+assert 'test_runtime_jar_inventory.py' in core_workflow
+assert 'scripts/runtime_jar_inventory.py --jar' in core_workflow
+assert 'cmp /tmp/gcpdf-core-libraries-a.json /tmp/gcpdf-core-libraries-b.json' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
