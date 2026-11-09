@@ -42,10 +42,27 @@ jobs:
           )
           print('Evidence ONLY:', report['candidate_count'], 'unreviewed assets')
           PY
+      - name: Verify adjacent notice review queue without granting asset rights
+        run: |
+          python3 -m unittest discover -s scripts/tests -p test_asset_notice_review_queue.py -v
+          python3 scripts/asset_notice_review_queue.py --output asset-license-notice-queue.json
+          python3 scripts/asset_notice_review_queue.py --output asset-license-notice-queue-again.json
+          cmp -s asset-license-notice-queue.json asset-license-notice-queue-again.json
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          report = json.loads(Path('asset-license-notice-queue.json').read_text())
+          assert report['asset_count'] == len(report['review_queue'])
+          assert report['rights_verified'] == 0
+          assert all(x['redistribution_rights'] == 'UNVERIFIED' for x in report['review_queue'])
+          print('Notice candidates only:', report['assets_with_adjacent_notices'], 'of', report['asset_count'])
+          PY
       - name: Retain nonrelease asset evidence for seven days
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: goreecloud-pdf-manager-tracked-asset-evidence
-          path: tracked-asset-evidence.json
+          path: |
+            tracked-asset-evidence.json
+            asset-license-notice-queue.json
           if-no-files-found: error
           retention-days: 7

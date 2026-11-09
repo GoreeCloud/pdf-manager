@@ -180,4 +180,12 @@ assert "assert.equal(minimatchVersion, '11.0.1'" in docgen_contract.read_text()
 # both malformed-input and empty multipart upload rejection.
 assert 'recovered = fetch_synthetic_merged_pdf(base)' in negative_smoke
 assert 'inspect_synthetic_merge_result(recovered, pdfinfo, pdftotext)' in negative_smoke
+# An adjacent license notice filename is only a candidate for manual review,
+# never redistribution permission. Keep the conservative read-only CI gate.
+asset_notice = ROOT / 'scripts/asset_notice_review_queue.py'
+asset_workflow = (ROOT / '.github/workflows/asset-evidence.yml').read_text()
+assert asset_notice.is_file()
+assert 'redistribution_rights": "UNVERIFIED"' in asset_notice.read_text()
+assert 'test_asset_notice_review_queue.py' in asset_workflow
+assert 'asset-license-notice-queue.json' in asset_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
