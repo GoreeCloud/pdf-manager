@@ -4,6 +4,7 @@ import org.springframework.boot.servlet.MultipartConfigFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.core.env.Environment;
 import org.springframework.util.unit.DataSize;
 
 import jakarta.servlet.MultipartConfigElement;
@@ -13,70 +14,81 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.controller.web.UploadLimitService;
 
 /**
- * Configuration for Spring multipart file upload settings. Synchronizes multipart limits with
- * fileUploadLimit from settings.yml or environment variables (SYSTEMFILEUPLOADLIMIT or
- * SYSTEM_MAXFILESIZE).
+ * Multipart upload bounds for the core preview.
+ *
+ * <p>The explicit Spring per-file and aggregate limits are independent. The
+ * imported implementation assigned the same limit to both and silently
+ * reverted to 2,000 MB, defeating application.properties defaults. The
+ * legacy fileUploadLimit from settings.yml remains supported as a per-file
+ * override when a dedicated Spring file-limit environment variable is absent.
  */
 @Configuration
 @Slf4j
 public class MultipartConfiguration {
+    private static final String FILE_OVERRIDE = "SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE";
+    private static final String REQUEST_OVERRIDE = "SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE";
+    private static final String DEFAULT_FILE_LIMIT = "128MB";
+    private static final String DEFAULT_REQUEST_LIMIT = "256MB";
 
     private final UploadLimitService uploadLimitService;
+    private final Environment environment;
 
-    public MultipartConfiguration(UploadLimitService uploadLimitService) {
+    public MultipartConfiguration(UploadLimitService uploadLimitService, Environment environment) {
         this.uploadLimitService = uploadLimitService;
+        this.environment = environment;
     }
 
-    /**
-     * Creates MultipartConfigElement that respects fileUploadLimit from settings.yml or environment
-     * variables (SYSTEMFILEUPLOADLIMIT or SYSTEM_MAXFILESIZE). Depends on ApplicationProperties
-     * being initialized so @PostConstruct has run.
-     */
+    private static long positiveSize(String value, String source) {
+        try {
+            long bytes = DataSize.parse(value.trim()).toBytes();
+            if (bytes > 0) {
+                return bytes;
+            }
+        } catch (RuntimeException e) {
+            throw new IllegalStateException("Invalid positive multipart size in " + source, e);
+        }
+        throw new IllegalStateException("Multipart size must be positive in " + source);
+    }
+
     @Bean
     @DependsOn("applicationProperties")
     public MultipartConfigElement multipartConfigElement() {
+        String fileOverride = environment.getProperty(FILE_OVERRIDE);
+        String requestOverride = environment.getProperty(REQUEST_OVERRIDE);
+
+        long fileBytes;
+        if (fileOverride != null && !fileOverride.isBlank()) {
+            fileBytes = positiveSize(fileOverride, FILE_OVERRIDE);
+        } else {
+            long legacyFileBytes = uploadLimitService.getUploadLimit();
+            if (legacyFileBytes > 0) {
+                fileBytes = legacyFileBytes;
+            } else {
+                fileBytes = positiveSize(
+                        environment.getProperty(
+                                "spring.servlet.multipart.max-file-size", DEFAULT_FILE_LIMIT),
+                        "spring.servlet.multipart.max-file-size");
+            }
+        }
+
+        long requestBytes = requestOverride != null && !requestOverride.isBlank()
+                ? positiveSize(requestOverride, REQUEST_OVERRIDE)
+                : positiveSize(
+                        environment.getProperty(
+                                "spring.servlet.multipart.max-request-size", DEFAULT_REQUEST_LIMIT),
+                        "spring.servlet.multipart.max-request-size");
+
+        // A larger per-file allowance than the aggregate request allowance
+        // cannot actually be used; enforce and report the effective bound.
+        if (fileBytes > requestBytes) {
+            log.warn("Multipart per-file limit exceeds total-request limit; clamping to aggregate");
+            fileBytes = requestBytes;
+        }
+
         MultipartConfigFactory factory = new MultipartConfigFactory();
-
-        // First check if SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE is explicitly set
-        String springMaxFileSize =
-                java.lang.System.getenv("SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE");
-        long uploadLimitBytes = 0;
-
-        if (springMaxFileSize != null && !springMaxFileSize.trim().isEmpty()) {
-            // Parse the Spring property format (e.g., "2000MB")
-            try {
-                DataSize dataSize = DataSize.parse(springMaxFileSize.trim());
-                uploadLimitBytes = dataSize.toBytes();
-                log.info("Using SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}", springMaxFileSize);
-            } catch (Exception e) {
-                log.warn(
-                        "Failed to parse SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: {}",
-                        springMaxFileSize,
-                        e);
-            }
-        }
-
-        // If not set via Spring property, use UploadLimitService which reads from
-        // fileUploadLimit (set from SYSTEMFILEUPLOADLIMIT/SYSTEM_MAXFILESIZE or settings.yml)
-        if (uploadLimitBytes == 0) {
-            uploadLimitBytes = uploadLimitService.getUploadLimit();
-            if (uploadLimitBytes > 0) {
-                log.info(
-                        "Using fileUploadLimit setting: {}",
-                        uploadLimitService.getReadableUploadLimit());
-            }
-        }
-
-        // If still no limit, use default of 2000MB
-        if (uploadLimitBytes == 0) {
-            uploadLimitBytes = 2000L * 1024 * 1024; // 2000MB default
-            log.info("Using default multipart file upload limit: 2000MB");
-        }
-
-        // Set max file size and max request size to the same value
-        factory.setMaxFileSize(DataSize.ofBytes(uploadLimitBytes));
-        factory.setMaxRequestSize(DataSize.ofBytes(uploadLimitBytes));
-
+        factory.setMaxFileSize(DataSize.ofBytes(fileBytes));
+        factory.setMaxRequestSize(DataSize.ofBytes(requestBytes));
+        log.info("Effective multipart limits: {} bytes/file, {} bytes/request", fileBytes, requestBytes);
         return factory.createMultipartConfig();
     }
 }

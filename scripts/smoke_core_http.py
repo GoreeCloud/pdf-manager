@@ -257,6 +257,33 @@ def assert_oversized_synthetic_upload_is_rejected(base: str) -> None:
         raise RuntimeError(f"Oversized synthetic PDF got HTTP {status}; required HTTP 413")
 
 
+
+def assert_aggregate_synthetic_upload_is_rejected(base: str) -> None:
+    """Test a total-request limit that is larger than each per-file limit."""
+    # Each of the two generated PDF parts is individually < 32 KiB; combined
+    # multipart headers/payload exceed the independent 64 KiB request bound.
+    def pad_pdf(label: str) -> bytes:
+        pdf = synthetic_pdf(label)
+        return pdf + b"Z" * (32740 - len(pdf))
+
+    alpha, beta = pad_pdf("Alpha"), pad_pdf("Beta")
+    payload, content_type = multipart_pdf_payload((alpha, beta))
+    if any(len(doc) >= 32 * 1024 for doc in (alpha, beta)):
+        raise RuntimeError("Aggregate fixture broke the per-file bound")
+    if not 64 * 1024 < len(payload) < 72 * 1024:
+        raise RuntimeError("Aggregate fixture failed the bounded request contract")
+
+    try:
+        with http_open(base + "/api/v1/general/merge-pdfs",
+                       data=payload, content_type=content_type) as response:
+            status = response.status
+    except urllib.error.HTTPError as exc:
+        status = exc.code
+        exc.close()
+    if status != 413:
+        raise RuntimeError(f"Oversized aggregate PDF request got HTTP {status}; required HTTP 413")
+
+
 def fetch_synthetic_merged_pdf(base: str) -> bytes:
     """Fetch a bounded successful merge of two generated PDF fixtures."""
     payload, content_type = multipart_pdf_payload()
@@ -348,6 +375,7 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                 assert_malformed_pdf_is_rejected_and_server_remains_healthy(base)
                 assert_no_file_merge_is_rejected(base)
                 assert_oversized_synthetic_upload_is_rejected(base)
+                assert_aggregate_synthetic_upload_is_rejected(base)
                 recovered = fetch_synthetic_merged_pdf(base)
                 inspect_synthetic_merge_result(recovered, pdfinfo, pdftotext)
                 return {
@@ -359,6 +387,7 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                     "jvm_healthy_after_invalid_upload": True,
                     "empty_file_merge_rejected_http_400": True,
                     "oversized_synthetic_pdf_rejected_http_413": True,
+                    "aggregate_synthetic_request_rejected_http_413": True,
                     "valid_merge_recovered_after_rejected_uploads": True,
                     "runtime_and_auth_security_audited": False,
                     "input_pdf_safety_audited": False,

@@ -61,6 +61,7 @@ jobs:
         run: |
           gradle :stirling-pdf:test \
             --tests "stirling.software.SPDF.config.WebMvcConfigTest" \
+            --tests "stirling.software.SPDF.config.MultipartConfigurationTest" \
             --tests "stirling.software.SPDF.config.InitialSetupTest" \
             --tests "stirling.software.SPDF.config.OpenApiConfigTest" \
             --tests "stirling.software.SPDF.controller.api.MergeControllerTest" \
