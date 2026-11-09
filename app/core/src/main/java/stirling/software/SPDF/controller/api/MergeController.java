@@ -256,8 +256,10 @@ public class MergeController {
         boolean generateToc = request.isGenerateToc();
 
         MultipartFile[] files = request.getFileInput();
-        if (files == null) {
-            files = new MultipartFile[0];
+        // Merging no uploaded documents cannot yield a valid PDF. Reject the
+        // client request before allocating temporary files or native resources.
+        if (files == null || files.length == 0) {
+            throw ExceptionUtils.createFileNullOrEmptyException();
         }
 
         if (fileOrder != null && !fileOrder.isBlank()) {

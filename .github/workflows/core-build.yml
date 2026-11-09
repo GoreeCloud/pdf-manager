@@ -65,6 +65,7 @@ jobs:
             --tests "stirling.software.SPDF.config.OpenApiConfigTest" \
             --tests "stirling.software.SPDF.controller.api.MergeControllerTest" \
             --tests "stirling.software.SPDF.controller.api.MalformedPdfMergeTest" \
+            --tests "stirling.software.SPDF.controller.api.MergeControllerMoreTest" \
             --tests "stirling.software.SPDF.controller.api.SplitPDFControllerTest" \
             --tests "stirling.software.SPDF.controller.api.RotationControllerTest" \
             -PbuildWithFrontend=false --no-daemon --stacktrace

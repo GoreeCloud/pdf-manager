@@ -74,6 +74,8 @@ The [required Java core CI check](.github/workflows/core-build.yml) now starts t
 
 The same isolated CI smoke also sends an intentionally truncated **synthetic** PDF, requires **HTTP 400** rather than success or a server error, and checks the JVM still returns health UP. The merge controller now rejects a failed PDF prevalidation **before** invoking its native merge engine, with focused Java regressions. This does not establish safety for arbitrary or malicious uploads.
 
+The PDF merge API now refuses a request with **no uploaded files** with the established HTTP 400 file-validation response, before creating any temporary or native document resources. The isolated Java smoke sends an empty synthetic multipart request to verify that it cannot return a successful zero-byte PDF. This guards the API contract only; it does not impose new file-size or account-level policy.
+
 ## Security defaults for development
 
 The imported application now denies cross-origin browser access unless a specific HTTP(S) origin is configured. Default analytics, feedback, Scarf tracking, update prompts, self-signed server signing and desktop-install promotion are disabled. The unused upstream Tauri updater plugin, bundled update-signing configuration, and its vulnerable transitive `zip` dependency have been removed; the existing desktop command names now return explicit disabled responses. The Rust manifest/lockfile guard and native Linux `cargo check --locked --lib --bins` now pass hosted CI, **but installer packaging, native runtime, and cross-platform desktop acceptance remain unverified**. This is a source-level default, **not proof of complete privacy or security assurance**.

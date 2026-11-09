@@ -70,6 +70,22 @@ class InvalidUploadTests(unittest.TestCase):
                     "http://127.0.0.1:12345"
                 )
 
+    def test_missing_file_upload_is_rejected_and_contains_no_data(self):
+        request, calls = fake_http(bad_code=400)
+        with patch.object(smoke, "http_open", side_effect=request):
+            smoke.assert_no_file_merge_is_rejected("http://127.0.0.1:12345")
+        self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0][0].endswith("/merge-pdfs"))
+        self.assertEqual(calls[0][1], b"--goreecloud-ci-no-files-boundary--\r\n")
+        self.assertNotIn(b"filename=", calls[0][1])
+        self.assertEqual(calls[0][2], "multipart/form-data; boundary=goreecloud-ci-no-files-boundary")
+
+    def test_missing_file_request_cannot_succeed(self):
+        request, _ = fake_http(bad_code=200)
+        with patch.object(smoke, "http_open", side_effect=request):
+            with self.assertRaisesRegex(RuntimeError, "expected 400"):
+                smoke.assert_no_file_merge_is_rejected("http://127.0.0.1:12345")
+
     def test_wrong_number_of_docs_rejected_before_request(self):
         for docs in ((), (smoke.synthetic_pdf("Alpha"),)):
             with self.assertRaisesRegex(ValueError, "exactly two"):

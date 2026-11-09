@@ -213,6 +213,26 @@ def assert_malformed_pdf_is_rejected_and_server_remains_healthy(base: str) -> No
         raise RuntimeError("Core did not remain healthy after malformed PDF upload")
 
 
+
+def assert_no_file_merge_is_rejected(base: str) -> None:
+    """A merge with no file parts is a client error, never a success document."""
+    boundary = "goreecloud-ci-no-files-boundary"
+    payload = ("--" + boundary + "--\r\n").encode("ascii")
+    status: int
+    try:
+        with http_open(
+            base + "/api/v1/general/merge-pdfs",
+            data=payload,
+            content_type=f"multipart/form-data; boundary={boundary}",
+        ) as response:
+            status = response.status
+    except urllib.error.HTTPError as exc:
+        status = exc.code
+        exc.close()  # No error document or private input is logged.
+    if status != 400:
+        raise RuntimeError(f"Empty PDF merge received HTTP {status}; expected 400")
+
+
 def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
     if not path.is_file() or path.is_symlink():
         raise ValueError("Expected a regular core JAR file")
@@ -291,6 +311,7 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                     raise RuntimeError("Poppler pdfinfo and pdftotext are required for the semantic smoke gate")
                 semantic = inspect_synthetic_merge_result(merged, pdfinfo, pdftotext)
                 assert_malformed_pdf_is_rejected_and_server_remains_healthy(base)
+                assert_no_file_merge_is_rejected(base)
                 return {
                     "result": "PASS",
                     "evidence": "Loopback health=UP and synthetic two-file PDF merge preserved two pages and ordered text",
@@ -298,6 +319,7 @@ def smoke_core_jar(path: Path, java: str, startup_timeout: int = 150) -> dict:
                     **semantic,
                     "malformed_synthetic_pdf_rejected_http_400": True,
                     "jvm_healthy_after_invalid_upload": True,
+                    "empty_file_merge_rejected_http_400": True,
                     "runtime_and_auth_security_audited": False,
                     "input_pdf_safety_audited": False,
                     "production_deployed": False,
