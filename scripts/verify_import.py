@@ -209,4 +209,9 @@ assert 'SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:256MB' in application_properti
 assert 'assert_oversized_synthetic_upload_is_rejected(base)' in negative_smoke
 assert '"oversized_synthetic_pdf_rejected_http_413": True' in negative_smoke
 assert 'test_smoke_invalid_upload.py' in core_workflow
+# Missing optional sortType and null multipart array members are client
+# input validation cases, not server 500s or native processing requests.
+assert 'if (file == null)' in merge_controller
+assert 'sortType == null ? "orderProvided" : sortType' in merge_controller
+assert 'MergeControllerMoreTest' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

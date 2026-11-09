@@ -158,6 +158,17 @@ class MergeControllerMoreTest {
         }
 
         @Test
+        @DisplayName("null sortType retains upload order without server error")
+        void nullSortTypeDefaultsToUploadOrder() throws Exception {
+            MockMultipartFile[] files = {pdf("z.pdf", 1), pdf("a.pdf", 2)};
+            ResponseEntity<Resource> response =
+                    mergeController.mergePdfs(request(files, null, false, false), null);
+            try (PDDocument result = readResponse(response)) {
+                assertThat(result.getNumberOfPages()).isEqualTo(3);
+            }
+        }
+
+        @Test
         @DisplayName("merges three PDFs preserving total pages")
         void mergesThreeFiles() throws Exception {
             MockMultipartFile[] files = {pdf("a.pdf", 1), pdf("b.pdf", 2), pdf("c.pdf", 1)};
