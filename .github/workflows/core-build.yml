@@ -117,6 +117,11 @@ jobs:
         run: npm ci --ignore-scripts --no-audit --no-fund
       - name: Verify Storybook docgen glob wildcard compatibility
         run: node scripts/verify-docgen-glob.mjs
+      - name: Build a nonpublishing MIT-core-only Storybook docgen preview
+        run: |
+          CI=true STORYBOOK_DISABLE_TELEMETRY=1 npx --no-install storybook build --config-dir .storybook-core --output-dir "$RUNNER_TEMP/gcpdf-core-storybook"
+          test -s "$RUNNER_TEMP/gcpdf-core-storybook/index.html"
+          test -s "$RUNNER_TEMP/gcpdf-core-storybook/iframe.html"
       - name: Check sandboxed development browser scripts
         run: |
           node --check scripts/generate-og-image.mjs

@@ -21,6 +21,19 @@ The new [synthetic glob compatibility check](../frontend/scripts/verify-docgen-g
 
 The `minimatch 11.0.1` tarball describes itself as BlueOak-1.0.0 licensed and has a changed dependency tree; no separate downstream license acceptance is implied. Existing npm audit checks distinguish runtime and development tooling; they do not certify desktop dependencies, imported assets, or production readiness.
 
+## Subsequent narrow docgen compatibility experiment
+
+A separate [controlled Storybook 9 dependency-tree bridge](STORYBOOK-DOCGEN-ADVISORY-REMEDIATION-2026-11-08.md)
+has since passed local clean Node 24 install, real plugin wildcard matching,
+TypeScript, frontend core Vite build and a core-only Storybook preview.
+Unlike the rejected `glob 10` / `minimatch 11` combination, the tested pair
+is `glob 13.0.7` with `minimatch 11.0.1`, scoped only under the original
+docgen plugin. It remains an **unsupported major-version override** in the
+declaring dependency graph, and protected GitHub CI and the actual Dependabot
+alert #29 must be checked before claiming a fix. The historical five-alert
+table above describes the original snapshot, not the post-merge alert state.
+All other alerts and legal/security release gates remain independently open.
+
 ## Next compatible remediation gates
 
 - **JavaScript:** Prefer supported, audited updates of the Storybook/docgen plugin and their upstream glob/mocker dependencies, not a global override to a new major API. In a disposable Node 24 environment run the locked install, new glob integration test, Storybook smoke, frontend typecheck, JavaScript tests, and the core build; read back resolved versions and GitHub alerts after merging.

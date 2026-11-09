@@ -169,4 +169,11 @@ assert runtime_evidence_script.is_file()
 assert 'test_runtime_jar_inventory.py' in core_workflow
 assert 'scripts/runtime_jar_inventory.py --jar' in core_workflow
 assert 'cmp /tmp/gcpdf-core-libraries-a.json /tmp/gcpdf-core-libraries-b.json' in core_workflow
+# Pin the proven MIT-core Storybook diagnostic to the actual reviewed
+# plugin-to-glob-to-minimatch chain; never rely on npm install alone.
+core_storybook = ROOT / 'frontend/.storybook-core/main.ts'
+assert core_storybook.is_file()
+assert 'Tokens.stories.tsx' in core_storybook.read_text()
+assert 'storybook build --config-dir .storybook-core' in core_workflow
+assert "assert.equal(minimatchVersion, '11.0.1'" in docgen_contract.read_text()
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
