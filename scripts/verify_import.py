@@ -209,4 +209,12 @@ assert 'SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE:256MB' in application_properti
 assert 'assert_oversized_synthetic_upload_is_rejected(base)' in negative_smoke
 assert '"oversized_synthetic_pdf_rejected_http_413": True' in negative_smoke
 assert 'test_smoke_invalid_upload.py' in core_workflow
+# Unused JS shell-open grants should never be inherited by the desktop
+# webview; Rust's explicitly internal sidecar process API stays compiled.
+desktop_gate = ROOT / 'scripts/verify_desktop_webview_permissions.py'
+native_build_workflow = (ROOT / '.github/workflows/desktop-linux-compile.yml').read_text()
+assert desktop_gate.is_file()
+assert 'shell:allow-open' not in permissions
+assert 'test_verify_desktop_webview_permissions.py' in native_build_workflow
+assert 'verify_desktop_webview_permissions.py' in native_build_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

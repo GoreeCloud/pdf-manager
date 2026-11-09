@@ -81,6 +81,17 @@ upstream-supported update, source/license clearance, or Stable release approval*
 
 The November 8 [baseline advisory review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) originally recorded **five open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
 
+## Desktop JS shell capability restriction
+
+The nonpublishing Tauri development preview no longer exposes the
+\`shell:allow-open\` permission to its main webview and disables the inherited
+legacy \`plugins.shell.open\` setting. Native Rust's ShellExt/plugin remains
+intact for the existing sidecar backend; the required Linux Rust compile
+pipeline now checks seven offline JS-permission contracts before compiling.
+This is **not** evidence that all other permissions, opener links, custom
+native commands, WebView isolation, installed installers, or desktop runtime
+behavior are safe. No app is packaged or released.
+
 ## Native Rust advisory path evidence (not remediation)
 
 A new [offline Cargo.lock dependency-path report](docs/NATIVE-RUST-ADVISORY-PATHS.md)

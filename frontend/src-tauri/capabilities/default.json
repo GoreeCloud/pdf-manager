@@ -20,7 +20,6 @@
     "dialog:allow-open",
     "dialog:allow-save",
     "opener:default",
-    "shell:allow-open",
     "notification:allow-notify",
     "notification:allow-request-permission",
     "notification:allow-is-permission-granted",
