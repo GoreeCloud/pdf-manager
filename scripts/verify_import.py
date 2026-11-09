@@ -217,6 +217,11 @@ assert desktop_gate.is_file()
 assert 'shell:allow-open' not in permissions
 assert 'test_verify_desktop_webview_permissions.py' in native_build_workflow
 assert 'verify_desktop_webview_permissions.py' in native_build_workflow
+# Missing optional sortType and null multipart array members are client
+# input validation cases, not server 500s or native processing requests.
+assert 'if (file == null)' in merge_controller
+assert 'sortType == null ? "orderProvided" : sortType' in merge_controller
+assert 'MergeControllerMoreTest' in core_workflow
 # The custom MultipartConfigElement must honor separate request/file caps.
 multipart_java = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/config/MultipartConfiguration.java').read_text()
 assert 'DEFAULT_FILE_LIMIT = "128MB"' in multipart_java
