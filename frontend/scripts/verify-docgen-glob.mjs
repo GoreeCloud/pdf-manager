@@ -9,8 +9,16 @@ import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const docgenRequire = createRequire(require.resolve('@joshwooding/vite-plugin-react-docgen-typescript'));
+const globRequire = createRequire(docgenRequire.resolve('glob'));
 const { globSync } = docgenRequire('glob');
 assert.equal(typeof globSync, 'function', 'Docgen glob API is missing');
+// Both resolution paths must reflect the *actual plugin's dependencies*:
+// a lockfile may contain a patched minimatch elsewhere while the docgen glob
+// still resolves a vulnerable older version.
+const globVersion = globRequire('glob/package.json').version;
+const minimatchVersion = globRequire('minimatch/package.json').version;
+assert.equal(globVersion, '13.0.7', 'Docgen must use the reviewed glob 13 integration');
+assert.equal(minimatchVersion, '11.0.1', 'Docgen glob must use patched minimatch 11.0.1');
 
 const fixture = mkdtempSync(join(tmpdir(), 'goreecloud-docgen-glob-'));
 try {
