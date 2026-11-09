@@ -188,4 +188,12 @@ assert asset_notice.is_file()
 assert 'redistribution_rights": "UNVERIFIED"' in asset_notice.read_text()
 assert 'test_asset_notice_review_queue.py' in asset_workflow
 assert 'asset-license-notice-queue.json' in asset_workflow
+# Cargo advisory paths are release review evidence, never a claim that an
+# inherited GTK/PHF runtime vulnerability is fixed or safe to ship.
+native_graph_script = ROOT / 'scripts/native_advisory_paths.py'
+advisory_workflow = (ROOT / '.github/workflows/dependency-audit.yml').read_text()
+assert native_graph_script.is_file()
+assert 'test_native_advisory_paths.py' in advisory_workflow
+assert 'native_advisory_paths.py --output' in advisory_workflow
+assert 'retention-days: 7' in advisory_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

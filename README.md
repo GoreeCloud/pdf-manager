@@ -71,6 +71,16 @@ upstream-supported update, source/license clearance, or Stable release approval*
 
 The November 8 [baseline advisory review](docs/DEPENDENCY-ADVISORY-REVIEW-2026-11-08.md) originally recorded **five open** GitHub Dependabot reports involving Storybook/docgen development tooling and the native desktop GTK/Rust graph. A narrowly scoped attempt to force patched `minimatch 11` into `glob 10` resolved npm's lockfile but **broke wildcard matching**, so it was rejected without changing the package versions. The required Node CI now checks that the actual Storybook docgen `glob` dependency enumerates synthetic JSON and TSX files before building. The advisories remain unresolved pending *compatible* upstream updates and licensing review.
 
+## Native Rust advisory path evidence (not remediation)
+
+A new [offline Cargo.lock dependency-path report](docs/NATIVE-RUST-ADVISORY-PATHS.md)
+shows the candidate route from the GoreeCloud Tauri desktop root through
+GTK to vulnerable glib 0.18.5 and through tauri-utils, PHF and its code
+generator to rand 0.7.3. Ten synthetic graph tests and a read-only CI job
+produce deterministic metadata; no Rust code runs in this evidence job.
+These source paths do not verify OS/feature reachability, runtime exploitation,
+third-party license rights, patched dependencies or production approval.
+
 ## Runtime dependency provenance evidence
 
 Required Java CI now also inventories and SHA-256 hashes every embedded

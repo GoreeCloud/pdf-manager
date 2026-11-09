@@ -35,3 +35,35 @@ jobs:
       - name: Audit development tools without running scripts
         working-directory: devTools
         run: npm audit --audit-level=low
+
+
+  native-lock-graph:
+    name: Offline native Rust advisory path evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout source read-only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify offline Cargo graph regression contracts
+        run: python3 -m unittest discover -s scripts/tests -p test_native_advisory_paths.py -v
+      - name: Generate and byte-compare nonrelease Cargo advisory graph
+        run: |
+          python3 scripts/native_advisory_paths.py --output /tmp/gcpdf-native-paths-a.json
+          python3 scripts/native_advisory_paths.py --output /tmp/gcpdf-native-paths-b.json
+          cmp /tmp/gcpdf-native-paths-a.json /tmp/gcpdf-native-paths-b.json
+          python3 - <<'PY_CHECK'
+          import json
+          report = json.load(open('/tmp/gcpdf-native-paths-a.json', encoding='utf-8'))
+          assert not report['source_license_cleared']
+          assert not report['security_release_approved']
+          assert all(x['remediation_status'] == 'NOT_VERIFIED' for x in report['advisories'])
+          assert all(x['runtime_exploitability'] == 'NOT_ASSESSED' for x in report['advisories'])
+          print('Native Cargo graph review only:', report['package_count'], 'locked package identities')
+          PY_CHECK
+      - name: Retain native source-only advisory path evidence for seven days
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: goreecloud-pdf-manager-native-advisory-paths
+          path: /tmp/gcpdf-native-paths-a.json
+          if-no-files-found: error
+          retention-days: 7
