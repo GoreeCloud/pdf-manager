@@ -169,4 +169,8 @@ assert runtime_evidence_script.is_file()
 assert 'test_runtime_jar_inventory.py' in core_workflow
 assert 'scripts/runtime_jar_inventory.py --jar' in core_workflow
 assert 'cmp /tmp/gcpdf-core-libraries-a.json /tmp/gcpdf-core-libraries-b.json' in core_workflow
+# Health UP alone is insufficient to show request-level recovery after
+# both malformed-input and empty multipart upload rejection.
+assert 'recovered = fetch_synthetic_merged_pdf(base)' in negative_smoke
+assert 'inspect_synthetic_merge_result(recovered, pdfinfo, pdftotext)' in negative_smoke
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')

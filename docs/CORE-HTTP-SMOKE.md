@@ -15,7 +15,7 @@ The existing branch-protected [Java 25 core CI job](../.github/workflows/core-bu
 - The CI-only, separately installed Poppler pdfinfo and pdftotext utilities parse the **actual merged response** from standard input. The gate requires **exactly two readable pages containing Alpha then Beta**, in their original order. Incorrect count, text, order or parsing failures reject the run; no response bytes or extracted text are published.
 - Tools run as subprocesses without a shell or proxy configuration; verifier output and timeout are bounded, executable paths are checked and conversion errors never echo document contents. Poppler is a testing utility, not shipped with GoreeCloud. If absent on the disposable runner, the workflow installs the signed Ubuntu poppler-utils package.
 
-Twenty-seven offline regression tests cover synthetic PDF construction, multipart upload, loopback-only HTTP, bounded diagnostics and rejection of malformed, missing, reversed or oversized merged-PDF results. An independent local experiment merged two synthetic PDFs using pdfunite, then verified pages and content with pdfinfo and pdftotext.
+Thirty offline regression tests cover synthetic PDF construction, multipart upload, loopback-only HTTP, bounded diagnostics and rejection of malformed, missing, reversed or oversized merged-PDF results. An independent local experiment merged two synthetic PDFs using pdfunite, then verified pages and content with pdfinfo and pdftotext.
 
 ## Synthetic malformed-input resilience
 
@@ -23,7 +23,7 @@ After the successful two-page merge, the same isolated test also submits a valid
 
 ## Empty-upload input validation
 
-A second negative case submits a correctly terminated multipart/form-data body with **zero file parts**. The core merge endpoint must reject missing inputs with HTTP 400 using its existing typed file validation exception, rather than producing an invalid zero-byte document or consuming native resources. Focused Java tests cover both null and empty file arrays; the real loopback test verifies the HTTP response. The original two-page success and corrupted-input health tests remain mandatory.
+A second negative case submits a correctly terminated multipart/form-data body with **zero file parts**. The core merge endpoint must reject missing inputs with HTTP 400 using its existing typed file validation exception, rather than producing an invalid zero-byte document or consuming native resources. Focused Java tests cover both null and empty file arrays; the real loopback test verifies the HTTP response. The original two-page success and corrupted-input health tests remain mandatory. After both negative cases, the **same still-running JVM** must process another freshly generated synthetic two-file merge whose returned PDF is independently inspected for exactly two pages with ordered Alpha/Beta content. This checks functional recovery, not merely liveness.
 
 ## Missing upstream pipeline presets
 
