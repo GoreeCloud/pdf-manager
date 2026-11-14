@@ -231,4 +231,10 @@ assert 'factory.setMaxFileSize(DataSize.ofBytes(fileBytes));' in multipart_java
 assert 'MultipartConfigurationTest' in core_workflow
 assert 'assert_aggregate_synthetic_upload_is_rejected(base)' in negative_smoke
 assert '"aggregate_synthetic_request_rejected_http_413": True' in negative_smoke
+# GoreeShield: reject accidental relogging of client file names and parser
+# messages in the merge controller's direct application logging.
+merge_logging = (ROOT / 'app/core/src/main/java/stirling/software/SPDF/controller/api/MergeController.java').read_text()
+assert '.getMessage()' not in merge_logging
+assert 'ExceptionUtils.logException(' not in merge_logging
+assert 'test_merge_log_privacy.py' in core_workflow
 print('MIT-only source boundaries, sanitized credentials, and provenance: PASS')
