@@ -33,6 +33,10 @@ jobs:
     steps:
       - name: Check out untrusted development-preview source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify JS webview shell grants stay disabled without removing native sidecar
+        run: |
+          python3 -m unittest discover -s scripts/tests -p test_verify_desktop_webview_permissions.py -v
+          python3 scripts/verify_desktop_webview_permissions.py
       - name: Install native Tauri v2 Linux headers
         run: |
           sudo apt-get update
