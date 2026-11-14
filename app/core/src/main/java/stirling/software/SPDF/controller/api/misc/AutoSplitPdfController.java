@@ -290,8 +290,7 @@ public class AutoSplitPdfController {
         boolean duplexMode = Boolean.TRUE.equals(request.getDuplexMode());
 
         log.info(
-                "Auto-split starting: filename='{}', size={} bytes, duplexMode={}",
-                file.getOriginalFilename(),
+                "Auto-split starting: size={} bytes, duplexMode={}",
                 file.getSize(),
                 duplexMode);
 
@@ -373,14 +372,14 @@ public class AutoSplitPdfController {
 
         } catch (Exception e) {
             outputTempFile.close();
-            log.error("Error in auto split", e);
+            log.error("Error in auto split ({})", e.getClass().getSimpleName());
             throw e;
         } finally {
             for (PDDocument splitDoc : splitDocuments) {
                 try {
                     splitDoc.close();
                 } catch (IOException e) {
-                    log.error("Error closing split PDDocument", e);
+                    log.error("Error closing split PDDocument ({})", e.getClass().getSimpleName());
                 }
             }
         }

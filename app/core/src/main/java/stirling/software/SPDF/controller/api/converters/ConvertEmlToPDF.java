@@ -82,7 +82,7 @@ public class ConvertEmlToPDF {
         // Validate file type - support EML and MSG (Outlook) files
         String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
         if (!lowerFilename.endsWith(".eml") && !lowerFilename.endsWith(".msg")) {
-            log.error("Invalid file type for EML/MSG to PDF: {}", originalFilename);
+            log.warn("Invalid file type for EML/MSG to PDF");
             return errorResponse(HttpStatus.BAD_REQUEST, "Please upload a valid EML or MSG file");
         }
 
@@ -95,7 +95,7 @@ public class ConvertEmlToPDF {
                 try {
                     String htmlContent =
                             EmlToPdf.convertEmlToHtml(fileBytes, request, customHtmlSanitizer);
-                    log.info("Successfully converted email to HTML: {}", originalFilename);
+                    log.info("Successfully converted email to HTML");
                     TempFile tempOut = tempFileManager.createManagedTempFile(".html");
                     try {
                         Files.writeString(tempOut.getPath(), htmlContent, StandardCharsets.UTF_8);
@@ -106,7 +106,7 @@ public class ConvertEmlToPDF {
                     return WebResponseUtils.fileToWebResponse(
                             tempOut, baseFilename + ".html", MediaType.TEXT_HTML);
                 } catch (IOException | IllegalArgumentException e) {
-                    log.error("HTML conversion failed for {}", originalFilename, e);
+                    log.error("HTML conversion failed ({})", e.getClass().getSimpleName());
                     String detail =
                             e.getMessage() == null
                                     ? "Unknown error"
@@ -139,12 +139,12 @@ public class ConvertEmlToPDF {
                                         customHtmlSanitizer);
 
                 if (pdfBytes == null || pdfBytes.length == 0) {
-                    log.error("PDF conversion failed - empty output for {}", originalFilename);
+                    log.error("PDF conversion failed - empty output");
                     return errorResponse(
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             "PDF conversion failed - empty output");
                 }
-                log.info("Successfully converted email to PDF: {}", originalFilename);
+                log.info("Successfully converted email to PDF");
                 TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
                 try {
                     Files.write(tempOut.getPath(), pdfBytes);
@@ -156,29 +156,21 @@ public class ConvertEmlToPDF {
 
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                log.error("Email to PDF conversion was interrupted for {}", originalFilename, e);
+                log.error("Email to PDF conversion was interrupted");
                 return errorResponse(
                         HttpStatus.INTERNAL_SERVER_ERROR, "Conversion was interrupted");
             } catch (IllegalArgumentException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error(
-                        "Email to PDF conversion failed for {}: {}",
-                        originalFilename,
-                        errorMessage,
-                        e);
+                log.error("Email to PDF conversion failed ({})", e.getClass().getSimpleName());
                 return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
             } catch (IOException | RuntimeException e) {
                 String errorMessage = buildErrorMessage(e, originalFilename);
-                log.error(
-                        "Email to PDF conversion failed for {}: {}",
-                        originalFilename,
-                        errorMessage,
-                        e);
+                log.error("Email to PDF conversion failed ({})", e.getClass().getSimpleName());
                 return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, errorMessage);
             }
 
         } catch (IOException e) {
-            log.error("File processing error for email to PDF: {}", originalFilename, e);
+            log.error("File processing error for email to PDF ({})", e.getClass().getSimpleName());
             return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "File processing error");
         }
     }

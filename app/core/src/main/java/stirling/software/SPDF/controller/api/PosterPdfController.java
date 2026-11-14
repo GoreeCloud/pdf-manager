@@ -67,11 +67,11 @@ public class PosterPdfController {
     public ResponseEntity<Resource> posterPdf(@Valid @ModelAttribute PosterPdfRequest request)
             throws Exception {
 
-        log.debug("Starting PDF poster split process with request: {}", request);
+        log.debug("Starting PDF poster split process");
         MultipartFile file = request.getFileInput();
 
         String filename = GeneralUtils.generateFilename(file.getOriginalFilename(), "");
-        log.debug("Base filename for output: {}", filename);
+        log.debug("Prepared poster output filename");
 
         TempFile zipTempFile = new TempFile(tempFileManager, ".zip");
         try {
@@ -83,8 +83,7 @@ public class PosterPdfController {
                 // Get target page size
                 PDRectangle targetPageSize = getTargetPageSize(request.getPageSize());
                 log.debug(
-                        "Target page size: {} ({}x{})",
-                        request.getPageSize(),
+                        "Target poster page dimensions: {}x{}",
                         targetPageSize.getWidth(),
                         targetPageSize.getHeight());
 
@@ -258,7 +257,7 @@ public class PosterPdfController {
             return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + "_poster.zip");
 
         } catch (IOException e) {
-            ExceptionUtils.logException("PDF poster split process", e);
+            log.error("PDF poster split failed ({})", e.getClass().getSimpleName());
             zipTempFile.close();
             throw e;
         } catch (Exception e) {
