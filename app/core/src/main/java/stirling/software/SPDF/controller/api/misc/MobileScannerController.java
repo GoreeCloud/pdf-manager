@@ -131,7 +131,7 @@ public class MobileScannerController {
         } catch (UploadLimitException e) {
             return limitExceeded(e);
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid session creation request: {}", e.getMessage());
+            log.warn("Invalid mobile scanner session creation request");
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
@@ -225,16 +225,16 @@ public class MobileScannerController {
             response.put("filesUploaded", files.size());
             response.put("message", "Files uploaded successfully");
 
-            log.info("Mobile scanner upload: session={}, files={}", sessionId, files.size());
+            log.info("Mobile scanner uploaded {} files", files.size());
             return ResponseEntity.ok(response);
 
         } catch (UploadLimitException e) {
             return limitExceeded(e);
         } catch (IllegalArgumentException e) {
-            log.warn("Invalid mobile scanner upload request: {}", e.getMessage());
+            log.warn("Invalid mobile scanner upload request");
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         } catch (IOException e) {
-            log.error("Failed to upload files for session: {}", sessionId, e);
+            log.error("Failed to upload mobile scanner files ({})", e.getClass().getSimpleName());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Failed to save files"));
         }
@@ -320,7 +320,7 @@ public class MobileScannerController {
                     .body(resource);
 
         } catch (IOException e) {
-            log.warn("File not found: session={}, file={}", sessionId, filename);
+            log.warn("Mobile scanner requested file not found");
             return ResponseEntity.notFound().build();
         }
     }
@@ -353,7 +353,7 @@ public class MobileScannerController {
     }
 
     private ResponseEntity<Map<String, Object>> limitExceeded(UploadLimitException e) {
-        log.warn("Mobile scanner storage limit: {}", e.getMessage());
+        log.warn("Mobile scanner storage limit reached (serverCapacity={})", e.isServerCapacity());
         HttpStatus status =
                 e.isServerCapacity()
                         ? HttpStatus.SERVICE_UNAVAILABLE

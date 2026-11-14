@@ -177,7 +177,7 @@ public class ConvertOfficeController {
                     unoconvertException = e;
                     log.warn(
                             "Unoconvert command failed ({}). Falling back to soffice command.",
-                            e.getMessage());
+                            e.getClass().getSimpleName());
                 }
             }
 
@@ -247,7 +247,7 @@ public class ConvertOfficeController {
             try {
                 Files.deleteIfExists(inputPath);
             } catch (IOException e) {
-                log.warn("Failed to delete temp input file: {}", inputPath, e);
+                log.warn("Failed to delete temporary Office conversion input ({})", e.getClass().getSimpleName());
             }
             if (libreOfficeProfile != null) {
                 FileUtils.deleteQuietly(libreOfficeProfile.toFile());
@@ -281,9 +281,8 @@ public class ConvertOfficeController {
                 throw e;
             }
             log.warn(
-                    "Stirling Office Convert could not convert {} ({}); retrying with LibreOffice",
-                    inputPath.getFileName(),
-                    e.getMessage());
+                    "Stirling Office Convert failed ({}); retrying with LibreOffice",
+                    e.getClass().getSimpleName());
             Files.deleteIfExists(outputPath);
             return false;
         } finally {
