@@ -123,14 +123,14 @@ public class SplitPdfByChaptersController {
                 totalPages = sourceDocument.pageCount();
                 List<stirling.software.jpdfium.doc.Bookmark> roots = sourceDocument.bookmarks();
                 if (roots == null || roots.isEmpty()) {
-                    log.warn("No outline found for {}", file.getOriginalFilename());
+                    log.warn("Uploaded PDF does not contain a usable bookmark outline");
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.pdfBookmarksNotFound",
                             "No PDF bookmarks/outline found in document");
                 }
                 collectBookmarks(roots, bookmarks, 0, bookmarkLevel);
                 if (bookmarks.isEmpty()) {
-                    log.warn("No outline found for {}", file.getOriginalFilename());
+                    log.warn("Uploaded PDF does not contain a usable bookmark outline");
                     throw ExceptionUtils.createIllegalArgumentException(
                             "error.pdfBookmarksNotFound",
                             "No PDF bookmarks/outline found in document");
@@ -142,13 +142,8 @@ public class SplitPdfByChaptersController {
             if (!allowDuplicates) {
                 bookmarks = mergeBookmarksThatCorrespondToSamePage(bookmarks);
             }
-            for (Bookmark bookmark : bookmarks) {
-                log.info(
-                        "{}::::{} to {}",
-                        bookmark.getTitle(),
-                        bookmark.getStartPage(),
-                        bookmark.getEndPage());
-            }
+            // Bookmark titles are document content and must not enter application logs.
+            log.debug("Chapter split identified {} bookmarks", bookmarks.size());
 
             PdfMetadata metadata = null;
             boolean hasForm = false;
@@ -235,9 +230,7 @@ public class SplitPdfByChaptersController {
                     }
                 }
             }
-            log.info(
-                    "Successfully created zip file with split documents: {}",
-                    zipTempFile.getPath());
+            log.info("Created ZIP with split PDF documents");
             return zipTempFile;
         } catch (Exception e) {
             zipTempFile.close();
@@ -310,7 +303,7 @@ public class SplitPdfByChaptersController {
             zipOut.putNextEntry(new ZipEntry(fileName));
             doc.save(zipOut);
             zipOut.closeEntry();
-            log.debug("Wrote split document {} to zip file", fileName);
+            log.debug("Wrote split PDF chapter to ZIP");
         }
     }
 
@@ -325,7 +318,7 @@ public class SplitPdfByChaptersController {
         zipOut.putNextEntry(new ZipEntry(fileName));
         Files.copy(pdfPath, zipOut);
         zipOut.closeEntry();
-        log.debug("Wrote split document {} to zip file", fileName);
+        log.debug("Wrote split PDF chapter to ZIP");
     }
 
     private static int[] clampRange(Bookmark bookmark, int totalPages) {

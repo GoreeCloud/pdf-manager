@@ -59,6 +59,8 @@ jobs:
           gradle-version: "9.7.1"
       - name: Check GoreeShield merge-log data minimization contract
         run: python3 -m unittest discover -s scripts/tests -p test_merge_log_privacy.py -v
+      - name: Check GoreeShield chapter and rearrange log minimization
+        run: python3 -m unittest discover -s scripts/tests -p test_chapter_rearrange_log_privacy.py -v
       - name: Test CORS and PDF merge, split and rotation controllers
         run: |
           gradle :stirling-pdf:test \
