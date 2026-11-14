@@ -189,7 +189,7 @@ public class RearrangePagesPDFController {
                             ? Integer.parseInt(pageOrder.trim())
                             : 2; // Default to 2 if not specified
         } catch (NumberFormatException e) {
-            log.error("Invalid duplicate count specified", e);
+            log.debug("Invalid PDF duplicate count; using default");
             duplicateCount = 2; // Default to 2 if invalid input
         }
 
@@ -330,7 +330,7 @@ public class RearrangePagesPDFController {
                         tempFileManager);
             }
         } catch (IOException e) {
-            ExceptionUtils.logException("document rearrangement", e);
+            log.error("PDF page rearrangement failed ({})", e.getClass().getSimpleName());
             throw e;
         }
     }
