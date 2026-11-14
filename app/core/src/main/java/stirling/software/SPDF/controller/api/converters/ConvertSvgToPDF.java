@@ -102,7 +102,7 @@ public class ConvertSvgToPDF {
 
                 String lowerFilename = originalFilename.toLowerCase(Locale.ROOT);
                 if (!lowerFilename.endsWith(".svg")) {
-                    log.warn("Skipping non-SVG file: {}", originalFilename);
+                    log.warn("Skipping non-SVG file");
                     continue;
                 }
 
@@ -113,7 +113,7 @@ public class ConvertSvgToPDF {
                     filenames.add(Filenames.toSimpleFileName(originalFilename));
 
                 } catch (IOException e) {
-                    log.error("SVG sanitization/reading failed for {}", originalFilename, e);
+                    log.error("SVG sanitization/reading failed ({})", e.getClass().getSimpleName());
                 }
             }
 
@@ -129,7 +129,7 @@ public class ConvertSvgToPDF {
             }
 
         } catch (Exception e) {
-            log.error("Unexpected error during SVG to PDF conversion", e);
+            log.error("Unexpected error during SVG to PDF conversion ({})", e.getClass().getSimpleName());
             return errorResponse(
                     HttpStatus.INTERNAL_SERVER_ERROR,
                     "An unexpected error occurred during conversion");
@@ -177,7 +177,7 @@ public class ConvertSvgToPDF {
             return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
 
         } catch (IOException e) {
-            log.error("Error combining SVGs into PDF", e);
+            log.error("Error combining SVGs into PDF ({})", e.getClass().getSimpleName());
             return errorResponse(
                     HttpStatus.INTERNAL_SERVER_ERROR, "Conversion failed: " + e.getMessage());
         }
@@ -195,7 +195,7 @@ public class ConvertSvgToPDF {
                 byte[] pdfBytes = SvgToPdf.convert(sanitizedBytes);
 
                 if (pdfBytes == null || pdfBytes.length == 0) {
-                    log.error("PDF conversion failed - empty output for {}", baseFilename);
+                    log.error("PDF conversion failed - empty output");
                     continue;
                 }
 
@@ -204,10 +204,10 @@ public class ConvertSvgToPDF {
                 String outputFilename = GeneralUtils.generateFilename(baseFilename, ".pdf");
                 convertedPdfs.add(new ConvertedPdf(outputFilename, pdfBytes));
 
-                log.info("Successfully converted SVG to PDF: {}", baseFilename);
+                log.info("Successfully converted SVG to PDF");
 
             } catch (IOException e) {
-                log.error("File processing error for SVG to PDF: {}", baseFilename, e);
+                log.error("File processing error for SVG to PDF ({})", e.getClass().getSimpleName());
             }
         }
 
@@ -238,7 +238,7 @@ public class ConvertSvgToPDF {
             TempFile zipFile = createZipFromPdfs(convertedPdfs);
             return WebResponseUtils.zipFileToWebResponse(zipFile, zipFilename);
         } catch (IOException e) {
-            log.error("Failed to create response", e);
+            log.error("Failed to create response ({})", e.getClass().getSimpleName());
             return errorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create response");
         }
     }
@@ -252,7 +252,7 @@ public class ConvertSvgToPDF {
                 zipOut.putNextEntry(pdfEntry);
                 zipOut.write(pdf.content);
                 zipOut.closeEntry();
-                log.debug("Added {} to ZIP", pdf.filename);
+                log.debug("Added generated PDF to ZIP");
             }
         } catch (IOException e) {
             tempZipFile.close();

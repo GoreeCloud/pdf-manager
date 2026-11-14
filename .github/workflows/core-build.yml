@@ -61,6 +61,8 @@ jobs:
         run: python3 -m unittest discover -s scripts/tests -p test_merge_log_privacy.py -v
       - name: Check GoreeShield chapter and rearrange log minimization
         run: python3 -m unittest discover -s scripts/tests -p test_chapter_rearrange_log_privacy.py -v
+      - name: Check GoreeShield converter and split log minimization
+        run: python3 -m unittest discover -s scripts/tests -p test_converter_log_privacy.py -v
       - name: Test CORS and PDF merge, split and rotation controllers
         run: |
           gradle :stirling-pdf:test \

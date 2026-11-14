@@ -149,10 +149,10 @@ public class SplitPdfBySectionsController {
                                             saveDocToZip(subDoc, zipOut, entryName);
                                         } catch (IOException e) {
                                             log.error(
-                                                    "Error creating section {} for page {}",
+                                                    "Error creating section {} for page {} ({})",
                                                     (i * verti + j + 1),
                                                     pageNum,
-                                                    e);
+                                                    e.getClass().getSimpleName());
                                             throw e;
                                         }
                                     }
@@ -165,13 +165,13 @@ public class SplitPdfBySectionsController {
                                     String entryName = filename + "_" + pageNum + "_1.pdf";
                                     saveDocToZip(subDoc, zipOut, entryName);
                                 } catch (IOException e) {
-                                    log.error("Error processing unsplit page {}", pageNum, e);
+                                    log.error("Error processing unsplit page {} ({})", pageNum, e.getClass().getSimpleName());
                                     throw e;
                                 }
                             }
                         }
                     } catch (IOException e) {
-                        log.error("Error creating ZIP file with split PDF sections", e);
+                        log.error("Error creating ZIP file with split PDF sections ({})", e.getClass().getSimpleName());
                         throw e;
                     }
                     return WebResponseUtils.zipFileToWebResponse(zipTempFile, filename + ".zip");
@@ -181,7 +181,7 @@ public class SplitPdfBySectionsController {
                 }
             }
         } catch (Exception e) {
-            log.error("Error splitting PDF file: {}", file.getOriginalFilename(), e);
+            log.error("Error splitting PDF file ({})", e.getClass().getSimpleName());
             throw e;
         }
     }
@@ -198,7 +198,7 @@ public class SplitPdfBySectionsController {
                 new PDPageContentStream(targetDoc, newPage, AppendMode.APPEND, true, true)) {
             contentStream.drawForm(form);
         } catch (IOException e) {
-            log.error("Error adding page {} to target document", pageIndex, e);
+            log.error("Error adding page {} to target document ({})", pageIndex, e.getClass().getSimpleName());
             throw e;
         }
     }
@@ -239,7 +239,7 @@ public class SplitPdfBySectionsController {
                     contentStream.restoreGraphicsState();
                 } catch (IOException e) {
                     log.error(
-                            "Error adding split section ({}, {}) for page {}", i, j, pageIndex, e);
+                            "Error adding split section ({}, {}) for page {} ({})", i, j, pageIndex, e.getClass().getSimpleName());
                     throw e;
                 }
             }
@@ -279,11 +279,11 @@ public class SplitPdfBySectionsController {
             contentStream.restoreGraphicsState();
         } catch (IOException e) {
             log.error(
-                    "Error adding single section ({}, {}) for page {} to target",
+                    "Error adding single section ({}, {}) for page {} to target ({})",
                     horizIndex,
                     vertIndex,
                     pageIndex,
-                    e);
+                    e.getClass().getSimpleName());
             throw e;
         }
     }
